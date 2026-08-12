@@ -1,0 +1,50 @@
+## ---------------------------------------------------------------------------
+## Corlix Hub — arquivos que NÃO devem ser versionados
+## Ver README.md > "Estrutura de diretórios" para o porquê de cada bloco.
+## ---------------------------------------------------------------------------
+
+## Distribuição vendor do Oracle APEX (baixada via scripts/setup.*, ~1.1 GB)
+## Contém apenas o instalador oficial da Oracle + uma cópia duplicada de f100/
+## que é gerada automaticamente ao exportar a aplicação pelo APEX Builder.
+/apex/
+
+## Metadados de assinatura do pacote Oracle APEX (parte do zip oficial)
+/META-INF/
+
+## Datafiles do Oracle Database (redo logs, control files, .dbf, wallet do DB)
+## Gerados automaticamente no primeiro `docker compose up`. Nunca portáveis
+## entre máquinas/arquiteturas e não devem ir para o Git (chegam a dezenas de GB).
+/oracle_oradata/
+
+## Configuração runtime do ORDS: recriada a cada `docker compose up` a partir
+## das variáveis de ambiente do docker-compose.yml. Inclui segredos (wallet,
+## certificado TLS autoassinado) que NUNCA devem ser versionados.
+/ords_config/
+
+## Variáveis de ambiente reais (senhas, etc.) — use .env.example como modelo
+.env
+.env.*
+!.env.example
+
+## Logs gerados pelos instaladores da Oracle/ORDS
+*.log
+
+## Lixo específico de sistema operacional
+.DS_Store
+**/.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## Editores / IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+## Backups locais e temporários
+*.bak
+*.tmp
+*~
+
+## Configurações locais de ferramentas de IDE/CLI (específicas da máquina/usuário)
+.claude/settings.local.json

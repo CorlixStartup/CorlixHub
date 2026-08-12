@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Valida a mensagem de commit no padrão Conventional Commits.
+# Funciona em macOS, Linux e Windows (via Git Bash, que acompanha o Git for Windows).
+#
+# Ativar (uma vez por clone):
+#   git config core.hooksPath scripts/git-hooks
+
+commit_msg_file="$1"
+first_line=$(head -n 1 "$commit_msg_file")
+
+pattern='^(feat|fix|hotfix|refactor|test|docs|chore|build|ci|perf)(\([a-z0-9_-]+\))?!?: .{1,100}$'
+
+if ! [[ "$first_line" =~ $pattern ]]; then
+  echo ""
+  echo "❌ Mensagem de commit fora do padrão Conventional Commits."
+  echo ""
+  echo "   Recebido:  $first_line"
+  echo "   Esperado:  <tipo>(<escopo opcional>): <descrição>"
+  echo ""
+  echo "   Tipos aceitos: feat, fix, hotfix, refactor, test, docs, chore, build, ci, perf"
+  echo ""
+  echo "   Exemplos:"
+  echo "     feat(colaborador): adiciona upload de foto de perfil"
+  echo "     fix(comunicado): corrige data de publicação exibida errada"
+  echo "     hotfix(login): corrige erro 500 ao autenticar em produção"
+  echo ""
+  exit 1
+fi
+
+exit 0

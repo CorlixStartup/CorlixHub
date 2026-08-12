@@ -1,0 +1,59 @@
+name: CI
+
+# Verificações leves em cada Pull Request para DEV/UAT/PROD.
+#
+# O que este pipeline NÃO faz (limitação conhecida, documentada no README):
+# subir o docker-compose completo como smoke test. Isso exigiria baixar a
+# distribuição do Oracle APEX (~1.1 GB, sujeita a aceite de licença da
+# Oracle) dentro do runner do GitHub Actions, o que não é confiável de
+# automatizar sem um espelho próprio autorizado da distribuição. Enquanto
+# isso não existir, a validação de "sobe e funciona" continua manual
+# (ver README > Instalação passo a passo).
+
+on:
+  pull_request:
+    branches: [DEV, UAT, PROD]
+  push:
+    branches: [DEV, UAT, PROD]
+
+jobs:
+  validate:
+    name: Validar docker-compose.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir sintaxe do docker-compose.yml
+        run: docker compose config
+        env:
+          ORACLE_PWD: dummyPassword1
+          APEX_PWD: dummyPassword1
+
+  secret-scan:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rodar gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  forbidden-paths:
+    name: Bloquear artefatos que não devem ser versionados
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Falhar se apex/, oracle_oradata/, ords_config/ ou META-INF/ foram commitados
+        run: |
+          for dir in apex oracle_oradata ords_config META-INF; do
+            if [ -d "$dir" ]; then
+              echo "ERRO: a pasta '$dir/' não deveria estar versionada (ver .gitignore e README)."
+              exit 1
+            fi
+          done
+          echo "OK: nenhuma pasta proibida encontrada no repositório."

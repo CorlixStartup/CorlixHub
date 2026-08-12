@@ -1,0 +1,28 @@
+services:
+  db:
+    image: container-registry.oracle.com/database/free:23.26.1.0
+    hostname: database
+    ports:
+      - "${DB_HOST_PORT:-1522}:1521"
+    environment:
+      - ORACLE_PWD=${ORACLE_PWD:-pwd}
+      - DBHOST=database
+    volumes:
+      - ./oracle_oradata/:/opt/oracle/oradata
+      - ./apex/:/opt/oracle/apex
+  ords:
+    image: container-registry.oracle.com/database/ords:25.4.0
+    ports:
+      - "${ORDS_HOST_PORT:-8081}:8080"
+    environment:
+      - DBHOST=database
+      - DBPORT=1521
+      - DBSERVICENAME=FREEPDB1
+      - ORACLE_PWD=${ORACLE_PWD:-pwd}
+      - APEX_PWD=${APEX_PWD:-pwd}
+    volumes:
+      - ./ords_config/:/etc/ords/config
+      - ./apex/:/opt/oracle/apex
+    depends_on:
+      db:
+        condition: service_healthy
