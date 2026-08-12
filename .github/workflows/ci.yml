@@ -37,10 +37,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Rodar gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rodar gitleaks (OSS CLI)
+        run: |
+          GITLEAKS_VERSION=8.28.0
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks git --redact --verbose --no-banner
 
   forbidden-paths:
     name: Bloquear artefatos que não devem ser versionados
