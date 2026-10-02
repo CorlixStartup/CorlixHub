@@ -1,0 +1,928 @@
+/* ============================================================
+   CORLIX HUB — THEME STYLESHEET
+   Oracle APEX (Universal Theme) customizations
+   ============================================================
+   Índice:
+     1. Ajustes globais do tema (Universal Theme overrides)
+     2. Header (busca, ações, avatar do usuário)
+     3. Configuração padrão de página / card padrão
+     4. Card: Boas-vindas
+     5. Card: Comunicados Oficiais
+     6. Card: Meu Gestor
+     7. Card: Links Rápidos
+     8. Card: Aniversariantes
+   ============================================================ */
+
+
+/* ============================================================
+   1. AJUSTES GLOBAIS DO TEMA
+   ============================================================ */
+
+.t-NavigationBar-item.has-username .t-Button-label {
+    text-transform: none !important;
+}
+
+.t-Body-mainContent {
+    background-color: #dddddd;
+}
+
+.t-Footer {
+    display: none !important;
+}
+
+.t-Header-branding {
+    background: #FFF !important;
+}
+
+.t-Region--noUI {
+    margin-bottom: 0 !important;
+}
+
+/* Menu lateral: empurra o último item (ex.: botão de ação) para o rodapé do menu */
+#t_TreeNav>ul[role="group"] {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#t_TreeNav>ul[role="group"]>li:last-child {
+    margin-top: auto;
+    padding: 16px;
+    /* Espaço entre a linha divisória e as bordas do botão */
+    border-top: 2px solid #F0F2F4;
+}
+
+#t_TreeNav>ul[role="group"]>li:last-child>.a-TreeView-row {
+    /* Remove o efeito de hover/seleção padrão do tema */
+    display: none;
+}
+
+#t_TreeNav>ul[role="group"]>li:last-child>.a-TreeView-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #F0F2F4;
+    border-radius: 10px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+#t_TreeNav>ul[role="group"]>li:last-child>.a-TreeView-content:hover {
+    background-color: #dfe2e6;
+}
+
+#t_TreeNav>ul[role="group"]>li:last-child .a-TreeView-label {
+    font-weight: 700;
+    font-size: 16px;
+    color: #111318;
+    text-decoration: none;
+    margin: 0;
+}
+
+#t_TreeNav>ul[role="group"]>li:last-child .fa {
+    font-size: 16px;
+    color: #111318;
+}
+
+
+/* ============================================================
+   2. HEADER
+   ============================================================
+   Cole em: Shared Components > Static Application Files > corlix-header.css
+   Referencie em: Shared Components > User Interface Attributes > CSS File URLs
+   como: #APP_FILES#corlix-header.css
+
+   Ajustado para viver dentro da estrutura nativa .t-Header do Universal Theme
+   (regiões posicionadas em After Logo / After Navigation Bar) — sem
+   position: fixed, já que o header do tema já é gerenciado pelo próprio APEX.
+   ============================================================ */
+
+/* --- Região: After Logo (busca) --- */
+
+.corlix-header__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 280px;
+    max-width: 40vw;
+}
+
+.corlix-header__search-icon {
+    position: absolute;
+    left: 25px;
+    color: #9ca3af;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.corlix-header__search-input {
+    width: 100%;
+    height: 32px;
+    padding: 0 12px 0 32px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.corlix-header__search-input:focus {
+    border-color: #9ca3af;
+    background: #ffffff;
+}
+
+/* --- Região: After Navigation Bar (ícones + perfil) --- */
+
+.corlix-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+}
+
+.corlix-header__icon-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #F6F6F8;
+    border-radius: 8px;
+    color: #4b5563;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.corlix-header__icon-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.corlix-header__user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 1px solid #e5e7eb;
+    cursor: pointer;
+}
+
+.corlix-header__user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.corlix-header__user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.corlix-header__user-role {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.corlix-header__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* --- Ajuste fino do container nativo do tema --- */
+
+/* Garante que a navBar acomode os itens sem quebrar linha em telas médias */
+.t-Header-navBar--end {
+    display: flex;
+    align-items: center;
+}
+
+/* Em telas estreitas, esconde a busca para não espremer os ícones/perfil */
+@media (max-width: 768px) {
+    .corlix-header__search {
+        display: none;
+    }
+}
+
+
+/* ============================================================
+   3. CONFIGURAÇÃO PADRÃO DE PÁGINA / CARD PADRÃO
+   ============================================================ */
+
+.t-Body-content {
+    --ut-body-content-padding-y: 1.5rem;
+}
+
+.t-Cards {
+    gap: 24px;
+}
+
+.card-default {
+    margin-top: 1rem;
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    padding: 10px 0px 20px 0px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card-default h1 {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    padding-left: 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 8px 0;
+}
+
+.card-default h2 {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0;
+}
+
+.card-default h3 {
+    text-transform: uppercase;
+    font-family: -apple-system, "Sora", Segoe UI, sans-serif;
+    padding-left: 1rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0;
+}
+
+/* Card genérico (usado como base por vários blocos: comunicados, etc.) */
+.a-CardView-item {
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .08);
+    transition: .2s;
+}
+
+.a-CardView-item:hover {
+    transform: translateY(-3px);
+}
+
+.a-CardView-media img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: flex;
+}
+
+.a-CardView-body {
+    padding: 0 0 1rem 2rem;
+}
+
+.a-CardView-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.a-CardView-subTitle {
+    color: #888;
+    font-size: 12px;
+}
+
+.a-CardView-desc {
+    margin-top: 15px;
+    line-height: 1.7;
+    color: #666;
+}
+
+
+/* ============================================================
+   4. CARD: BOAS-VINDAS
+   ============================================================ */
+
+.card-boas-vindas {
+    margin: 0;
+}
+
+.card-boas-vindas p {
+    font-size: 1.1rem;
+    padding-left: 1rem;
+    color: #6B7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.card-boas-vindas .link-empresa {
+    color: #2563EB;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.card-boas-vindas .link-empresa:hover {
+    text-decoration: underline;
+}
+
+
+/* ============================================================
+   5. CARD: COMUNICADOS OFICIAIS
+   ============================================================ */
+
+.card-comunicados-oficiais {
+    background-color: rgba(255, 255, 255, 0);
+    box-shadow: none;
+}
+
+.lista-de-comunicados {
+    margin-top: 1rem;
+}
+
+.lista-de-comunicados .a-CardView-items--row .a-CardView {
+    display: flex;
+    padding: 0;
+}
+
+.titulo-lista-de-comunicados {
+    text-transform: lowercase;
+    font-family: -apple-system, "Sora", Segoe UI, sans-serif;
+}
+
+.emitir-comunicado {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.botao-emitir-comunicado {
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+.imagem-capa-comunicado {
+    width: 100%;
+    display: block;
+    margin: 0;
+}
+
+.imagem-capa-comunicado img {
+    width: 100%;
+    height: 100%;
+    /* Ajuste a altura que quiser pro "banner" */
+    object-fit: cover;
+    /* Preenche sem esticar/distorcer */
+    display: block;
+    /* Cantos arredondados só em cima */
+    border-radius: 14px 0 0 0;
+}
+
+/* Linha do badge + data */
+.cmt-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.cmt-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.cmt-date {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.cmt-date::before {
+    content: "• ";
+}
+
+/* Título do comunicado */
+.cmt-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #151515;
+    line-height: 1.35;
+}
+
+/* Paleta dos departamentos (badges) */
+.dept-0 {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.dept-1 {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.dept-2 {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.dept-3 {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.dept-4 {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.dept-5 {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.dept-geral {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+/* Neutraliza o estilo padrão do título do card (override específico deste bloco) */
+.card-comunicados-oficiais .a-CardView-title {
+    font-size: inherit;
+    font-weight: normal;
+    text-transform: none;
+}
+
+/* Corpo do comunicado (override específico deste bloco) */
+.card-comunicados-oficiais .a-CardView-body {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   6. CARD: MEU GESTOR
+   ============================================================ */
+
+.card-meu-gestor {
+    margin: 0;
+}
+
+.card-meu-gestor .a-CardView-header {
+    padding-bottom: 0;
+}
+
+.card-meu-gestor .a-CardView,
+.card-meu-gestor .a-CardView:hover,
+.card-meu-gestor .a-CardView:focus {
+    box-shadow: none !important;
+    transform: none !important;
+    transition: none !important;
+    border: none !important;
+    border-color: inherit !important;
+}
+
+.card-meu-gestor .a-CardView:hover,
+.card-meu-gestor .a-CardView-item:hover .a-CardView,
+.card-meu-gestor .a-CardView-item {
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+
+/* ============================================================
+   7. CARD: LINKS RÁPIDOS
+   ============================================================ */
+
+.links-rapidos-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.links-rapidos-card h3 {
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.link-item {
+    display: flex;
+    align-items: center;
+    /* Ícone e texto alinhados verticalmente */
+    justify-content: space-between;
+    background-color: #f8f9fc;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.link-item:hover {
+    background-color: #eef2ff;
+    /* Leve efeito de zoom */
+    transform: scale(1.01);
+}
+
+.link-item .icon {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.link-item svg {
+    vertical-align: middle;
+}
+
+.link-item .text {
+    flex: 1;
+    font-weight: 500;
+    color: #000;
+    display: flex;
+    align-items: center;
+    /* Centraliza o texto verticalmente */
+}
+
+.link-item .arrow {
+    color: #4f46e5;
+    font-size: 1em;
+    margin-left: 8px;
+}
+
+
+/* ============================================================
+   8. CARD: ANIVERSARIANTES
+   ============================================================ */
+
+/* --- 8.1 Remoção de molduras e caixas internas do componente nativo --- */
+
+.card-aniversariantes .t-Cards,
+.card-aniversariantes .t-Cards-item,
+.card-aniversariantes .t-Card,
+.card-aniversariantes .t-Card-wrap,
+.card-aniversariantes .t-Card-body,
+.card-aniversariantes .t-Card-container,
+.card-aniversariantes .t-Card-media,
+.card-aniversariantes .t-Card-info,
+.card-aniversariantes .t-Card-content,
+.card-aniversariantes [class*="t-Card"],
+.card-aniversariantes .a-CardView,
+.card-aniversariantes .a-CardView-container,
+.card-aniversariantes .a-CardView-item {
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.card-aniversariantes .t-Cards-item:hover,
+.card-aniversariantes .t-Card:hover,
+.card-aniversariantes .a-CardView-item:hover {
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.card-aniversariantes .t-Cards,
+.card-aniversariantes .a-CardView-items {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    padding: 0 16px !important;
+    margin-top: 5px !important;
+    margin-bottom: 10px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* --- 8.2 Estrutura do card customizado (padrão Figma) --- */
+
+.figma-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 12px 0 !important;
+    width: 100% !important;
+    font-family: 'Segoe UI', -apple-system, sans-serif !important;
+    border-bottom: none !important;
+}
+
+.figma-avatar-img {
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    display: block;
+}
+
+.figma-row.is-normal-day .figma-avatar-img {
+    border: 1px solid #E5E7EB !important;
+}
+
+.figma-row.is-birthday-today .figma-avatar-img {
+    border: 3px solid #3B66F5 !important;
+    padding: 2px !important;
+    background-color: #ffffff !important;
+}
+
+.figma-info-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 2px !important;
+}
+
+.figma-name-text {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    line-height: 1.2 !important;
+}
+
+.figma-date-text {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #6B7280 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.figma-row.is-birthday-today .figma-date-text {
+    color: #3B66F5 !important;
+    font-weight: 600 !important;
+}
+
+.figma-row.is-normal-day .figma-cake-icon {
+    display: none !important;
+}
+
+.figma-row.is-birthday-today .figma-cake-icon {
+    display: inline-block !important;
+}
+
+.card-aniversariantes .t-Card-actions {
+    display: none !important;
+}
+
+/* --- 8.3 Configuração de fluxo vertical da região do APEX --- */
+
+.card-aniversariantes,
+.card-aniversariantes .t-Region-inner,
+.card-aniversariantes .t-Region-bodyWrap,
+.card-aniversariantes .t-Region-body {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* --- 8.4 Posicionamento absoluto do "Ver todos" no rodapé --- */
+
+/* Cria um espaço fixo de respiro na base do card pai para acomodar o link */
+.card-aniversariantes.t-Region {
+    position: relative !important;
+    /* Abre o espaço exato abaixo da última linha */
+    padding-bottom: 60px !important;
+}
+
+/* Arranca o link do topo e cola ele na base real do card */
+.figma-footer-link {
+    position: absolute !important;
+    /* Fixa o link na base interna do card */
+    bottom: 15px !important;
+    left: 20px !important;
+    right: 20px !important;
+    display: block !important;
+    text-align: center !important;
+    color: #3B66F5 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    padding-top: 14px !important;
+    cursor: pointer !important;
+    /* Cria a linha divisória perfeita */
+    border-top: 1px solid #F3F4F6 !important;
+    font-family: 'Segoe UI', -apple-system, sans-serif !important;
+    transition: color 0.15s ease !important;
+    margin: 0 !important;
+}
+
+.figma-footer-link:hover {
+    color: #114297 !important;
+    text-decoration: underline !important;
+}
+
+.log-detalhe summary {
+    cursor: pointer;
+    color: var(--ut-link-text-color, #056ac8);
+}
+
+.log-detalhe pre {
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow: auto;
+    font-size: 12px;
+    margin-top: 6px;
+    padding: 8px;
+    background: rgba(0, 0, 0, .04);
+    border-radius: 4px;
+}
+
+.log-descricao {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 8px 0 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ut-body-text-color, #404040);
+    background: var(--ut-component-background-color, #fff);
+    border: 1px solid var(--ut-component-border-color, rgba(0, 0, 0, .1));
+    border-left: 4px solid var(--ut-palette-info, #056ac8);
+    border-radius: var(--ut-component-border-radius, 4px);
+}
+
+.log-descricao .fa {
+    color: var(--ut-palette-info, #056ac8);
+    font-size: 16px;
+    margin-top: 1px;
+}
+
+.log-descricao .log-tag {
+    display: inline-block;
+    margin: 4px 6px 0 0;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+    background: rgba(5, 106, 200, .1);
+    color: var(--ut-palette-info, #056ac8);
+}
+
+/* Remove o contorno pontilhado azul/preto nativo ao clicar no botão */
+.figma-footer-link:focus,
+.card-aniversariantes button[id*="VER_TODOS"]:focus,
+.card-aniversariantes .t-Button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+
+/* ============================================================
+   9. CARD: TODOS OS ANIVERSARIANTES DO MÊS (EXCLUSIVO POPUP)
+   ============================================================ */
+
+/* --- 9.1 Remoção de molduras e caixas internas do componente nativo --- */
+.popup-todos-aniversariantes .t-Cards,
+.popup-todos-aniversariantes .t-Cards-item,
+.popup-todos-aniversariantes .t-Card,
+.popup-todos-aniversariantes .t-Card-wrap,
+.popup-todos-aniversariantes .t-Card-body,
+.popup-todos-aniversariantes .t-Card-container,
+.popup-todos-aniversariantes .t-Card-media,
+.popup-todos-aniversariantes .t-Card-info,
+.popup-todos-aniversariantes .t-Card-content,
+.popup-todos-aniversariantes [class*="t-Card"],
+.popup-todos-aniversariantes .a-CardView,
+.popup-todos-aniversariantes .a-CardView-container,
+.popup-todos-aniversariantes .a-CardView-item {
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.popup-todos-aniversariantes .t-Cards-item:hover,
+.popup-todos-aniversariantes .t-Card:hover,
+.popup-todos-aniversariantes .a-CardView-item:hover {
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.popup-todos-aniversariantes .t-Cards,
+.popup-todos-aniversariantes .a-CardView-items {
+    display: flex !important;
+    flex-direction: column !important; /* Força lista única vertical */
+    gap: 0 !important;
+    padding: 0 16px !important;
+    margin-top: 5px !important;
+    margin-bottom: 10px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    width: 100% !important;
+}
+
+/* --- 9.2 Estrutura do card customizado (padrão Figma) --- */
+.popup-todos-aniversariantes .figma-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 12px 0 !important;
+    width: 100% !important;
+    font-family: 'Segoe UI', -apple-system, sans-serif !important;
+    border-bottom: none !important;
+}
+
+.popup-todos-aniversariantes .figma-avatar-img {
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    display: block;
+}
+
+.popup-todos-aniversariantes .figma-row.is-normal-day .figma-avatar-img {
+    border: 1px solid #E5E7EB !important;
+}
+
+/* Garante a borda azul de Aniversário Hoje dentro da Janela */
+.popup-todos-aniversariantes .figma-row.is-birthday-today .figma-avatar-img {
+    border: 3px solid #3B66F5 !important;
+    padding: 2px !important;
+    background-color: #ffffff !important;
+}
+
+.popup-todos-aniversariantes .figma-info-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 2px !important;
+}
+
+.popup-todos-aniversariantes .figma-name-text {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    line-height: 1.2 !important;
+}
+
+.popup-todos-aniversariantes .figma-date-text {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #6B7280 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+/* Garante o texto azul de Aniversário Hoje dentro da Janela */
+.popup-todos-aniversariantes .figma-row.is-birthday-today .figma-date-text {
+    color: #3B66F5 !important;
+    font-weight: 600 !important;
+}
+
+.popup-todos-aniversariantes .figma-row.is-normal-day .figma-cake-icon {
+    display: none !important;
+}
+
+.popup-todos-aniversariantes .figma-row.is-birthday-today .figma-cake-icon {
+    display: inline-block !important;
+}
+
+/* --- 9.3 Ocultar links de rodapé duplicados na modal --- */
+.popup-todos-aniversariantes .t-Card-actions,
+.popup-todos-aniversariantes .figma-footer-link,
+.popup-todos-aniversariantes button[id*="VER_TODOS"] {
+    display: none !important;
+}
+
+/* --- 9.4 Configuração de fluxo vertical da região do APEX --- */
+.popup-todos-aniversariantes,
+.popup-todos-aniversariantes .t-Region-inner,
+.popup-todos-aniversariantes .t-Region-bodyWrap,
+.popup-todos-aniversariantes .t-Region-body {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* ============================================================
+   10. CARD: CABEÇALHO DO POPUP ANIVERSARIANTES
+   ============================================================ */
+
+/* Alvo certeiro: Remove a imagem achurada do topo do popup nativo */
+.ui-dialog .ui-dialog-titlebar:before {
+    background-image: none !important;
+    display: none !important;
+    content: none !important;
+}
+
+/* Garante o fundo totalmente liso, plano e branco no cabeçalho */
+.ui-dialog .ui-dialog-titlebar {
+    background-image: none !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #F3F4F6 !important;
+    padding-top: var(--rw-dialog-strip-size, 1.25rem) !important; /* Compensa o espaço da barra removida */
+}

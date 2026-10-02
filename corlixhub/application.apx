@@ -1,0 +1,64 @@
+app CORLIXHUB (
+    name: Corlix Hub
+    logo {
+        type: text
+        text: CorlixHub
+    }
+    navigation {
+        homeUrl: {
+            page: 1
+        }
+        loginUrl: {
+            page: LOGIN
+        }
+    }
+    navigationMenu {
+        listTemplate: @/side-navigation-menu
+        templateOptions: [
+            #DEFAULT#
+            js-defaultCollapsed
+            js-navCollapsed--default
+            t-TreeNav--styleA
+        ]
+        list: @navigation-menu
+    }
+    navigationBar {
+        implementation: classic
+    }
+    userInterface {
+        currentTheme: @universal-theme
+        globalPage: 0
+        addBuiltWithApexToFooter: false
+    }
+    appFormatMasks {
+        date: DS
+        timestamp: DS
+        timestampTimeZone: DS
+    }
+    css {
+        fileUrls: #APP_FILES#custom#MIN#.css
+    }
+    authentication {
+        scheme: @oracle-apex-accounts
+    }
+    security {
+        runtimeApiUsage: modifyWorkspaceRepository
+    }
+    sessionStateProtection {
+        checksumSalt: 3B3FDB328916A290ACF1591DB85C9E72D15DAEA68E3463777493A1E159155D46
+    }
+    errorHandling {
+        errorHandlingFunctionName: log_pkg.apex_error_handler
+    }
+    runtime {
+        allowFeedback: true
+    }
+
+    substitution APP_NAME (
+        value {
+            staticValue: CorlixHub
+        }
+    )
+
+)
+

@@ -1,0 +1,776 @@
+page 14 (
+    name: Cadastro de Usuários
+    alias: CADASTROS-DE-USUARIOS
+    title: Cadastro de Usuários
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region cadastrar-colaborador-header (
+        name: Cadastrar Colaborador - Header
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <h1 style="font-size:20px;color:#1A1C1C;margin-top:0;">Cadastro de Usuários</h1>
+                <span style="font-size:14px;color:#444748;">Preencha as informações para registrar um novo colaborador no sistema.</span>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+            startNewRow: false
+            newColumn: false
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--stacked
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    region dados-do-colaborador (
+        name: DADOS DO COLABORADOR
+        type: staticContent
+        layout {
+            sequence: 30
+            parentRegion: @novo
+            slot: regionBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    region new (
+        name: INFORMAÇÕES DE LOGIN
+        type: staticContent
+        layout {
+            sequence: 20
+            parentRegion: @novo
+            slot: regionBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    region novo (
+        name: Cadastrar Colaborador
+        title: Cadastrar Colaborador
+        type: form
+        source {
+            location: localDatabase
+            tableName: COLABORADOR
+        }
+        layout {
+            sequence: 20
+            slot: body
+            startNewRow: false
+            newColumn: false
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--stacked
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    region status-do-registro (
+        name: STATUS DO REGISTRO
+        type: staticContent
+        source {
+            htmlCode: <span>Contas inativas não terão acesso ao sistema.</span>
+        }
+        layout {
+            sequence: 50
+            parentRegion: @novo
+            slot: regionBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    pageItem P14_CARGO (
+        type: popupLov
+        label {
+            label: Cargo
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT NOME AS display_value,
+                       ID_CARGO AS return_value
+                FROM CARGO
+                WHERE ID_DEPARTAMENTO = :P14_DEPARTAMENTO
+                  AND ID_EMPRESA = :P14_EMPRESA
+                ORDER BY NOME;
+                ```
+        }
+        cascadingLov {
+            parentItems: [
+                P14_EMPRESA
+                P14_DEPARTAMENTO
+            ]
+            itemsToSubmit: [
+                P14_EMPRESA
+                P14_DEPARTAMENTO
+            ]
+        }
+        layout {
+            sequence: 80
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @novo
+            column: ID_CARGO
+            dataType: number
+        }
+    )
+
+    pageItem P14_CONFIRMAR_SENHA (
+        type: password
+        label {
+            label: Confirmar Senha
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @new
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+    )
+
+    pageItem P14_DATA_ADMISSAO (
+        type: datePicker
+        label {
+            label: Data de Admissão
+            alignment: left
+        }
+        settings {
+            displayAs: nativeHtml
+        }
+        layout {
+            sequence: 40
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            formatMask: YYYY-MM-DD
+            width: 30
+        }
+        source {
+            formRegion: @novo
+            column: DATA_ADMISSAO
+            dataType: date
+        }
+    )
+
+    pageItem P14_DATA_NASCIMENTO (
+        type: datePicker
+        label {
+            label: Data de Nascimento
+            alignment: left
+        }
+        settings {
+            displayAs: nativeHtml
+        }
+        layout {
+            sequence: 50
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            formatMask: YYYY-MM-DD
+            width: 30
+        }
+        source {
+            formRegion: @novo
+            column: DATA_DE_NASCIMENTO
+            dataType: date
+        }
+    )
+
+    pageItem P14_DEPARTAMENTO (
+        type: popupLov
+        label {
+            label: Departamento
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT NOME AS display_value,
+                       ID_DEPARTAMENTO AS return_value
+                FROM DEPARTAMENTO
+                WHERE ID_EMPRESA = :P14_EMPRESA
+                ORDER BY NOME;
+                ```
+        }
+        cascadingLov {
+            parentItems: P14_EMPRESA
+            itemsToSubmit: P14_EMPRESA
+        }
+        layout {
+            sequence: 70
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @novo
+            column: ID_DEPARTAMENTO
+            dataType: number
+        }
+    )
+
+    pageItem P14_EMAIL (
+        type: textField
+        label {
+            label: E-mail Coporativo
+            alignment: left
+        }
+        settings {
+            subtype: email
+        }
+        layout {
+            sequence: 20
+            region: @new
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            valueRequired: true
+            maxLength: 200
+        }
+        source {
+            formRegion: @novo
+            column: EMAIL
+            dataType: varchar2
+        }
+    )
+
+    pageItem P14_EMPRESA (
+        type: selectOne
+        label {
+            label: Empresa
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT NOME d,
+                       ID_EMPRESA r
+                FROM EMPRESA
+                ORDER BY NOME;
+                ```
+        }
+        layout {
+            sequence: 60
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @novo
+            column: ID_EMPRESA
+            dataType: number
+        }
+    )
+
+    pageItem P14_GESTOR (
+        type: popupLov
+        label {
+            label: Gestor
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT c.NOME_COMPLETO d,
+                       c.ID_COLABORADOR r
+                FROM COLABORADOR c
+                JOIN CARGO cg
+                  ON cg.ID_CARGO = c.ID_CARGO
+                WHERE cg.NOME = 'Gestor'
+                ORDER BY c.NOME_COMPLETO;
+                ```
+        }
+        layout {
+            sequence: 90
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        source {
+            formRegion: @novo
+            column: ID_GESTOR
+            dataType: number
+        }
+    )
+
+    pageItem P14_ID_COLABORADOR (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @novo
+            slot: regionBody
+        }
+        source {
+            formRegion: @novo
+            column: ID_COLABORADOR
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P14_LOGIN (
+        type: textField
+        label {
+            label: Login Corporativo
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @new
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            maxLength: 255
+        }
+        source {
+            formRegion: @novo
+            column: LOGIN_APEX
+            dataType: varchar2
+        }
+    )
+
+    pageItem P14_NOME_COMPLETO (
+        type: textField
+        label {
+            label: Nome Completo
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            valueRequired: true
+            maxLength: 200
+        }
+        source {
+            formRegion: @novo
+            column: NOME_COMPLETO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P14_PRIMEIRO_NOME (
+        type: textField
+        label {
+            label: Primeiro Nome
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            maxLength: 30
+        }
+        source {
+            formRegion: @novo
+            column: PRIMEIRO_NOME
+            dataType: varchar2
+        }
+    )
+
+    pageItem P14_SENHA (
+        type: password
+        label {
+            label: Senha
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @new
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+    )
+
+    pageItem P14_STATUS (
+        type: switch
+        label {
+            label: Status
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @status-do-registro
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        source {
+            formRegion: @novo
+            column: STATUS
+            dataType: boolean
+        }
+        sessionState {
+            dataType: boolean
+            storage: session
+        }
+    )
+
+    pageItem P14_ULTIMO_NOME (
+        type: textField
+        label {
+            label: Último Nome
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @dados-do-colaborador
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            maxLength: 30
+        }
+        source {
+            formRegion: @novo
+            column: ULTIMO_NOME
+            dataType: varchar2
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 120
+            region: @novo
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 14
+            }
+        }
+    )
+
+    button salvar-usuario (
+        buttonName: SALVAR_USUARIO
+        label: Salvar Usuario
+        layout {
+            sequence: 120
+            region: @novo
+            slot: create
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            databaseAction: insert
+            requiresConfirmation: true
+        }
+        confirmation {
+            message:
+                ```html
+                <h4>Confirmar Cadastro</h4>
+                <span>Deseja realmente salvar as informações deste novo colaborador? Esta ação criará o acesso ao sistema imediatamente.</span>
+                ```
+            style: warning
+        }
+    )
+
+    dynamicAction new (
+        name: Desabilitar campos caso a empresa não tenha sido selecionada
+        execution {
+            sequence: 10
+        }
+        when {
+            selectionType: items
+            items: P14_EMPRESA
+        }
+        clientSideCondition {
+            type: itemIsNotNull
+            item: P14_EMPRESA
+        }
+
+        action campos-que-serão-desabilitados (
+            name: Campos que serão desabilitados
+            action: disable
+            affectedElements {
+                selectionType: items
+                items: [
+                    P14_DEPARTAMENTO
+                    P14_CARGO
+                    P14_GESTOR
+                ]
+            }
+            execution {
+                sequence: 30
+                fireWhenEventResultIs: false
+            }
+        )
+
+        action campos-que-vão-estar-habilitados (
+            name: Campos que vão estar habilitados
+            action: enable
+            affectedElements {
+                selectionType: items
+                items: [
+                    P14_DEPARTAMENTO
+                    P14_CARGO
+                    P14_GESTOR
+                ]
+            }
+            execution {
+                sequence: 20
+            }
+        )
+
+    )
+
+    validation validar-confirmação-de-senha (
+        name: Validar Confirmação de Senha
+        execution {
+            sequence: 10
+        }
+        validation {
+            type: functionBodyReturningBoolean
+            plsqlFunctionBody:
+                ```plsql
+                BEGIN
+                    RETURN :P14_SENHA = :P14_CONFIRMAR_SENHA;
+                END;
+                ```
+            alwaysExecute: true
+        }
+        error {
+            errorMessage: A confirmação de senha não corresponde à senha informada.
+            associatedItem: @P14_CONFIRMAR_SENHA
+        }
+    )
+
+    process criar-usuario-apex (
+        name: Criar usuário APEX
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                BEGIN
+                    APEX_UTIL.CREATE_USER(
+                        p_user_name                    => :P14_LOGIN,
+                        p_email_address                => :P14_EMAIL,
+                        p_web_password                 => :P14_SENHA,
+                        p_first_name                   => :P14_PRIMEIRO_NOME,
+                        p_last_name                    => :P14_ULTIMO_NOME,
+                        p_change_password_on_first_use => 'N'
+                    );
+                
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        raise_application_error(
+                            -20000,
+                            SQLERRM || CHR(10) || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE
+                        );
+                END;
+                ```
+        }
+        execution {
+            sequence: 20
+            point: afterSubmit
+        }
+        successMessage {
+            successMessage: Colaborador cadastrado com sucesso!
+        }
+        advanced {
+            executionMappingIdentifier: 9205761285147840
+        }
+    )
+
+    process inicializar-o-form-cadastros (
+        name: Inicializar o form Cadastros
+        type: formInitialization
+        formRegion: @novo
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 9201933922147802
+        }
+    )
+
+    process salvar-dados-colaborador (
+        name: Salvar Dados Colaborador
+        type: formAutoRowProcessing
+        formRegion: @novo
+        execution {
+            sequence: 10
+            point: afterSubmit
+        }
+        successMessage {
+            successMessage: Colaborador cadastrado com sucesso!
+        }
+        advanced {
+            executionMappingIdentifier: 9205500288147838
+        }
+    )
+
+    branch (
+        name: Limpar formulário após carregamento
+        execution {
+            sequence: 10
+            point: processing
+        }
+        behavior {
+            target: {
+                page: 14
+                clearCache: 14
+                action: clearRegions
+            }
+        }
+    )
+
+)
+

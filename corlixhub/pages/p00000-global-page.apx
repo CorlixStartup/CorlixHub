@@ -1,0 +1,74 @@
+page 0 (
+    name: Global Page
+    appearance {
+        templateOptions: #DEFAULT#
+    }
+
+    region novo (
+        name: Barra de Busca
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="corlix-header__search">
+                  <span class="fa fa-search corlix-header__search-icon" aria-hidden="true"></span>
+                  <input type="text" id="P0_SEARCH_GLOBAL" class="corlix-header__search-input"
+                         placeholder="Buscar na intranet..." autocomplete="off" />
+                </div>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: afterLogo
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    region perfil (
+        name: Perfil
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="corlix-header__actions">
+                  <a href="r/corlixhub/&APP_ALIAS./notificacoes?session=&SESSION." class="corlix-header__icon-btn" id="corlix-btn-notif" aria-label="Notificações">
+                    <span class="fa fa-bell-o" aria-hidden="true"></span>
+                  </a>
+                  <a href="r/corlixhub/&APP_ALIAS./configuracoes?session=&SESSION." class="corlix-header__icon-btn" id="corlix-btn-settings" aria-label="Configurações">
+                    <span class="fa fa-cog" aria-hidden="true"></span>
+                  </a>
+                  <div class="corlix-header__user">
+                    <div class="corlix-header__user-info">
+                      <span class="corlix-header__user-name">&G_NOME_USUARIO.</span>
+                      <span class="corlix-header__user-role">&APP_USER_CARGO.</span>
+                    </div>
+                    <img src="&APP_USER_FOTO." alt="Foto do usuário" class="corlix-header__avatar" />
+                  </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: afterNavigationBar
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+)
+

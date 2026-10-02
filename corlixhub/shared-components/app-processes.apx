@@ -1,0 +1,109 @@
+appProcess app-user-cargo (
+    name: APP_USER_CARGO
+    type: executeCode
+    source {
+        plsqlCode:
+            ```plsql
+            BEGIN
+              SELECT G.nome
+                INTO :APP_USER_CARGO
+                FROM COLABORADOR C
+                JOIN CARGO G ON G.id_cargo = C.id_cargo
+               WHERE UPPER(TRIM(C.login_apex)) = UPPER(TRIM(:APP_USER));
+            EXCEPTION
+              WHEN NO_DATA_FOUND THEN
+                :APP_USER_CARGO := 'SEM VÍNCULO';
+              WHEN TOO_MANY_ROWS THEN
+                :APP_USER_CARGO := 'MÚLTIPLOS VÍNCULOS';
+              WHEN OTHERS THEN
+                :APP_USER_CARGO := 'ERRO AO CARREGAR CARGO';
+            END;
+            ```
+    }
+    execution {
+        sequence: 1
+    }
+)
+
+appProcess app-user-foto (
+    name: APP_USER_FOTO
+    type: executeCode
+    source {
+        plsqlCode:
+            ```plsql
+            BEGIN
+              SELECT
+                CASE
+                  WHEN C.foto_url IS NULL THEN
+                    '#APP_FILES#default-user.jpeg'
+                  ELSE
+                    '#APP_FILES#fotos/' || C.foto_url
+                END
+                INTO :APP_USER_FOTO
+                FROM COLABORADOR C
+               WHERE UPPER(TRIM(C.login_apex)) = UPPER(TRIM(:APP_USER));
+            EXCEPTION
+              WHEN NO_DATA_FOUND THEN
+                :APP_USER_FOTO := '#APP_FILES#default-user.jpeg';
+              WHEN TOO_MANY_ROWS THEN
+                :APP_USER_FOTO := '#APP_FILES#default-user.jpeg';
+              WHEN OTHERS THEN
+                :APP_USER_FOTO := '#APP_FILES#default-user.jpeg';
+            END;
+            ```
+    }
+    execution {
+        sequence: 1
+    }
+)
+
+appProcess g-nome-empresa (
+    name: G_NOME_EMPRESA
+    type: executeCode
+    source {
+        plsqlCode:
+            ```plsql
+            BEGIN
+              SELECT E.nome
+                INTO :G_NOME_EMPRESA
+                FROM COLABORADOR C
+                JOIN EMPRESA E ON E.id_empresa = C.id_empresa
+               WHERE UPPER(TRIM(C.login_apex)) = UPPER(TRIM(:APP_USER));
+            EXCEPTION
+              WHEN NO_DATA_FOUND THEN
+                :G_NOME_EMPRESA := 'SEM VINCULO - usuario: ' || :APP_USER;
+              WHEN TOO_MANY_ROWS THEN
+                :G_NOME_EMPRESA := 'MULTIPLOS VINCULOS - usuario: ' || :APP_USER;
+              WHEN OTHERS THEN
+                :G_NOME_EMPRESA := 'ERRO: ' || SQLERRM;
+            END;
+            ```
+    }
+    execution {
+        sequence: 1
+    }
+)
+
+appProcess g-nome-usuario (
+    name: G_NOME_USUARIO
+    type: executeCode
+    source {
+        plsqlCode:
+            ```plsql
+            begin
+                select initcap(first_name || ' ' || last_name)
+                into :G_NOME_USUARIO
+                from apex_workspace_apex_users
+                where upper(user_name) = upper(:APP_USER);
+            
+            exception
+                when no_data_found then
+                    :G_NOME_USUARIO := :APP_USER;
+            end;
+            ```
+    }
+    execution {
+        sequence: 1
+    }
+)
+

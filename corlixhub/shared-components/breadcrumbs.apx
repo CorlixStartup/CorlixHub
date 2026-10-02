@@ -1,0 +1,161 @@
+breadcrumb breadcrumb (
+    name: Breadcrumb
+
+    entry cadastros (
+        name: Cadastro de Usuários
+        pageNumber: 14
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 14
+            }
+        }
+    )
+
+    entry central-de-equipes (
+        name: Central de Equipes
+        pageNumber: 26
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 26
+            }
+        }
+    )
+
+    entry colaboradores (
+        name: Colaboradores
+        pageNumber: 12
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 12
+            }
+        }
+    )
+
+    entry comunicação (
+        name: Comunicação
+        pageNumber: 11
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 11
+            }
+        }
+    )
+
+    entry configurações (
+        name: Configurações
+        pageNumber: 6
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 6
+            }
+        }
+    )
+
+    entry empresas-cadastradas (
+        name: Empresas Cadastradas
+        pageNumber: 15
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 15
+            }
+        }
+    )
+
+    entry histórico-de-carreira (
+        name: Histórico de carreira
+        pageNumber: 13
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 13
+            }
+        }
+    )
+
+    entry home (
+        name: Home
+        pageNumber: 1
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 1
+            }
+        }
+    )
+
+    entry meu-perfil (
+        name: Meu Perfil
+        pageNumber: 2
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 2
+            }
+        }
+    )
+
+    entry notificações (
+        name: Notificações
+        pageNumber: 5
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 5
+            }
+        }
+    )
+
+    entry organograma (
+        name: Organograma
+        pageNumber: 3
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 3
+            }
+        }
+    )
+
+    entry terminal (
+        name: Monitor de Logs
+        pageNumber: 7
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 7
+            }
+        }
+    )
+
+)
+

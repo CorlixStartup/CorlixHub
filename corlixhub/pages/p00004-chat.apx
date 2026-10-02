@@ -1,0 +1,676 @@
+page 4 (
+    name: Chat
+    alias: CHAT
+    title: Chat
+    appearance {
+        pageTemplate: @corlix-standard-page
+        templateOptions: #DEFAULT#
+        cssClasses: ch-page
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    css {
+        inline:
+            ```css
+            /* ============================================
+               CHAT — Página 4
+               ============================================ */
+            
+            :root{
+              --ch-topbar-h: 40px;
+              --ch-list-w: 260px;
+            
+              --ch-blue: #2563EB;
+              --ch-blue-soft: #EFF6FF;
+              --ch-bubble-in: #F1F3F6;
+            
+              --ch-border: #E5E7EB;
+              --ch-border-soft: #F3F4F6;
+              --ch-surface: #F9FAFB;
+            
+              --ch-text: #111827;
+              --ch-text-dim: #6B7280;
+              --ch-text-faint: #9CA3AF;
+            
+              --ch-avatar-bg: #E0E7FF;
+              --ch-avatar-fg: #3730A3;
+            
+              --ch-online: #22C55E;
+              --ch-ausente: #F59E0B;
+              --ch-offline: #D1D5DB;
+            
+              --ch-radius: 12px;
+              --ch-avatar-size: 34px;
+            }
+            
+            /* ---- reset do container do Universal Theme ---- */
+            html, body{ height:100%; }
+            
+            .ch-page .t-Body-content,
+            .ch-page .t-Body-contentInner,
+            .ch-page .t-Body-main{
+              padding: 0 !important;
+              margin: 0 !important;
+              max-width: none;
+            }
+            .ch-page .t-Body-content{ overflow: hidden; }
+            
+            /* ---- estrutura de duas colunas ---- */
+            .ch-shell{
+              display: grid;
+              grid-template-columns: var(--ch-list-w) 1fr;
+              grid-template-rows: minmax(0, 1fr);   /* impede a linha de crescer */
+              height: calc(100vh - var(--ch-topbar-h));
+              overflow: hidden;
+              background: #fff;
+            }
+            
+            /* wrappers do APEX somem do layout; .ch-list e .ch-chat viram grid items */
+            .ch-shell > div,
+            .ch-shell .container,
+            .ch-shell .row{
+              display: contents;
+            }
+            
+            /* ============================================
+               Coluna de contatos
+               ============================================ */
+            
+            .ch-list{
+              background: #fff;
+              border-right: 1px solid var(--ch-border);
+              display: flex;
+              flex-direction: column;
+              min-height: 0;
+              overflow: hidden;
+            }
+            
+            /* repassa a altura: .js-apex-region → #report_catch */
+            .ch-list > div,
+            .ch-list > div > div{
+              display: flex;
+              flex-direction: column;
+              flex: 1 1 auto;
+              min-height: 0;
+            }
+            
+            .ch-contacts{
+              display: flex;
+              flex-direction: column;
+              flex: 1 1 auto;
+              min-height: 0;
+              overflow-y: auto;
+            }
+            
+            .ch-dept{
+              padding: 10px 16px;
+              font-size: 11px;
+              font-weight: 600;
+              letter-spacing: .04em;
+              text-transform: uppercase;
+              color: var(--ch-text-dim);
+              background: var(--ch-surface);
+              border-top: 1px solid var(--ch-border-soft);
+              border-bottom: 1px solid var(--ch-border-soft);
+              position: sticky;
+              top: 0;
+              z-index: 1;
+              flex: 0 0 auto;
+            }
+            .ch-dept:first-child{ border-top: none; }
+            
+            .ch-contact{
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 10px 16px;
+              text-decoration: none;
+              color: inherit;
+              border-left: 3px solid transparent;
+              transition: background .12s ease;
+              flex: 0 0 auto;
+            }
+            .ch-contact:hover{ background: var(--ch-surface); }
+            .ch-contact.is-active{
+              background: var(--ch-blue-soft);
+              border-left-color: var(--ch-blue);
+            }
+            
+            .ch-avatar-wrap{
+              position: relative;
+              flex: 0 0 var(--ch-avatar-size);
+            }
+            .ch-avatar{
+              width: var(--ch-avatar-size);
+              height: var(--ch-avatar-size);
+              border-radius: 50%;
+              background: var(--ch-avatar-bg);
+              color: var(--ch-avatar-fg);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 12px;
+              font-weight: 600;
+            }
+            
+            .ch-dot{
+              position: absolute;
+              right: -1px;
+              bottom: -1px;
+              width: 10px;
+              height: 10px;
+              border-radius: 50%;
+              border: 2px solid #fff;
+            }
+            .ch-dot--online { background: var(--ch-online); }
+            .ch-dot--ausente{ background: var(--ch-ausente); }
+            .ch-dot--offline{ background: var(--ch-offline); }
+            
+            .ch-contact-txt{
+              display: flex;
+              flex-direction: column;
+              min-width: 0;
+            }
+            .ch-contact-txt b{
+              font-size: 13px;
+              font-weight: 600;
+              color: var(--ch-text);
+            }
+            .ch-contact-txt small{
+              font-size: 11px;
+              color: var(--ch-text-dim);
+            }
+            
+            /* ============================================
+               Painel de conversa
+               ============================================ */
+            
+            .ch-chat{
+              background: #fff;
+              display: flex;
+              flex-direction: column;
+              min-height: 0;
+              overflow: hidden;
+            }
+            
+            /* repassa a altura pela cadeia de wrappers até .ch-msgs */
+            .ch-chat > div,
+            .ch-chat .col,
+            .ch-chat .col > div,
+            .ch-chat .col > div > div{
+              display: flex;
+              flex-direction: column;
+              flex: 1 1 auto;
+              min-height: 0;
+            }
+            
+            .ch-msgs{
+              flex: 1 1 auto;
+              min-height: 0;
+              overflow-y: auto;
+              padding: 24px;
+              display: flex;
+              flex-direction: column;
+              gap: 18px;
+              background: #fff;
+            }
+            
+            .ch-sep{
+              text-align: center;
+              margin: 6px 0;
+              flex: 0 0 auto;
+            }
+            .ch-sep span{
+              font-size: 11px;
+              font-weight: 600;
+              color: var(--ch-text-faint);
+              letter-spacing: .04em;
+            }
+            
+            .ch-msg{ display: flex; flex: 0 0 auto; }
+            .ch-msg--out{ justify-content: flex-end; }
+            
+            .ch-bubble{
+              max-width: 420px;
+              padding: 10px 13px;
+              border-radius: var(--ch-radius);
+              font-size: 13px;
+              line-height: 1.45;
+              word-break: break-word;
+            }
+            .ch-msg--in .ch-bubble{
+              background: var(--ch-bubble-in);
+              color: var(--ch-text);
+              border-top-left-radius: 4px;
+            }
+            .ch-msg--out .ch-bubble{
+              background: var(--ch-blue);
+              color: #fff;
+              border-top-right-radius: 4px;
+            }
+            
+            .ch-txt{ display: block; }
+            .ch-time{
+              display: block;
+              margin-top: 5px;
+              font-size: 11px;
+              opacity: .6;
+            }
+            ```
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region chat-shell_1 (
+        name: Chat Shell
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: body
+            columnCssClasses: ch-shell
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region contatos (
+        name: Lista
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select d.nome                          as departamento,
+                       c.id_colaborador,
+                       c.nome_completo,
+                       cg.nome                         as cargo,
+                       c.foto_url,
+                       upper(substr(c.primeiro_nome,1,1) ||
+                             substr(c.ultimo_nome,1,1)) as iniciais,
+                       case
+                         when p.data_ultimo_ping > systimestamp - interval '5' minute
+                              and upper(p.status_presenca) = 'ONLINE' then 'online'
+                         when p.data_ultimo_ping > systimestamp - interval '30' minute
+                              then 'ausente'
+                         else 'offline'
+                       end                              as presenca,
+                       case when row_number() over (
+                                   partition by d.nome
+                                   order by c.nome_completo
+                                 ) = 1
+                            then '<div class="ch-dept">' || d.nome || '</div>'
+                       end                              as cab_dept
+                from   colaborador  c
+                join   departamento d  on d.id_departamento = c.id_departamento
+                left   join cargo   cg on cg.id_cargo       = c.id_cargo
+                left   join presenca_colaborador p on p.id_colaborador = c.id_colaborador
+                where  c.status = true
+                and    nvl(upper(c.login_apex),'x') != upper(:APP_USER)
+                order  by d.nome, c.nome_completo
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @chat-shell_1
+            slot: subRegions
+            columnCssClasses: ch-list
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            template: @chat-contatos
+            templateOptions: "[object Object]"
+        }
+        breakFormatting {
+            breakColumns: col1
+        }
+
+        column CAB_DEPT (
+            reportColumnQueryId: 8
+            derivedColumn: N
+            heading {
+                heading: Cab Dept
+            }
+            layout {
+                sequence: 80
+            }
+            sorting {
+                sortable: false
+            }
+            security {
+                authorizationScheme: @administration-rights
+                escapeSpecialChars: false
+            }
+        )
+
+        column CARGO (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Cargo
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column DEPARTAMENTO (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Departamento
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column FOTO_URL (
+            reportColumnQueryId: 5
+            derivedColumn: N
+            heading {
+                heading: Foto Url
+            }
+            layout {
+                sequence: 50
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column ID_COLABORADOR (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Id Colaborador
+                alignment: end
+            }
+            layout {
+                sequence: 20
+                columnAlignment: end
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column INICIAIS (
+            reportColumnQueryId: 6
+            derivedColumn: N
+            heading {
+                heading: Iniciais
+            }
+            layout {
+                sequence: 60
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column NOME_COMPLETO (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Nome Completo
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column PRESENCA (
+            reportColumnQueryId: 7
+            derivedColumn: N
+            heading {
+                heading: Presenca
+            }
+            layout {
+                sequence: 70
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+    )
+
+    region conversa (
+        name: Conversa
+        type: staticContent
+        layout {
+            sequence: 30
+            parentRegion: @chat-shell_1
+            slot: subRegions
+            columnCssClasses: ch-chat
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region msgs (
+        name: Mensagens
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select m.corpo,
+                       to_char(m.data_envio, 'hh24:mi') as hora,
+                       case when col.login_apex = :APP_USER then 'out' else 'in' end as lado,
+                       case when row_number() over (
+                                   partition by trunc(m.data_envio)
+                                   order by m.data_envio
+                                 ) = 1
+                            then '<div class="ch-sep"><span>' ||
+                                 case when trunc(m.data_envio) = trunc(sysdate) then 'HOJE'
+                                      when trunc(m.data_envio) = trunc(sysdate)-1 then 'ONTEM'
+                                      else to_char(m.data_envio, 'dd/mm/yyyy') end ||
+                                 '</span></div>'
+                       end as sep_dia
+                from   canal_mensagem m
+                join   colaborador col on col.id_colaborador = m.id_colaborador
+                where  m.id_canal = :P4_CANAL_ID
+                and    nvl(m.excluida, false) = false
+                order  by m.data_envio
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @conversa
+            slot: subRegions
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        advanced {
+            customAttributes: class="ch-msgs-wrap"
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P4_CANAL_ID
+        }
+        componentAppearance {
+            template: @chat-mensagens
+            templateOptions: #DEFAULT#
+        }
+
+        column CORPO (
+            reportColumnQueryId: 1
+            derivedColumn: N
+            heading {
+                heading: Corpo
+            }
+            layout {
+                sequence: 10
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column HORA (
+            reportColumnQueryId: 2
+            derivedColumn: N
+            heading {
+                heading: Hora
+            }
+            layout {
+                sequence: 20
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column LADO (
+            reportColumnQueryId: 3
+            derivedColumn: N
+            heading {
+                heading: Lado
+            }
+            layout {
+                sequence: 30
+            }
+            sorting {
+                sortable: false
+            }
+        )
+
+        column SEP_DIA (
+            reportColumnQueryId: 4
+            derivedColumn: N
+            heading {
+                heading: Sep Dia
+            }
+            layout {
+                sequence: 40
+            }
+            sorting {
+                sortable: false
+            }
+            security {
+                escapeSpecialChars: false
+            }
+        )
+
+    )
+
+    pageItem P4_CANAL_ID (
+        type: hidden
+        settings {
+            valueProtected: false
+        }
+        layout {
+            sequence: 30
+            slot: body
+        }
+    )
+
+    pageItem P4_CONTATO_ID (
+        type: hidden
+        settings {
+            valueProtected: false
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+    )
+
+    dynamicAction selecionar-contato (
+        name: Selecionar Contato
+        execution {
+            sequence: 10
+        }
+        when {
+            event: click
+            selectionType: jQuerySelector
+            jquerySelector: .ch-contact
+        }
+
+        action atualizar-mensagens (
+            name: Atualizar mensagens
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @msgs
+            }
+            execution {
+                sequence: 40
+                fireOnInit: false
+            }
+        )
+
+        action marcar-contato-selecionado (
+            name: Marcar contato selecionado
+            action: executeJsCode
+            settings {
+                jsCode:
+                    ```javascript-browser
+                    const id = this.triggeringElement.dataset.id;
+                    apex.item("P4_CONTATO_ID").setValue(id);
+                    
+                    document.querySelectorAll(".ch-contact.is-active")
+                            .forEach(el => el.classList.remove("is-active"));
+                    this.triggeringElement.classList.add("is-active");
+                    ```
+            }
+            execution {
+                sequence: 20
+                fireOnInit: false
+            }
+        )
+
+        action obter-canal-direto (
+            name: Obter canal direto
+            action: executeServerSideCode
+            settings {
+                plsqlCode:
+                    ```plsql
+                    declare
+                      l_eu number;
+                    begin
+                      select id_colaborador
+                      into   l_eu
+                      from   colaborador
+                      where  upper(login_apex) = upper(:APP_USER);
+                    
+                      :P4_CANAL_ID := ch_get_canal_direto(l_eu, :P4_CONTATO_ID);
+                    end;
+                    ```
+                itemsToSubmit: P4_CONTATO_ID
+                itemsToReturn: P4_CANAL_ID
+            }
+            execution {
+                sequence: 30
+                fireOnInit: false
+            }
+        )
+
+    )
+
+)
+

@@ -1,0 +1,663 @@
+page 1 (
+    name: Home
+    alias: HOME
+    title: CorlixHub
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    javaScript {
+        fileUrls: [
+            // 1. Captura o mês atual e força a primeira letra maiúscula
+            "const nomeMes = new Date().toLocaleString('pt-BR', { month: 'long' });"
+            const mesFormatado = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+            // 2. Busca a caixinha azul e injeta o mês
+            const badge = document.querySelector('.figma-badge-mes');
+            "if (badge) {"
+            "    badge.innerText = mesFormatado;"
+            "}"
+        ]
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region POPUP_ANIVERSARIANTES (
+        name: Todos os Aniversariantes do Mês
+        title: TODOS OS ANIVERSARIANTES DO MÊS
+        type: cards
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT
+                    ID_COLABORADOR,
+                    NOME_COMPLETO,
+                    DATA_DE_NASCIMENTO,
+                
+                    -- Retorna o caminho exato corrigido e validado para o APEX
+                    CASE
+                        WHEN FOTO_URL IS NULL
+                             OR FOTO_URL = '#APP_FILES#Fotos Colaboradores/'
+                        THEN
+                            '#APP_FILES#Fotos Colaboradores/'
+                        ELSE
+                            '#APP_FILES#Fotos Colaboradores/' || FOTO_URL
+                    END AS FOTO_URL,
+                
+                    -- Seu vínculo de NOME limpo para o HTML Expression
+                    NOME_COMPLETO AS NOME,
+                
+                    -- Seu vínculo de DESCRICAO limpa para o HTML Expression
+                    CASE
+                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'Hoje'
+                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE + 1, 'MMDD') THEN 'Amanhã, ' || TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                        ELSE TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                    END AS DESCRICAO,
+                
+                    -- Seu vínculo de classe CSS condicional
+                    CASE 
+                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'is-birthday-today'
+                        ELSE 'is-normal-day'
+                    END AS CSS_NIVER_HOJE,
+                
+                    -- Seu código original do mês corrente
+                    RTRIM(
+                        INITCAP(
+                            TO_CHAR(
+                                SYSDATE,
+                                'Month',
+                                'NLS_DATE_LANGUAGE=PORTUGUESE'
+                            )
+                        )
+                    ) AS MES_CORRENTE
+                
+                FROM COLABORADOR
+                WHERE TO_CHAR(DATA_DE_NASCIMENTO, 'MM') = TO_CHAR(SYSDATE, 'MM')
+                ORDER BY EXTRACT(DAY FROM DATA_DE_NASCIMENTO)
+                
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: dialogsDrawersAndPopups
+        }
+        appearance {
+            template: @/inline-dialog
+            templateOptions: [
+                #DEFAULT#
+                js-dialog-autoheight
+                js-dialog-size600x400
+            ]
+            cssClasses: popup-todos-aniversariantes
+        }
+        card {
+            primaryKeyColumn1: ID_COLABORADOR
+        }
+        title {
+            advancedFormatting: true
+            htmlExpression:
+                ```html
+                <div class="figma-row &CSS_NIVER_HOJE.">
+                    <!-- Foto Circular com Fallback Corrigido para Usuário Padrão -->
+                    <div class="figma-avatar-wrapper">
+                        <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='https://dicebear.com.';">
+                    </div>
+                    
+                    <!-- Bloco de Texto Empilhado -->
+                    <div class="figma-info-wrapper">
+                        <span class="figma-name-text">&NOME.</span>
+                        <span class="figma-date-text">
+                            &DESCRICAO.
+                            <!-- O bolo só aparece se for HOJE através do CSS condicional -->
+                            <span class="figma-cake-icon">🎂</span>
+                        </span>
+                    </div>
+                </div>
+                ```
+        }
+        media {
+            cssClasses: u-circle
+        }
+        performance {
+            lazyLoading: true
+        }
+    )
+
+    region botao-emitir-comunicado (
+        name: emitir_comunicado
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @id-lista-de-comunicados
+            slot: subRegions
+            columnCssClasses: emitir-comunicado
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region card-aniversariantes (
+        name: card_aniversariantes
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 16px 16px 12px 16px; font-family: 'Segoe UI', sans-serif; box-sizing: border-box;">
+                    
+                    <!-- Título Principal alinhado -->
+                    <h3 style="margin: 0; text-transform: uppercase;">Aniversariantes</h3>
+                    
+                    <!-- Badge Dinâmico do Mês -->
+                    <div class="figma-badge-mes" style="background: #DCE7FF; color: #3B66F5; font-size: 13px; font-weight: 600; text-transform: capitalize; display: grid !important; place-items: center !important; min-width: 80px; height: 28px; border-radius: 14px; box-sizing: border-box; line-height: 0 !important; margin: 0 !important; padding: 0 12px !important; text-align: center !important;">
+                        <!-- O mês será inserido aqui pelo JavaScript -->
+                    </div>
+                </div>
+                
+                
+                ```
+        }
+        layout {
+            sequence: 50
+            parentRegion: @container-conteudo-diversos
+            slot: regionBody
+            columnCssClasses: [
+                card-default
+                card-aniversariantes
+            ]
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region card-boas-vindas (
+        name: card_boas_vindas
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <h1>Bem-vindo, &G_NOME_USUARIO.! 👋</h1>
+                  <p>Sua jornada de carreira na <a href="#" style="text-decoration:none;" class="link-empresa">&G_NOME_EMPRESA.</a> 
+                     está indo muito bem. Veja o que temos para hoje.</p>
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @container-conteudo-principal
+            slot: subRegions
+            columnCssClasses: [
+                card-default
+                card-boas-vindas
+            ]
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region card-comunicados-oficiais (
+        name: card_comunicados_oficiais
+        title: Comunicados Oficiais
+        type: staticContent
+        source {
+            htmlCode: <h2> Comunicados Oficiais </h2>
+        }
+        layout {
+            sequence: 30
+            parentRegion: @container-conteudo-principal
+            slot: subRegions
+            columnCssClasses: [
+                card-default
+                card-comunicados-oficiais
+            ]
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region card-meu-gestor (
+        name: card_meu_gestor
+        title: Meu Gestor
+        type: cards
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT 
+                    CG.NOME AS NOME_CARGO,
+                    G.PRIMEIRO_NOME || ' ' || G.ULTIMO_NOME AS NOME_GESTOR,
+                    CASE
+                        WHEN G.FOTO_URL IS NULL
+                             OR G.FOTO_URL = '#APP_FILES#default-user.jpeg' THEN
+                            '#APP_FILES#default-user.jpeg'
+                        ELSE
+                            '#APP_FILES#fotos/' || G.FOTO_URL
+                    END AS FOTO_GESTOR
+                FROM COLABORADOR C
+                JOIN COLABORADOR G
+                    ON G.ID_COLABORADOR = C.ID_GESTOR
+                JOIN CARGO CG
+                    ON CG.ID_CARGO = G.ID_CARGO
+                WHERE C.LOGIN_APEX = :APP_USER;
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @container-conteudo-diversos
+            slot: regionBody
+        }
+        appearance {
+            template: @/cards-container
+            templateOptions: [
+                #DEFAULT#
+                t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc
+            ]
+            cssClasses: [
+                card-default
+                card-meu-gestor
+            ]
+        }
+        headerAndFooter {
+            headerText: <h3>MEU GESTOR</h3>
+            footerText:
+                ```html
+                <div style="display:flex;flex-direction:row;align-items:center;gap:8px;justify-content:center;">
+                    <a href="#" style="background-color:#F6F6F8;padding:8px 55px;border-radius:8px;color:#111318;font-size:14px;font-weight:bold;">Chat</a>
+                    <a href="#" style="background-color:#F6F6F8;padding:8px 55px;border-radius:8px;color:#111318;font-size:14px;font-weight:bold;">E-mail</a>
+                </div>
+                ```
+        }
+        title {
+            advancedFormatting: true
+            htmlExpression:
+                ```html
+                <div style="display:flex;flex-direction:row;align-items:center;gap:16px;margin-bottom:0;">
+                    <img src="&FOTO_GESTOR." style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #f3f3f3; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://dicebear.com';">
+                
+                    <div style="display:flex;flex-direction:column;">
+                        <span style="font-size:14px;font-weight:bold;color:#111318;margin-bottom:8px;">&NOME_GESTOR.</span>
+                        <span style="font-size:12px;color:#636F88;">&NOME_CARGO.</span>
+                    </div>
+                </div>
+                ```
+        }
+    )
+
+    region container-conteudo-diversos (
+        name: container-conteudo-diversos
+        type: staticContent
+        layout {
+            sequence: 40
+            slot: body
+            startNewRow: false
+            columnSpan: 4
+            columnCssClasses: container-conteudo-diversos
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region container-conteudo-principal (
+        name: container-conteudo-principal
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: body
+            columnSpan: 8
+            columnCssClasses: .container-conteudo-principal
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region id-lista-de-comunicados (
+        name: lista_de_comunicados
+        type: cards
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT
+                  c.ID_COMUNICADO,
+                  c.TITULO,
+                  DBMS_LOB.SUBSTR(c.CONTEUDO, 250, 1) CONTEUDO,
+                  c.DATA_PUBLICACAO,
+                  c.IMAGEM,
+                  c.MIME_TYPE,
+                  c.NOME_ARQUIVO,
+                  NVL(d.NOME, 'Geral') DEPARTAMENTO,
+                  'dept-' || NVL(TO_CHAR(MOD(d.ID_DEPARTAMENTO, 6)), 'geral') CLASSE_DEPTO,
+                  CASE TRUNC(SYSDATE) - TRUNC(c.DATA_PUBLICACAO)
+                    WHEN 0 THEN 'Hoje'
+                    WHEN 1 THEN 'Ontem'
+                    ELSE TO_CHAR(TRUNC(SYSDATE) - TRUNC(c.DATA_PUBLICACAO)) || ' dias atrás'
+                  END TEMPO_PUBLICACAO
+                FROM COMUNICADO c
+                LEFT JOIN DEPARTAMENTO d
+                  ON d.ID_DEPARTAMENTO = c.ID_DEPARTAMENTO
+                ORDER BY c.DATA_PUBLICACAO DESC
+                FETCH FIRST 3 ROWS ONLY;
+                 
+                ```
+        }
+        layout {
+            sequence: 30
+            parentRegion: @card-comunicados-oficiais
+            slot: subRegions
+            columnCssClasses: lista-de-comunicados
+        }
+        appearance {
+            template: @cards-container-image-first
+            templateOptions: [
+                #DEFAULT#
+                t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc
+            ]
+        }
+        componentAppearance {
+            layout: horizontal
+        }
+        card {
+            primaryKeyColumn1: ID_COMUNICADO
+        }
+        title {
+            advancedFormatting: true
+            htmlExpression:
+                ```html
+                <div class="cmt-meta">
+                  <span class="cmt-badge &CLASSE_DEPTO.">&DEPARTAMENTO.</span>
+                  <span class="cmt-date">&TEMPO_PUBLICACAO.</span>
+                </div>
+                <div class="cmt-title">&TITULO.</div>
+                ```
+        }
+        body {
+            column: CONTEUDO
+        }
+        media {
+            source: blobColumn
+            blobColumn: IMAGEM
+            position: first
+            cssClasses: imagem-capa-comunicado
+        }
+        blobAttributes {
+            mimeTypeColumn: MIME_TYPE
+        }
+    )
+
+    region links-rapidos (
+        name: card_links_rapidos
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="links-rapidos-card">
+                  <h3>Links Rápidos</h3>
+                
+                  <div class="link-item" onclick="apex.navigation.redirect('f?p=&APP_ID.:5:&SESSION.')">
+                    <span class="icon">
+                      <!-- Ícone Holerite -->
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <rect x="1" y="3" width="16" height="12" rx="2" ry="2" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
+                        <circle cx="9" cy="9" r="2.5" fill="#4f46e5"/>
+                        <line x1="1" y1="7" x2="17" y2="7" stroke="#4f46e5" stroke-width="1"/>
+                        <line x1="1" y1="11" x2="17" y2="11" stroke="#4f46e5" stroke-width="1"/>
+                      </svg>
+                    </span>
+                    <span class="text">Holerite Digital</span>
+                    <span class="arrow"><i class="fa fa-chevron-right"></i></span>
+                  </div>
+                
+                  <div class="link-item" onclick="apex.navigation.redirect('f?p=&APP_ID.:6:&SESSION.')">
+                    <span class="icon">
+                      <!-- Ícone Relógio -->
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <circle cx="9" cy="9" r="7" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
+                        <path d="M9 5v4l3 2" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
+                      </svg>
+                    </span>
+                    <span class="text">Ponto Eletrônico</span>
+                    <span class="arrow"><i class="fa fa-chevron-right"></i></span>
+                  </div>
+                
+                  <div class="link-item" onclick="apex.navigation.redirect('f?p=&APP_ID.:7:&SESSION.')">
+                    <span class="icon">
+                      <!-- Ícone Suporte -->
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M9 2a7 7 0 0 0-7 7v3a1.5 1.5 0 0 0 1.5 1.5H5v-4H3v-1a6 6 0 0 1 12 0v1h-2v4h1.5A1.5 1.5 0 0 0 16 12V9a7 7 0 0 0-7-7z" fill="#4f46e5"/>
+                      </svg>
+                    </span>
+                    <span class="text">Suporte TI</span>
+                    <span class="arrow"><i class="fa fa-chevron-right"></i></span>
+                  </div>
+                </div>
+                
+                ```
+        }
+        layout {
+            sequence: 40
+            parentRegion: @container-conteudo-diversos
+            slot: regionBody
+            columnCssClasses: [
+                card-default
+                card-links-rapidos
+            ]
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region lista-aniversariantes (
+        name: lista_aniversariantes
+        type: cards
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT
+                    ID_COLABORADOR,
+                    NOME_COMPLETO,
+                    DATA_DE_NASCIMENTO,
+                
+                    -- Retorna o caminho exato corrigido e validado para o APEX
+                    CASE
+                        WHEN FOTO_URL IS NULL
+                             OR FOTO_URL = '#APP_FILES#Fotos Colaboradores/'
+                        THEN
+                            '#APP_FILES#Fotos Colaboradores/'
+                        ELSE
+                            '#APP_FILES#Fotos Colaboradores/' || FOTO_URL
+                    END AS FOTO_URL,
+                
+                    -- Seu vínculo de NOME limpo para o HTML Expression
+                    NOME_COMPLETO AS NOME,
+                
+                    -- Seu vínculo de DESCRICAO limpa para o HTML Expression
+                    CASE
+                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'Hoje'
+                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE + 1, 'MMDD') THEN 'Amanhã, ' || TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                        ELSE TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                    END AS DESCRICAO,
+                
+                    -- Seu vínculo de classe CSS condicional
+                    CASE 
+                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'is-birthday-today'
+                        ELSE 'is-normal-day'
+                    END AS CSS_NIVER_HOJE,
+                
+                    -- Seu código original do mês corrente
+                    RTRIM(
+                        INITCAP(
+                            TO_CHAR(
+                                SYSDATE,
+                                'Month',
+                                'NLS_DATE_LANGUAGE=PORTUGUESE'
+                            )
+                        )
+                    ) AS MES_CORRENTE
+                
+                FROM COLABORADOR
+                WHERE TO_CHAR(DATA_DE_NASCIMENTO, 'MM') = TO_CHAR(SYSDATE, 'MM')
+                ORDER BY EXTRACT(DAY FROM DATA_DE_NASCIMENTO)
+                
+                -- [NOVA TRAVA]: Garante que a Home exiba apenas até 5 pessoas, independente de quantas existam no banco
+                FETCH FIRST 5 ROWS ONLY;
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @card-aniversariantes
+            slot: subRegions
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        title {
+            advancedFormatting: true
+            htmlExpression:
+                ```html
+                <div class="figma-row &CSS_NIVER_HOJE.">
+                    <!-- Foto Circular com Fallback Corrigido para Usuário Padrão -->
+                    <div class="figma-avatar-wrapper">
+                        <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='https://dicebear.com.';">
+                    </div>
+                    
+                    <!-- Bloco de Texto Empilhado -->
+                    <div class="figma-info-wrapper">
+                        <span class="figma-name-text">&NOME.</span>
+                        <span class="figma-date-text">
+                            &DESCRICAO.
+                            <!-- O bolo só aparece se for HOJE através do CSS condicional -->
+                            <span class="figma-cake-icon">🎂</span>
+                        </span>
+                    </div>
+                </div>
+                ```
+        }
+    )
+
+    button B_VER_TODOS (
+        buttonName: B_VER_TODOS
+        label: Ver Todos
+        layout {
+            sequence: 10
+            region: @lista-aniversariantes
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+            cssClasses: figma-footer-link
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        advanced {
+            customAttributes: style="display: block !important; text-align: center !important; color: #3B66F5 !important; background: transparent !important; border: none !important; box-shadow: none !important; text-decoration: underline !important; font-weight: 600 !important; width: 100% !important; margin-top: 00px !important; font-size: 19px !important;"
+        }
+    )
+
+    button emitir-comunicado (
+        buttonName: botao_emitir_comunicado
+        label: Emitir Comunicado
+        layout {
+            sequence: 10
+            region: @botao-emitir-comunicado
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+            cssClasses: botao-emitir-comunicado
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 17
+            }
+        }
+    )
+
+    dynamicAction abrir-popup-aniversariantes (
+        name: Abrir Popup Aniversariantes
+        execution {
+            sequence: 20
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @B_VER_TODOS
+        }
+
+        action native-javascript-code (
+            action: openRegion
+            affectedElements {
+                selectionType: region
+                region: @POPUP_ANIVERSARIANTES
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction carregar-mês-no-badge (
+        name: Carregar Mês no Badge
+        execution {
+            sequence: 10
+        }
+        when {
+            event: ready
+        }
+
+        action native-javascript-code (
+            action: executeJsCode
+            settings {
+                jsCode:
+                    ```javascript-browser
+                    // Captura o mês atual por extenso em português (ex: "agosto")
+                    const nomeMes = new Date().toLocaleString('pt-BR', { month: 'long' });
+                    
+                    // Força a primeira letra a ficar maiúscula (ex: "Agosto")
+                    const mesFormatado = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+                    
+                    // Busca a nova caixinha azul criada pelo HTML Expression e injeta o mês
+                    const badge = document.querySelector('.figma-badge-mes');
+                    if (badge) {
+                        badge.innerText = mesFormatado;
+                    }
+                    
+                    ```
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+)
+

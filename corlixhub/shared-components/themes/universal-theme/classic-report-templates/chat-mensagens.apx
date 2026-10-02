@@ -1,0 +1,29 @@
+classicReportTemplate chat-mensagens (
+    name: Chat Mensagens
+    templateClass: custom1
+    type: namedColumn
+    reportTemplate {
+        top: <div class="ch-msgs">
+        bottom: </div>
+    }
+    rowTemplate1 {
+        template:
+            ```html
+            #SEP_DIA#
+            <div class="ch-msg ch-msg--#LADO#">
+              <div class="ch-bubble">
+                <span class="ch-txt">#CORPO#</span>
+                <span class="ch-time">#HORA#</span>
+              </div>
+            </div>
+            ```
+    }
+    pagination {
+        template: <span>#TEXT#</span>
+        nextPage: <a href="#LINK#">#PAGINATION_NEXT# <span class="a-Icon icon-right-arrow" aria-hidden="true"></span></a>
+        previousPage: <a href="#LINK#"><span class="a-Icon icon-left-arrow" aria-hidden="true"></span> #PAGINATION_PREVIOUS#</a>
+        nextSet: <a href="#LINK#">#PAGINATION_NEXT_SET# <span class="a-Icon icon-right-arrow" aria-hidden="true"></span></a>
+        previousSet: <a href="#LINK#"><span class="a-Icon icon-left-arrow" aria-hidden="true"></span> #PAGINATION_PREVIOUS_SET#</a>
+    }
+)
+

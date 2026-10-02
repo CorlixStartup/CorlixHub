@@ -1,0 +1,956 @@
+page 7 (
+    name: Monitor de Logs
+    alias: MONITOR_LOGS
+    title: Monitor de Logs
+    appearance {
+        pageTemplate: @corlix-standard-page
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region apex_debug_messages (
+        name: Debug detalhado (APEX)
+        title: Debug detalhado (APEX)
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select m.id,
+                       cast(m.message_timestamp as timestamp with time zone) at time zone 'America/Sao_Paulo' as data_hora,
+                       m.application_id as app,
+                       m.page_id        as pagina,
+                       m.apex_user      as usuario,
+                       m.session_id     as sessao,
+                       case
+                         when m.message_level = 1 then 'ERRO'
+                         when m.message_level = 2 then 'AVISO'
+                         when m.message_level = 4 then 'INFO'
+                         else 'DEBUG'
+                       end as nivel,
+                       case
+                         when m.message_level = 1 then 'u-danger'
+                         when m.message_level = 2 then 'u-warning'
+                         when m.message_level = 4 then 'u-info'
+                         else 'u-normal'
+                       end as nivel_css,
+                       m.message        as mensagem,
+                       m.message_level
+                  from apex_debug_messages m
+                ```
+        }
+        layout {
+            sequence: 30
+            parentRegion: @logs
+            slot: tabs
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: [
+                #DEFAULT#
+                t-IRR-region--hideHeader js-addHiddenHeadingRoleDesc
+            ]
+        }
+        headerAndFooter {
+            headerText:
+                ```html
+                <div class="log-descricao">
+                  <span class="fa fa-info-circle" aria-hidden="true"></span>
+                  <div>
+                    Rastreamento completo das páginas executadas com <strong>Debug</strong> ligado. Use para investigar um problema específico.
+                    <div>
+                      <span class="log-tag">Requer Debug ativo</span>
+                      <span class="log-tag">Uso técnico</span>
+                    </div>
+                  </div>
+                </div>
+                ```
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: Dados não encontrados.
+            whenMoreDataFound: A contagem máxima de linhas deste relatório é #MAX_ROW_COUNT# linhas. Aplique um filtro para reduzir o número de registros em sua consulta.
+        }
+        advanced {
+            savedReportMappingIdentifier: 25219825823518531
+        }
+
+        column APP (
+            type: plainText
+            heading {
+                heading: App
+                alignment: end
+            }
+            layout {
+                sequence: 3
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column DATA_HORA (
+            type: plainText
+            heading {
+                heading: Data Hora
+            }
+            layout {
+                sequence: 2
+            }
+            appearance {
+                formatMask: DD/MM/YYYY HH24:MI:SS
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column ID (
+            type: plainText
+            heading {
+                heading: Id
+                alignment: end
+            }
+            layout {
+                sequence: 1
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column MENSAGEM (
+            type: plainText
+            heading {
+                heading: Mensagem
+            }
+            layout {
+                sequence: 9
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: I
+            }
+        )
+
+        column MESSAGE_LEVEL (
+            type: plainText
+            heading {
+                heading: Message Level
+                alignment: end
+            }
+            layout {
+                sequence: 10
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: J
+            }
+        )
+
+        column NIVEL (
+            type: plainText
+            heading {
+                heading: Nivel
+            }
+            layout {
+                sequence: 7
+            }
+            columnFormatting {
+                htmlExpression: <span class="t-Badge #NIVEL_CSS#">#NIVEL#</span>
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column NIVEL_CSS (
+            type: hidden
+            heading {
+                heading: Nivel Css
+            }
+            layout {
+                sequence: 8
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        column PAGINA (
+            type: plainText
+            heading {
+                heading: Pagina
+                alignment: end
+            }
+            layout {
+                sequence: 4
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column SESSAO (
+            type: plainText
+            heading {
+                heading: Sessao
+                alignment: end
+            }
+            layout {
+                sequence: 6
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column USUARIO (
+            type: plainText
+            heading {
+                heading: Usuario
+            }
+            layout {
+                sequence: 5
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        page {
+            borderWidth: 0.5
+            borderColor: #666666
+        }
+        pageHeader {
+            pageHeaderText: Debug detalhado (APEX)
+        }
+
+        savedReport primary (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn APP (
+                sequence: 3
+            )
+
+            displayColumn DATA_HORA (
+                sequence: 2
+            )
+
+            displayColumn ID (
+                sequence: 1
+            )
+
+            displayColumn MENSAGEM (
+                sequence: 9
+            )
+
+            displayColumn MESSAGE_LEVEL (
+                sequence: 10
+            )
+
+            displayColumn NIVEL (
+                sequence: 7
+            )
+
+            displayColumn NIVEL_CSS (
+                sequence: 8
+            )
+
+            displayColumn PAGINA (
+                sequence: 4
+            )
+
+            displayColumn SESSAO (
+                sequence: 6
+            )
+
+            displayColumn USUARIO (
+                sequence: 5
+            )
+
+            sort (
+                column: DATA_HORA
+                sort {
+                    direction: desc
+                    sequence: 1
+                }
+            )
+
+        )
+
+    )
+
+    region apex_workspace_activity_log (
+        name: Erros de página (APEX)
+        title: Erros de página (APEX)
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select from_tz(cast(view_date as timestamp), 'UTC') at time zone 'America/Sao_Paulo' as data_hora,
+                       application_id  as app,
+                       page_id         as pagina,
+                       page_name       as nome_pagina,
+                       apex_user       as usuario,
+                       error_message   as erro,
+                       error_on_component_type as tipo_componente,
+                       error_on_component_name as componente
+                  from apex_workspace_activity_log
+                 where error_message is not null
+                ```
+        }
+        layout {
+            sequence: 20
+            parentRegion: @logs
+            slot: tabs
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: [
+                #DEFAULT#
+                t-IRR-region--hideHeader js-addHiddenHeadingRoleDesc
+            ]
+        }
+        headerAndFooter {
+            headerText:
+                ```html
+                <div class="log-descricao">
+                  <span class="fa fa-info-circle" aria-hidden="true"></span>
+                  <div>
+                    Erros registrados pelo próprio APEX ao carregar ou enviar páginas.
+                    <div>
+                      <span class="log-tag">Registro nativo</span>
+                      <span class="log-tag">Retenção definida pelo APEX</span>
+                    </div>
+                  </div>
+                </div>
+                ```
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        advanced {
+            savedReportMappingIdentifier: 21016543990847906
+        }
+
+        column APP (
+            type: plainText
+            heading {
+                heading: App
+                alignment: end
+            }
+            layout {
+                sequence: 20
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column COMPONENTE (
+            type: plainText
+            heading {
+                heading: Componente
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        column DATA_HORA (
+            type: plainText
+            heading {
+                heading: Data Hora
+            }
+            layout {
+                sequence: 10
+            }
+            appearance {
+                formatMask: DD/MM/YYYY HH24:MI:SS
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column ERRO (
+            type: plainText
+            heading {
+                heading: Erro
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column NOME_PAGINA (
+            type: plainText
+            heading {
+                heading: Nome Pagina
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column PAGINA (
+            type: plainText
+            heading {
+                heading: Pagina
+                alignment: end
+            }
+            layout {
+                sequence: 30
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column TIPO_COMPONENTE (
+            type: plainText
+            heading {
+                heading: Tipo Componente
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column USUARIO (
+            type: plainText
+            heading {
+                heading: Usuario
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        page {
+            borderWidth: 0.5
+            borderColor: #666666
+        }
+        pageHeader {
+            pageHeaderText: Erros de página (APEX)
+        }
+
+        savedReport primary (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn APP (
+                sequence: 2
+            )
+
+            displayColumn COMPONENTE (
+                sequence: 8
+            )
+
+            displayColumn DATA_HORA (
+                sequence: 1
+            )
+
+            displayColumn ERRO (
+                sequence: 6
+            )
+
+            displayColumn NOME_PAGINA (
+                sequence: 4
+            )
+
+            displayColumn PAGINA (
+                sequence: 3
+            )
+
+            displayColumn TIPO_COMPONENTE (
+                sequence: 7
+            )
+
+            displayColumn USUARIO (
+                sequence: 5
+            )
+
+            sort (
+                column: DATA_HORA
+                sort {
+                    direction: desc
+                    sequence: 1
+                }
+            )
+
+        )
+
+    )
+
+    region app_log (
+        name: Log da aplicação
+        title: Log da aplicação
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select id,
+                       log_ts at time zone 'America/Sao_Paulo' as data_hora,
+                       nivel,
+                       case nivel
+                         when 'ERRO'  then 'u-danger'
+                         when 'AVISO' then 'u-warning'
+                         when 'INFO'  then 'u-info'
+                         else 'u-normal'
+                       end as nivel_css,
+                       app_id, page_id, apex_user, session_id, origem, mensagem, detalhe
+                  from app_log
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @logs
+            slot: tabs
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: [
+                #DEFAULT#
+                t-IRR-region--hideHeader js-addHiddenHeadingRoleDesc
+            ]
+        }
+        headerAndFooter {
+            headerText:
+                ```html
+                <div class="log-descricao">
+                  <span class="fa fa-info-circle" aria-hidden="true"></span>
+                  <div>
+                    Erros capturados automaticamente e mensagens gravadas pelo código com <code>log_pkg</code>.
+                    <div>
+                      <span class="log-tag">Automático</span>
+                      <span class="log-tag">Histórico de 30 dias</span>
+                    </div>
+                  </div>
+                </div>
+                ```
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        advanced {
+            savedReportMappingIdentifier: 21018120714847922
+        }
+
+        column APEX_USER (
+            type: plainText
+            heading {
+                heading: Apex User
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column APP_ID (
+            type: plainText
+            heading {
+                heading: App Id
+                alignment: end
+            }
+            layout {
+                sequence: 50
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        column DATA_HORA (
+            type: plainText
+            heading {
+                heading: Data Hora
+            }
+            layout {
+                sequence: 20
+            }
+            appearance {
+                formatMask: DD/MM/YYYY HH24:MI:SS
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column DETALHE (
+            type: plainText
+            heading {
+                heading: Detalhe
+            }
+            layout {
+                sequence: 110
+            }
+            columnFormatting {
+                htmlExpression:
+                    ```html
+                    <details class="log-detalhe">
+                      <summary>Ver detalhes</summary>
+                      <pre>#DETALHE#</pre>
+                    </details>
+                    ```
+            }
+            source {
+                dataType: CLOB
+            }
+            columnFilter {
+                type: none
+            }
+            advanced {
+                endUserAlias: K
+            }
+            enableUsersTo {
+                sort: false
+                controlBreak: false
+                aggregate: false
+                compute: false
+                chart: false
+                groupBy: false
+                pivot: false
+            }
+        )
+
+        column ID (
+            type: plainText
+            heading {
+                heading: Id
+                alignment: end
+            }
+            layout {
+                sequence: 10
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column MENSAGEM (
+            type: plainText
+            heading {
+                heading: Mensagem
+            }
+            layout {
+                sequence: 100
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: J
+            }
+        )
+
+        column NIVEL (
+            type: plainText
+            heading {
+                heading: Nivel
+            }
+            layout {
+                sequence: 30
+            }
+            columnFormatting {
+                htmlExpression: <span class="t-Badge #NIVEL_CSS#">#NIVEL#</span>
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column NIVEL_CSS (
+            type: hidden
+            heading {
+                heading: Nivel Css
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column ORIGEM (
+            type: plainText
+            heading {
+                heading: Origem
+            }
+            layout {
+                sequence: 90
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: I
+            }
+        )
+
+        column PAGE_ID (
+            type: plainText
+            heading {
+                heading: Page Id
+                alignment: end
+            }
+            layout {
+                sequence: 60
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column SESSION_ID (
+            type: plainText
+            heading {
+                heading: Session Id
+                alignment: end
+            }
+            layout {
+                sequence: 80
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        page {
+            borderWidth: 0.5
+            borderColor: #666666
+        }
+        pageHeader {
+            pageHeaderText: Log da aplicação
+        }
+
+        savedReport primary (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn APEX_USER (
+                sequence: 7
+            )
+
+            displayColumn APP_ID (
+                sequence: 5
+            )
+
+            displayColumn DATA_HORA (
+                sequence: 2
+            )
+
+            displayColumn DETALHE (
+                sequence: 11
+            )
+
+            displayColumn ID (
+                sequence: 1
+            )
+
+            displayColumn MENSAGEM (
+                sequence: 10
+            )
+
+            displayColumn NIVEL (
+                sequence: 3
+            )
+
+            displayColumn NIVEL_CSS (
+                sequence: 4
+            )
+
+            displayColumn ORIGEM (
+                sequence: 9
+            )
+
+            displayColumn PAGE_ID (
+                sequence: 6
+            )
+
+            displayColumn SESSION_ID (
+                sequence: 8
+            )
+
+            sort (
+                column: DATA_HORA
+                sort {
+                    direction: desc
+                    sequence: 1
+                }
+            )
+
+        )
+
+    )
+
+    region logs (
+        name: Logs
+        title: Logs da aplicação
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/tabs-container
+            templateOptions: [
+                #DEFAULT#
+                js-useLocalStorage
+                t-TabsRegion-mod--simple
+            ]
+        }
+    )
+
+    region navegação-estrutural (
+        name: Navegação Estrutural
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+            templateOptions: #DEFAULT#
+        }
+    )
+
+)
+

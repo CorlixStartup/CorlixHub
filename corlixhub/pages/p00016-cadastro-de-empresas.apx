@@ -1,0 +1,837 @@
+page 16 (
+    name: Cadastro de Empresas
+    alias: CADASTRO-DE-EMPRESAS
+    title: Cadastro de Empresas
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        chained: false
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region buttons (
+        name: Buttons
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region cadastro-de-empresas (
+        name: Cadastro de Empresas
+        type: form
+        source {
+            location: localDatabase
+            tableName: EMPRESA
+        }
+        layout {
+            sequence: 10
+            slot: contentBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        edit {
+            enabled: true
+            allowedOperations: [
+                add
+                update
+                delete
+            ]
+        }
+    )
+
+    region configurações (
+        name: Configurações
+        type: staticContent
+        layout {
+            sequence: 50
+            parentRegion: @cadastro-de-empresas
+            slot: regionBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+        headerAndFooter {
+            headerText: <span style="font-size:20px;color:#171818;">Configurações</span>
+        }
+    )
+
+    region contato-e-endereço (
+        name: Contato e Endereço
+        type: staticContent
+        layout {
+            sequence: 40
+            parentRegion: @cadastro-de-empresas
+            slot: regionBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+        headerAndFooter {
+            headerText: <span style="font-size:20px;color:#171818;">Contato e Endereço</span>
+        }
+    )
+
+    region new (
+        name: Informações Principais
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @cadastro-de-empresas
+            slot: regionBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--noUI
+                t-Region--scrollBody
+            ]
+        }
+        headerAndFooter {
+            headerText: <span style="font-size:20px;color:#171818;">Informações Principais</span>
+        }
+    )
+
+    pageItem P16_BAIRRO (
+        type: textField
+        label {
+            label: Bairro
+            alignment: left
+        }
+        layout {
+            sequence: 70
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 50
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: BAIRRO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_CEP (
+        type: textField
+        label {
+            label: CEP
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 8
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: CEP
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_CIDADE (
+        type: textField
+        label {
+            label: Cidade
+            alignment: left
+        }
+        layout {
+            sequence: 80
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 100
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: CIDADE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_CNPJ (
+        type: textField
+        label {
+            label: CNPJ
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @new
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 20
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: CNPJ
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_COMPLEMENTO (
+        type: textField
+        label {
+            label: Complemento
+            alignment: left
+        }
+        layout {
+            sequence: 60
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            maxLength: 30
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: COMPLEMENTO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_DATA_CRIACAO (
+        type: datePicker
+        label {
+            label: Data de Criação
+            alignment: left
+        }
+        settings {
+            displayAs: nativeHtml
+        }
+        layout {
+            sequence: 50
+            region: @new
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            formatMask: YYYY-MM-DD
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 255
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: DATA_CRIACAO
+            dataType: date
+        }
+    )
+
+    pageItem P16_EMAIL_CORPORATIVO (
+        type: textField
+        label {
+            label: E-mail Corporativo
+            alignment: left
+        }
+        settings {
+            subtype: email
+            textCase: lower
+        }
+        layout {
+            sequence: 10
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 255
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: EMAIL_CORPORATIVO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_ID_EMPRESA (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @new
+            slot: regionBody
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: ID_EMPRESA
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P16_LOGOTIPO_EMPRESA (
+        type: imageUpload
+        label {
+            label: Logotipo da Empresa
+            alignment: left
+        }
+        storage {
+            type: appTempFiles
+        }
+        layout {
+            sequence: 20
+            region: @configurações
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: LOGOTIPO_EMPRESA
+            dataType: blob
+        }
+    )
+
+    pageItem P16_LOGRADOURO (
+        type: textField
+        label {
+            label: Logradouro
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 100
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: LOGRADOURO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_NOME (
+        type: textField
+        label {
+            label: Razão Social
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @new
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 200
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: NOME
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_NOME_FANTASIA (
+        type: textField
+        label {
+            label: Nome Fantasia
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @new
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 255
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: NOME_FANTASIA
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_NUMERO (
+        type: textField
+        label {
+            label: Número
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 4
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: NUMERO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_STATUS (
+        type: switch
+        label {
+            label: Status da Empresa
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @configurações
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: STATUS
+            dataType: boolean
+        }
+        sessionState {
+            dataType: boolean
+        }
+    )
+
+    pageItem P16_TELEFONE (
+        type: textField
+        label {
+            label: Telefone
+            alignment: left
+        }
+        settings {
+            subtype: phone
+        }
+        layout {
+            sequence: 20
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 12
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: TELEFONE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P16_UF (
+        type: textField
+        label {
+            label: UF
+            alignment: left
+        }
+        layout {
+            sequence: 90
+            region: @contato-e-endereço
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+        }
+        appearance {
+            template: @/required-floating
+            templateOptions: #DEFAULT#
+            width: 32
+        }
+        validation {
+            valueRequired: true
+            maxLength: 2
+        }
+        source {
+            formRegion: @cadastro-de-empresas
+            column: UF
+            dataType: varchar2
+        }
+    )
+
+    button cancel (
+        buttonName: CANCEL
+        label: Cancelar
+        layout {
+            sequence: 10
+            region: @buttons
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: triggerAction
+        }
+
+        triggerAction native-dialog-cancel (
+            action: cancelDialog
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    button create (
+        buttonName: CREATE
+        label: Criar
+        layout {
+            sequence: 40
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+        }
+        serverSideCondition {
+            type: itemIsNull
+            item: P16_ID_EMPRESA
+        }
+    )
+
+    button delete (
+        buttonName: DELETE
+        label: Remover
+        layout {
+            sequence: 20
+            region: @buttons
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: delete
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: &APP_TEXT$DELETE_MSG!RAW.
+            style: danger
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P16_ID_EMPRESA
+        }
+    )
+
+    button save (
+        buttonName: SAVE
+        label: Salvar
+        layout {
+            sequence: 30
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: update
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P16_ID_EMPRESA
+        }
+    )
+
+    dynamicAction desabilitar-campos-de-endereço (
+        name: Desabilitar campos de endereço
+        execution {
+            sequence: 20
+        }
+        when {
+            selectionType: items
+            items: P16_CEP
+        }
+        clientSideCondition {
+            type: itemIsNotNull
+            item: P16_CEP
+        }
+
+        action campos-que-serão-desabilitados (
+            name: Campos que serão desabilitados
+            action: disable
+            affectedElements {
+                selectionType: items
+                items: [
+                    P16_LOGRADOURO
+                    P16_BAIRRO
+                    P16_CIDADE
+                    P16_UF
+                    P16_NUMERO
+                    P16_COMPLEMENTO
+                ]
+            }
+            execution {
+                sequence: 10
+                fireWhenEventResultIs: false
+            }
+        )
+
+        action campos-que-vão-estar-habilitados (
+            name: Campos que vão estar habilitados
+            action: enable
+            affectedElements {
+                selectionType: items
+                items: [
+                    P16_NOME_FANTASIA
+                    P16_NOME
+                    P16_CNPJ
+                    P16_DATA_CRIACAO
+                    P16_EMAIL_CORPORATIVO
+                    P16_TELEFONE
+                    P16_CEP
+                    P16_STATUS
+                    P16_LOGOTIPO_EMPRESA
+                ]
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    dynamicAction endereço-por-cep (
+        name: Endereço por CEP
+        execution {
+            sequence: 10
+        }
+        when {
+            event: keyup
+            selectionType: items
+            items: P16_CEP
+        }
+
+        action quando-cep-for-verdade (
+            name: Quando CEP for verdade
+            action: executeJsCode
+            settings {
+                jsCode:
+                    ```javascript-browser
+                    var cep = this.triggeringElement.value.replace(/\D/g, '');
+                    if (cep.length === 8) {
+                      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                        .then(response => response.json())
+                        .then(data => {
+                          if (!data.erro) {
+                            apex.item("P16_LOGRADOURO").setValue(data.logradouro);
+                            apex.item("P16_BAIRRO").setValue(data.bairro);
+                            apex.item("P16_CIDADE").setValue(data.localidade);
+                            apex.item("P16_UF").setValue(data.uf);
+                    
+                            // Habilita número e complemento após o preenchimento
+                            apex.item("P16_NUMERO").enable();
+                            apex.item("P16_COMPLEMENTO").enable();
+                            apex.item("P16_NUMERO").node.focus();
+                          } else {
+                            apex.message.showErrors([{
+                              type: "error",
+                              location: "page",
+                              message: "CEP não encontrado.",
+                              unsafe: false
+                            }]);
+                    
+                            // opcional: mantém desabilitado se o CEP for inválido
+                            apex.item("P16_NUMERO").disable();
+                            apex.item("P16_COMPLEMENTO").disable();
+                          }
+                        })
+                        .catch(err => console.error("Erro ao consultar CEP:", err));
+                    }
+                    ```
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    process close-dialog (
+        name: Close Dialog
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        advanced {
+            executionMappingIdentifier: 9982013278177535
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CREATE,SAVE,DELETE
+        }
+    )
+
+    process initialize-form-cadastro-de-empresas (
+        name: Initialize form Cadastro de Empresas
+        type: formInitialization
+        formRegion: @cadastro-de-empresas
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 9981250137177533
+        }
+    )
+
+    process process-form-cadastro-de-empresas (
+        name: Process form Cadastro de Empresas
+        type: formAutoRowProcessing
+        formRegion: @cadastro-de-empresas
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 9981626380177534
+        }
+    )
+
+)
+

@@ -1,0 +1,12 @@
+role diretoria (
+    name: Diretoria
+)
+
+role equipe-do-corlix-hub (
+    name: Equipe do Corlix Hub
+)
+
+role publicador-de-conteúdo (
+    name: Publicador de Conteúdo
+)
+
