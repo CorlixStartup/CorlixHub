@@ -10,16 +10,20 @@ page 1 (
         cursorFocus: doNotFocusCursor
     }
     javaScript {
-        fileUrls: [
-            // 1. Captura o mês atual e força a primeira letra maiúscula
-            "const nomeMes = new Date().toLocaleString('pt-BR', { month: 'long' });"
-            const mesFormatado = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
-            // 2. Busca a caixinha azul e injeta o mês
-            const badge = document.querySelector('.figma-badge-mes');
-            "if (badge) {"
-            "    badge.innerText = mesFormatado;"
-            "}"
-        ]
+        executeWhenPageLoads:
+            ```javascript-browser
+            function carregarCapasComunicados() {
+                document.querySelectorAll('.lista-de-comunicados img.a-CardView-mediaImg').forEach(function (img, i) {
+                    img.loading = 'eager';
+                    img.decoding = 'async';
+                    if (i === 0) {
+                        img.fetchPriority = 'high';
+                    }
+                });
+            }
+            carregarCapasComunicados();
+            $('.lista-de-comunicados').on('apexafterrefresh', carregarCapasComunicados);
+            ```
     }
     security {
         pageAccessProtection: argumentsMustHaveChecksum
@@ -36,51 +40,50 @@ page 1 (
             sqlQuery:
                 ```sql
                 SELECT
-                    ID_COLABORADOR,
-                    NOME_COMPLETO,
-                    DATA_DE_NASCIMENTO,
-                
-                    -- Retorna o caminho exato corrigido e validado para o APEX
-                    CASE
-                        WHEN FOTO_URL IS NULL
-                             OR FOTO_URL = '#APP_FILES#Fotos Colaboradores/'
-                        THEN
-                            '#APP_FILES#Fotos Colaboradores/'
-                        ELSE
-                            '#APP_FILES#Fotos Colaboradores/' || FOTO_URL
-                    END AS FOTO_URL,
-                
-                    -- Seu vínculo de NOME limpo para o HTML Expression
-                    NOME_COMPLETO AS NOME,
-                
-                    -- Seu vínculo de DESCRICAO limpa para o HTML Expression
-                    CASE
-                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'Hoje'
-                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE + 1, 'MMDD') THEN 'Amanhã, ' || TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
-                        ELSE TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
-                    END AS DESCRICAO,
-                
-                    -- Seu vínculo de classe CSS condicional
-                    CASE 
-                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'is-birthday-today'
-                        ELSE 'is-normal-day'
-                    END AS CSS_NIVER_HOJE,
-                
-                    -- Seu código original do mês corrente
-                    RTRIM(
-                        INITCAP(
-                            TO_CHAR(
-                                SYSDATE,
-                                'Month',
-                                'NLS_DATE_LANGUAGE=PORTUGUESE'
-                            )
-                        )
-                    ) AS MES_CORRENTE
-                
-                FROM COLABORADOR
-                WHERE TO_CHAR(DATA_DE_NASCIMENTO, 'MM') = TO_CHAR(SYSDATE, 'MM')
-                ORDER BY EXTRACT(DAY FROM DATA_DE_NASCIMENTO)
-                
+                                    ID_COLABORADOR,
+                                    NOME_COMPLETO,
+                                    DATA_DE_NASCIMENTO,
+                                
+                                    -- Retorna o caminho exato corrigido e validado para o APEX
+                                    CASE
+                                        WHEN FOTO_URL IS NULL
+                                             OR FOTO_URL = '#APP_FILES#Fotos Colaboradores/'
+                                        THEN
+                                            '#APP_FILES#Fotos Colaboradores/'
+                                        ELSE
+                                            '#APP_FILES#Fotos Colaboradores/' || FOTO_URL
+                                    END AS FOTO_URL,
+                                
+                                    -- Seu vínculo de NOME limpo para o HTML Expression
+                                    NOME_COMPLETO AS NOME,
+                                
+                                    -- Seu vínculo de DESCRICAO limpa para o HTML Expression
+                                    CASE
+                                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE), 'MMDD') THEN 'Hoje'
+                                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE) + 1, 'MMDD') THEN 'Amanhã, ' || TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                                        ELSE TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                                    END AS DESCRICAO,
+                                
+                                    -- Seu vínculo de classe CSS condicional
+                                    CASE 
+                                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE), 'MMDD') THEN 'is-birthday-today'
+                                        ELSE 'is-normal-day'
+                                    END AS CSS_NIVER_HOJE,
+                                
+                                    -- Seu código original do mês corrente
+                                    RTRIM(
+                                        INITCAP(
+                                            TO_CHAR(
+                                                CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE),
+                                                'Month',
+                                                'NLS_DATE_LANGUAGE=PORTUGUESE'
+                                            )
+                                        )
+                                    ) AS MES_CORRENTE
+                                
+                                FROM COLABORADOR
+                                WHERE TO_CHAR(DATA_DE_NASCIMENTO, 'MM') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE), 'MM')
+                                ORDER BY EXTRACT(DAY FROM DATA_DE_NASCIMENTO)
                 ```
         }
         layout {
@@ -106,7 +109,7 @@ page 1 (
                 <div class="figma-row &CSS_NIVER_HOJE.">
                     <!-- Foto Circular com Fallback Corrigido para Usuário Padrão -->
                     <div class="figma-avatar-wrapper">
-                        <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='https://dicebear.com.';">
+                        <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='#APP_FILES#default-user.jpeg';">
                     </div>
                     
                     <!-- Bloco de Texto Empilhado -->
@@ -150,15 +153,10 @@ page 1 (
         source {
             htmlCode:
                 ```html
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 16px 16px 12px 16px; font-family: 'Segoe UI', sans-serif; box-sizing: border-box;">
-                    
-                    <!-- Título Principal alinhado -->
-                    <h3 style="margin: 0; text-transform: uppercase;">Aniversariantes</h3>
-                    
-                    <!-- Badge Dinâmico do Mês -->
-                    <div class="figma-badge-mes" style="background: #DCE7FF; color: #3B66F5; font-size: 13px; font-weight: 600; text-transform: capitalize; display: grid !important; place-items: center !important; min-width: 80px; height: 28px; border-radius: 14px; box-sizing: border-box; line-height: 0 !important; margin: 0 !important; padding: 0 12px !important; text-align: center !important;">
-                        <!-- O mês será inserido aqui pelo JavaScript -->
-                    </div>
+                <div class="cx-cabecalho-card">
+                    <h3>Aniversariantes</h3>
+                    <!-- O mês é preenchido pelo JavaScript da página (classe figma-badge-mes) -->
+                    <span class="figma-badge-mes cx-badge cx-badge--info"></span>
                 </div>
                 
                 
@@ -186,7 +184,7 @@ page 1 (
             htmlCode:
                 ```html
                 <h1>Bem-vindo, &G_NOME_USUARIO.! 👋</h1>
-                  <p>Sua jornada de carreira na <a href="#" style="text-decoration:none;" class="link-empresa">&G_NOME_EMPRESA.</a> 
+                  <p>Sua jornada de carreira na <a href="#" class="link-empresa">&G_NOME_EMPRESA.</a> 
                      está indo muito bem. Veja o que temos para hoje.</p>
                 ```
         }
@@ -271,12 +269,18 @@ page 1 (
             ]
         }
         headerAndFooter {
-            headerText: <h3>MEU GESTOR</h3>
+            headerText: <h3>Meu gestor</h3>
             footerText:
                 ```html
-                <div style="display:flex;flex-direction:row;align-items:center;gap:8px;justify-content:center;">
-                    <a href="#" style="background-color:#F6F6F8;padding:8px 55px;border-radius:8px;color:#111318;font-size:14px;font-weight:bold;">Chat</a>
-                    <a href="#" style="background-color:#F6F6F8;padding:8px 55px;border-radius:8px;color:#111318;font-size:14px;font-weight:bold;">E-mail</a>
+                <div class="cx-acoes-card">
+                    <a class="t-Button t-Button--icon t-Button--iconLeft" href="#">
+                        <span class="t-Icon t-Icon--left fa fa-comment-o" aria-hidden="true"></span>
+                        <span class="t-Button-label">Chat</span>
+                    </a>
+                    <a class="t-Button t-Button--icon t-Button--iconLeft" href="#">
+                        <span class="t-Icon t-Icon--left fa fa-envelope-o" aria-hidden="true"></span>
+                        <span class="t-Button-label">E-mail</span>
+                    </a>
                 </div>
                 ```
         }
@@ -284,12 +288,11 @@ page 1 (
             advancedFormatting: true
             htmlExpression:
                 ```html
-                <div style="display:flex;flex-direction:row;align-items:center;gap:16px;margin-bottom:0;">
-                    <img src="&FOTO_GESTOR." style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #f3f3f3; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://dicebear.com';">
-                
-                    <div style="display:flex;flex-direction:column;">
-                        <span style="font-size:14px;font-weight:bold;color:#111318;margin-bottom:8px;">&NOME_GESTOR.</span>
-                        <span style="font-size:12px;color:#636F88;">&NOME_CARGO.</span>
+                <div class="cx-pessoa">
+                    <img src="&FOTO_GESTOR." alt="" class="cx-pessoa__foto" onerror="this.onerror=null; this.src='#APP_FILES#default-user.jpeg';">
+                    <div>
+                        <strong class="cx-pessoa__nome">&NOME_GESTOR.</strong>
+                        <span class="cx-pessoa__detalhe">&NOME_CARGO.</span>
                     </div>
                 </div>
                 ```
@@ -382,7 +385,7 @@ page 1 (
             htmlExpression:
                 ```html
                 <div class="cmt-meta">
-                  <span class="cmt-badge &CLASSE_DEPTO.">&DEPARTAMENTO.</span>
+                  <span class="cx-etiqueta">&DEPARTAMENTO.</span>
                   <span class="cmt-date">&TEMPO_PUBLICACAO.</span>
                 </div>
                 <div class="cmt-title">&TITULO.</div>
@@ -415,10 +418,10 @@ page 1 (
                     <span class="icon">
                       <!-- Ícone Holerite -->
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <rect x="1" y="3" width="16" height="12" rx="2" ry="2" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
-                        <circle cx="9" cy="9" r="2.5" fill="#4f46e5"/>
-                        <line x1="1" y1="7" x2="17" y2="7" stroke="#4f46e5" stroke-width="1"/>
-                        <line x1="1" y1="11" x2="17" y2="11" stroke="#4f46e5" stroke-width="1"/>
+                        <rect x="1" y="3" width="16" height="12" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <circle cx="9" cy="9" r="2.5" fill="currentColor"/>
+                        <line x1="1" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="1"/>
+                        <line x1="1" y1="11" x2="17" y2="11" stroke="currentColor" stroke-width="1"/>
                       </svg>
                     </span>
                     <span class="text">Holerite Digital</span>
@@ -429,8 +432,8 @@ page 1 (
                     <span class="icon">
                       <!-- Ícone Relógio -->
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <circle cx="9" cy="9" r="7" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
-                        <path d="M9 5v4l3 2" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
+                        <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M9 5v4l3 2" stroke="currentColor" stroke-width="1.5" fill="none"/>
                       </svg>
                     </span>
                     <span class="text">Ponto Eletrônico</span>
@@ -441,7 +444,7 @@ page 1 (
                     <span class="icon">
                       <!-- Ícone Suporte -->
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <path d="M9 2a7 7 0 0 0-7 7v3a1.5 1.5 0 0 0 1.5 1.5H5v-4H3v-1a6 6 0 0 1 12 0v1h-2v4h1.5A1.5 1.5 0 0 0 16 12V9a7 7 0 0 0-7-7z" fill="#4f46e5"/>
+                        <path d="M9 2a7 7 0 0 0-7 7v3a1.5 1.5 0 0 0 1.5 1.5H5v-4H3v-1a6 6 0 0 1 12 0v1h-2v4h1.5A1.5 1.5 0 0 0 16 12V9a7 7 0 0 0-7-7z" fill="currentColor"/>
                       </svg>
                     </span>
                     <span class="text">Suporte TI</span>
@@ -475,53 +478,53 @@ page 1 (
             sqlQuery:
                 ```sql
                 SELECT
-                    ID_COLABORADOR,
-                    NOME_COMPLETO,
-                    DATA_DE_NASCIMENTO,
-                
-                    -- Retorna o caminho exato corrigido e validado para o APEX
-                    CASE
-                        WHEN FOTO_URL IS NULL
-                             OR FOTO_URL = '#APP_FILES#Fotos Colaboradores/'
-                        THEN
-                            '#APP_FILES#Fotos Colaboradores/'
-                        ELSE
-                            '#APP_FILES#Fotos Colaboradores/' || FOTO_URL
-                    END AS FOTO_URL,
-                
-                    -- Seu vínculo de NOME limpo para o HTML Expression
-                    NOME_COMPLETO AS NOME,
-                
-                    -- Seu vínculo de DESCRICAO limpa para o HTML Expression
-                    CASE
-                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'Hoje'
-                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE + 1, 'MMDD') THEN 'Amanhã, ' || TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
-                        ELSE TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
-                    END AS DESCRICAO,
-                
-                    -- Seu vínculo de classe CSS condicional
-                    CASE 
-                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(SYSDATE, 'MMDD') THEN 'is-birthday-today'
-                        ELSE 'is-normal-day'
-                    END AS CSS_NIVER_HOJE,
-                
-                    -- Seu código original do mês corrente
-                    RTRIM(
-                        INITCAP(
-                            TO_CHAR(
-                                SYSDATE,
-                                'Month',
-                                'NLS_DATE_LANGUAGE=PORTUGUESE'
-                            )
-                        )
-                    ) AS MES_CORRENTE
-                
-                FROM COLABORADOR
-                WHERE TO_CHAR(DATA_DE_NASCIMENTO, 'MM') = TO_CHAR(SYSDATE, 'MM')
-                ORDER BY EXTRACT(DAY FROM DATA_DE_NASCIMENTO)
-                
-                -- [NOVA TRAVA]: Garante que a Home exiba apenas até 5 pessoas, independente de quantas existam no banco
-                FETCH FIRST 5 ROWS ONLY;
+                                    ID_COLABORADOR,
+                                    NOME_COMPLETO,
+                                    DATA_DE_NASCIMENTO,
+                                
+                                    -- Retorna o caminho exato corrigido e validado para o APEX
+                                    CASE
+                                        WHEN FOTO_URL IS NULL
+                                             OR FOTO_URL = '#APP_FILES#Fotos Colaboradores/'
+                                        THEN
+                                            '#APP_FILES#Fotos Colaboradores/'
+                                        ELSE
+                                            '#APP_FILES#Fotos Colaboradores/' || FOTO_URL
+                                    END AS FOTO_URL,
+                                
+                                    -- Seu vínculo de NOME limpo para o HTML Expression
+                                    NOME_COMPLETO AS NOME,
+                                
+                                    -- Seu vínculo de DESCRICAO limpa para o HTML Expression
+                                    CASE
+                                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE), 'MMDD') THEN 'Hoje'
+                                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE) + 1, 'MMDD') THEN 'Amanhã, ' || TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                                        ELSE TO_CHAR(DATA_DE_NASCIMENTO, 'DD') || ' de ' || RTRIM(TO_CHAR(DATA_DE_NASCIMENTO, 'Month', 'NLS_DATE_LANGUAGE=PORTUGUESE'))
+                                    END AS DESCRICAO,
+                                
+                                    -- Seu vínculo de classe CSS condicional
+                                    CASE 
+                                        WHEN TO_CHAR(DATA_DE_NASCIMENTO, 'MMDD') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE), 'MMDD') THEN 'is-birthday-today'
+                                        ELSE 'is-normal-day'
+                                    END AS CSS_NIVER_HOJE,
+                                
+                                    -- Seu código original do mês corrente
+                                    RTRIM(
+                                        INITCAP(
+                                            TO_CHAR(
+                                                CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE),
+                                                'Month',
+                                                'NLS_DATE_LANGUAGE=PORTUGUESE'
+                                            )
+                                        )
+                                    ) AS MES_CORRENTE
+                                
+                                FROM COLABORADOR
+                                WHERE TO_CHAR(DATA_DE_NASCIMENTO, 'MM') = TO_CHAR(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE), 'MM')
+                                ORDER BY EXTRACT(DAY FROM DATA_DE_NASCIMENTO)
+                                
+                                -- [NOVA TRAVA]: Garante que a Home exiba apenas até 5 pessoas, independente de quantas existam no banco
+                                FETCH FIRST 5 ROWS ONLY;
                 ```
         }
         layout {
@@ -540,7 +543,7 @@ page 1 (
                 <div class="figma-row &CSS_NIVER_HOJE.">
                     <!-- Foto Circular com Fallback Corrigido para Usuário Padrão -->
                     <div class="figma-avatar-wrapper">
-                        <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='https://dicebear.com.';">
+                        <img src="&FOTO_URL." alt="Foto de perfil" class="figma-avatar-img" onerror="this.onerror=null; this.src='#APP_FILES#default-user.jpeg';">
                     </div>
                     
                     <!-- Bloco de Texto Empilhado -->
@@ -559,36 +562,42 @@ page 1 (
 
     button B_VER_TODOS (
         buttonName: B_VER_TODOS
-        label: Ver Todos
+        label: Ver todos
         layout {
             sequence: 10
             region: @lista-aniversariantes
             slot: next
         }
         appearance {
-            buttonTemplate: @/text
-            templateOptions: #DEFAULT#
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--noUI
+                t-Button--iconRight
+            ]
+            icon: fa-arrow-right
             cssClasses: figma-footer-link
         }
         behavior {
             action: definedByDynamicAction
         }
-        advanced {
-            customAttributes: style="display: block !important; text-align: center !important; color: #3B66F5 !important; background: transparent !important; border: none !important; box-shadow: none !important; text-decoration: underline !important; font-weight: 600 !important; width: 100% !important; margin-top: 00px !important; font-size: 19px !important;"
-        }
     )
 
     button emitir-comunicado (
         buttonName: botao_emitir_comunicado
-        label: Emitir Comunicado
+        label: Novo comunicado
         layout {
             sequence: 10
             region: @botao-emitir-comunicado
             slot: regionBody
         }
         appearance {
-            buttonTemplate: @/text
-            templateOptions: #DEFAULT#
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-plus
             cssClasses: botao-emitir-comunicado
         }
         behavior {

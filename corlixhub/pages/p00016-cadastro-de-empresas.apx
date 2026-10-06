@@ -74,7 +74,7 @@ page 16 (
             ]
         }
         headerAndFooter {
-            headerText: <span style="font-size:20px;color:#171818;">Configurações</span>
+            headerText: <h2 class="cx-titulo-secao">Configurações</h2>
         }
     )
 
@@ -96,7 +96,7 @@ page 16 (
             ]
         }
         headerAndFooter {
-            headerText: <span style="font-size:20px;color:#171818;">Contato e Endereço</span>
+            headerText: <h2 class="cx-titulo-secao">Contato e endereço</h2>
         }
     )
 
@@ -118,7 +118,7 @@ page 16 (
             ]
         }
         headerAndFooter {
-            headerText: <span style="font-size:20px;color:#171818;">Informações Principais</span>
+            headerText: <h2 class="cx-titulo-secao">Informações principais</h2>
         }
     )
 
@@ -637,7 +637,10 @@ page 16 (
         }
         appearance {
             buttonTemplate: @/text
-            templateOptions: #DEFAULT#
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+            ]
         }
         behavior {
             executeValidations: false

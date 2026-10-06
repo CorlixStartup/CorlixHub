@@ -21,26 +21,26 @@ page 4 (
               --ch-topbar-h: 40px;
               --ch-list-w: 260px;
             
-              --ch-blue: #2563EB;
-              --ch-blue-soft: #EFF6FF;
-              --ch-bubble-in: #F1F3F6;
+              --ch-blue: var(--cx-primaria);
+              --ch-blue-soft: var(--cx-primaria-suave);
+              --ch-bubble-in: var(--cx-tag);
             
-              --ch-border: #E5E7EB;
-              --ch-border-soft: #F3F4F6;
-              --ch-surface: #F9FAFB;
+              --ch-border: var(--cx-borda);
+              --ch-border-soft: var(--cx-borda);
+              --ch-surface: var(--cx-superficie-2);
             
-              --ch-text: #111827;
-              --ch-text-dim: #6B7280;
-              --ch-text-faint: #9CA3AF;
+              --ch-text: var(--cx-texto);
+              --ch-text-dim: var(--cx-texto-2);
+              --ch-text-faint: var(--cx-texto-3);
             
-              --ch-avatar-bg: #E0E7FF;
-              --ch-avatar-fg: #3730A3;
+              --ch-avatar-bg: var(--cx-primaria-suave);
+              --ch-avatar-fg: var(--cx-primaria);
             
               --ch-online: #22C55E;
               --ch-ausente: #F59E0B;
               --ch-offline: #D1D5DB;
             
-              --ch-radius: 12px;
+              --ch-radius: var(--cx-raio-card);
               --ch-avatar-size: 34px;
             }
             

@@ -1453,6 +1453,16 @@ file "Fotos Colaboradores/vinicius_soares.jpg" (
     charSet: utf-8
 )
 
+file corlix-tema.css (
+    mimeType: text/css
+    charSet: utf-8
+)
+
+file corlix-tema.min.css (
+    mimeType: text/css
+    charSet: utf-8
+)
+
 file custom.css (
     mimeType: text/css
     charSet: utf-8

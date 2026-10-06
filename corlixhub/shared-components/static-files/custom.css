@@ -1,6 +1,9 @@
 /* ============================================================
-   CORLIX HUB — THEME STYLESHEET
+   CORLIX HUB — AJUSTES DE PÁGINAS
    Oracle APEX (Universal Theme) customizations
+   Cores, fontes, raios e componentes base ficam em corlix-tema.css
+   (carregado antes deste arquivo). Aqui ficam só os ajustes de
+   páginas e regiões específicas, usando os tokens --cx-*.
    ============================================================
    Índice:
      1. Ajustes globais do tema (Universal Theme overrides)
@@ -22,16 +25,8 @@
     text-transform: none !important;
 }
 
-.t-Body-mainContent {
-    background-color: #dddddd;
-}
-
 .t-Footer {
     display: none !important;
-}
-
-.t-Header-branding {
-    background: #FFF !important;
 }
 
 .t-Region--noUI {
@@ -49,7 +44,7 @@
     margin-top: auto;
     padding: 16px;
     /* Espaço entre a linha divisória e as bordas do botão */
-    border-top: 2px solid #F0F2F4;
+    border-top: 1px solid var(--cx-borda);
 }
 
 #t_TreeNav>ul[role="group"]>li:last-child>.a-TreeView-row {
@@ -62,28 +57,28 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background-color: #F0F2F4;
-    border-radius: 10px;
-    padding: 14px 20px;
+    background-color: var(--cx-btn);
+    border-radius: var(--cx-raio);
+    padding: 8px 16px;
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
 
 #t_TreeNav>ul[role="group"]>li:last-child>.a-TreeView-content:hover {
-    background-color: #dfe2e6;
+    background-color: var(--cx-btn-hover);
 }
 
 #t_TreeNav>ul[role="group"]>li:last-child .a-TreeView-label {
-    font-weight: 700;
-    font-size: 16px;
-    color: #111318;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--cx-texto);
     text-decoration: none;
     margin: 0;
 }
 
 #t_TreeNav>ul[role="group"]>li:last-child .fa {
     font-size: 16px;
-    color: #111318;
+    color: var(--cx-texto);
 }
 
 
@@ -105,33 +100,49 @@
     position: relative;
     display: flex;
     align-items: center;
-    width: 280px;
+    width: 360px;
     max-width: 40vw;
+    margin-left: 24px;
 }
 
-.corlix-header__search-icon {
+/* Ícone centralizado na vertical, dentro do campo (o input tem 36px de padding à esquerda) */
+.corlix-header__search .corlix-header__search-icon {
     position: absolute;
-    left: 25px;
-    color: #9ca3af;
+    top: 50%;
+    left: 12px;
+    z-index: 1;
+    width: 16px;
+    margin: 0;
+    transform: translateY(-50%);
+    color: var(--cx-texto-3);
     font-size: 14px;
+    line-height: 1;
+    text-align: center;
     pointer-events: none;
 }
 
 .corlix-header__search-input {
     width: 100%;
-    height: 32px;
-    padding: 0 12px 0 32px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background: #f9fafb;
-    font-size: 13px;
-    outline: none;
+    height: 36px;
+    padding: 0 12px 0 36px;
+    border: 1px solid var(--cx-borda);
+    border-radius: var(--cx-raio);
+    background: var(--cx-tag);
+    color: var(--cx-texto);
+    font-family: inherit;
+    font-size: 14px;
     box-sizing: border-box;
 }
 
+.corlix-header__search-input::placeholder {
+    color: var(--cx-texto-3);
+}
+
 .corlix-header__search-input:focus {
-    border-color: #9ca3af;
-    background: #ffffff;
+    border-color: var(--cx-primaria);
+    background: var(--cx-superficie);
+    outline: 2px solid var(--cx-primaria);
+    outline-offset: -1px;
 }
 
 /* --- Região: After Navigation Bar (ícones + perfil) --- */
@@ -144,12 +155,12 @@
 }
 
 .corlix-header__icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border: none;
-    background: #F6F6F8;
-    border-radius: 8px;
-    color: #4b5563;
+    background: transparent;
+    border-radius: var(--cx-raio);
+    color: var(--cx-texto-2);
     font-size: 15px;
     cursor: pointer;
     display: flex;
@@ -158,16 +169,16 @@
 }
 
 .corlix-header__icon-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(22, 21, 19, .06);
 }
 
 .corlix-header__user {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-left: 12px;
-    padding-left: 12px;
-    border-left: 1px solid #e5e7eb;
+    margin-left: 8px;
+    padding: 4px 8px 4px 12px;
+    border-left: 1px solid var(--cx-borda);
     cursor: pointer;
 }
 
@@ -179,14 +190,14 @@
 }
 
 .corlix-header__user-name {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-    color: #111827;
+    color: var(--cx-texto);
 }
 
 .corlix-header__user-role {
-    font-size: 11px;
-    color: #6b7280;
+    font-size: 12px;
+    color: var(--cx-texto-3);
 }
 
 .corlix-header__avatar {
@@ -216,46 +227,38 @@
    3. CONFIGURAÇÃO PADRÃO DE PÁGINA / CARD PADRÃO
    ============================================================ */
 
-.t-Body-content {
-    --ut-body-content-padding-y: 1.5rem;
-}
-
 .t-Cards {
     gap: 24px;
 }
 
 .card-default {
     margin-top: 1rem;
-    background-color: #FFFFFF;
-    border-radius: 12px;
+    background-color: var(--cx-superficie);
+    border: 1px solid var(--cx-borda);
+    border-radius: var(--cx-raio-card);
     padding: 10px 0px 20px 0px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .card-default h1 {
-    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
     padding-left: 1rem;
     font-size: 2rem;
     font-weight: 700;
-    color: #1A1A1A;
+    color: var(--cx-texto);
     margin: 0 0 8px 0;
 }
 
 .card-default h2 {
-    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
     font-size: 1.4rem;
     font-weight: 700;
-    color: #1A1A1A;
+    color: var(--cx-texto);
     margin: 0;
 }
 
 .card-default h3 {
-    text-transform: uppercase;
-    font-family: -apple-system, "Sora", Segoe UI, sans-serif;
     padding-left: 1rem;
     font-size: 1.4rem;
     font-weight: 700;
-    color: #1A1A1A;
+    color: var(--cx-texto);
     margin: 0;
 }
 
@@ -290,14 +293,14 @@
 }
 
 .a-CardView-subTitle {
-    color: #888;
+    color: var(--cx-texto-3);
     font-size: 12px;
 }
 
 .a-CardView-desc {
     margin-top: 15px;
     line-height: 1.7;
-    color: #666;
+    color: var(--cx-texto-2);
 }
 
 
@@ -312,13 +315,13 @@
 .card-boas-vindas p {
     font-size: 1.1rem;
     padding-left: 1rem;
-    color: #6B7280;
+    color: var(--cx-texto-2);
     margin: 0;
     line-height: 1.5;
 }
 
 .card-boas-vindas .link-empresa {
-    color: #2563EB;
+    color: var(--cx-primaria);
     text-decoration: none;
     font-weight: 500;
 }
@@ -348,7 +351,7 @@
 
 .titulo-lista-de-comunicados {
     text-transform: lowercase;
-    font-family: -apple-system, "Sora", Segoe UI, sans-serif;
+    font-family: inherit;
 }
 
 .emitir-comunicado {
@@ -363,6 +366,8 @@
 
 .imagem-capa-comunicado {
     width: 100%;
+    /* Reserva o espaço do banner antes da imagem carregar (evita CLS) */
+    height: 260px;
     display: block;
     margin: 0;
 }
@@ -386,20 +391,9 @@
     margin-bottom: 6px;
 }
 
-.cmt-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .4px;
-    text-transform: uppercase;
-    line-height: 1.2;
-}
-
 .cmt-date {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--cx-texto-3);
 }
 
 .cmt-date::before {
@@ -410,44 +404,8 @@
 .cmt-title {
     font-size: 17px;
     font-weight: 700;
-    color: #151515;
+    color: var(--cx-texto);
     line-height: 1.35;
-}
-
-/* Paleta dos departamentos (badges) */
-.dept-0 {
-    background: #eef2ff;
-    color: #4338ca;
-}
-
-.dept-1 {
-    background: #ecfdf5;
-    color: #047857;
-}
-
-.dept-2 {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-.dept-3 {
-    background: #fce7f3;
-    color: #be185d;
-}
-
-.dept-4 {
-    background: #e0f2fe;
-    color: #0369a1;
-}
-
-.dept-5 {
-    background: #f3e8ff;
-    color: #7e22ce;
-}
-
-.dept-geral {
-    background: #f3f4f6;
-    color: #4b5563;
 }
 
 /* Neutraliza o estilo padrão do título do card (override específico deste bloco) */
@@ -460,7 +418,7 @@
 /* Corpo do comunicado (override específico deste bloco) */
 .card-comunicados-oficiais .a-CardView-body {
     font-size: 14px;
-    color: #4b5563;
+    color: var(--cx-texto-2);
     line-height: 1.5;
 }
 
@@ -500,16 +458,16 @@
    ============================================================ */
 
 .links-rapidos-card {
-    background-color: #fff;
-    border-radius: 10px;
+    background-color: var(--cx-superficie);
+    border-radius: var(--cx-raio-card);
     padding: 15px;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: inherit;
 }
 
 .links-rapidos-card h3 {
     font-weight: bold;
     margin-bottom: 15px;
-    color: #333;
+    color: var(--cx-texto);
 }
 
 .link-item {
@@ -517,7 +475,7 @@
     align-items: center;
     /* Ícone e texto alinhados verticalmente */
     justify-content: space-between;
-    background-color: #f8f9fc;
+    background-color: var(--cx-tag);
     border-radius: 8px;
     padding: 10px 12px;
     margin-bottom: 12px;
@@ -526,7 +484,7 @@
 }
 
 .link-item:hover {
-    background-color: #eef2ff;
+    background-color: var(--cx-btn);
     /* Leve efeito de zoom */
     transform: scale(1.01);
 }
@@ -535,6 +493,7 @@
     display: flex;
     align-items: center;
     margin-right: 10px;
+    color: var(--cx-primaria);
 }
 
 .link-item svg {
@@ -544,14 +503,14 @@
 .link-item .text {
     flex: 1;
     font-weight: 500;
-    color: #000;
+    color: var(--cx-texto);
     display: flex;
     align-items: center;
     /* Centraliza o texto verticalmente */
 }
 
 .link-item .arrow {
-    color: #4f46e5;
+    color: var(--cx-texto-3);
     font-size: 1em;
     margin-left: 8px;
 }
@@ -613,26 +572,34 @@
     gap: 16px !important;
     padding: 12px 0 !important;
     width: 100% !important;
-    font-family: 'Segoe UI', -apple-system, sans-serif !important;
+    font-family: inherit !important;
     border-bottom: none !important;
+}
+
+/* Fixa o avatar em 54px (Home e popup) para o flex da .figma-row não encolher a foto */
+.figma-avatar-wrapper {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
 }
 
 .figma-avatar-img {
     width: 54px !important;
     height: 54px !important;
+    box-sizing: border-box;
     border-radius: 50% !important;
     object-fit: cover !important;
     display: block;
 }
 
 .figma-row.is-normal-day .figma-avatar-img {
-    border: 1px solid #E5E7EB !important;
+    border: 1px solid var(--cx-borda) !important;
 }
 
 .figma-row.is-birthday-today .figma-avatar-img {
-    border: 3px solid #3B66F5 !important;
+    border: 3px solid var(--cx-primaria) !important;
     padding: 2px !important;
-    background-color: #ffffff !important;
+    background-color: var(--cx-superficie) !important;
 }
 
 .figma-info-wrapper {
@@ -645,21 +612,21 @@
 .figma-name-text {
     font-size: 16px !important;
     font-weight: 700 !important;
-    color: #111827 !important;
+    color: var(--cx-texto) !important;
     line-height: 1.2 !important;
 }
 
 .figma-date-text {
     font-size: 14px !important;
     font-weight: 500 !important;
-    color: #6B7280 !important;
+    color: var(--cx-texto-2) !important;
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
 }
 
 .figma-row.is-birthday-today .figma-date-text {
-    color: #3B66F5 !important;
+    color: var(--cx-primaria) !important;
     font-weight: 600 !important;
 }
 
@@ -703,20 +670,20 @@
     right: 20px !important;
     display: block !important;
     text-align: center !important;
-    color: #3B66F5 !important;
+    color: var(--cx-primaria) !important;
     font-size: 15px !important;
     font-weight: 700 !important;
     padding-top: 14px !important;
     cursor: pointer !important;
     /* Cria a linha divisória perfeita */
-    border-top: 1px solid #F3F4F6 !important;
-    font-family: 'Segoe UI', -apple-system, sans-serif !important;
+    border-top: 1px solid var(--cx-borda) !important;
+    font-family: inherit !important;
     transition: color 0.15s ease !important;
     margin: 0 !important;
 }
 
 .figma-footer-link:hover {
-    color: #114297 !important;
+    color: var(--cx-primaria-hover) !important;
     text-decoration: underline !important;
 }
 
@@ -768,10 +735,10 @@
     color: var(--ut-palette-info, #056ac8);
 }
 
-/* Remove o contorno pontilhado azul/preto nativo ao clicar no botão */
-.figma-footer-link:focus,
-.card-aniversariantes button[id*="VER_TODOS"]:focus,
-.card-aniversariantes .t-Button:focus {
+/* Esconde o contorno só no clique; no teclado (Tab) o foco continua visível */
+.figma-footer-link:focus:not(:focus-visible),
+.card-aniversariantes button[id*="VER_TODOS"]:focus:not(:focus-visible),
+.card-aniversariantes .t-Button:focus:not(:focus-visible) {
     outline: none !important;
     box-shadow: none !important;
 }
@@ -832,7 +799,7 @@
     gap: 16px !important;
     padding: 12px 0 !important;
     width: 100% !important;
-    font-family: 'Segoe UI', -apple-system, sans-serif !important;
+    font-family: inherit !important;
     border-bottom: none !important;
 }
 
@@ -845,14 +812,14 @@
 }
 
 .popup-todos-aniversariantes .figma-row.is-normal-day .figma-avatar-img {
-    border: 1px solid #E5E7EB !important;
+    border: 1px solid var(--cx-borda) !important;
 }
 
 /* Garante a borda azul de Aniversário Hoje dentro da Janela */
 .popup-todos-aniversariantes .figma-row.is-birthday-today .figma-avatar-img {
-    border: 3px solid #3B66F5 !important;
+    border: 3px solid var(--cx-primaria) !important;
     padding: 2px !important;
-    background-color: #ffffff !important;
+    background-color: var(--cx-superficie) !important;
 }
 
 .popup-todos-aniversariantes .figma-info-wrapper {
@@ -865,14 +832,14 @@
 .popup-todos-aniversariantes .figma-name-text {
     font-size: 16px !important;
     font-weight: 700 !important;
-    color: #111827 !important;
+    color: var(--cx-texto) !important;
     line-height: 1.2 !important;
 }
 
 .popup-todos-aniversariantes .figma-date-text {
     font-size: 14px !important;
     font-weight: 500 !important;
-    color: #6B7280 !important;
+    color: var(--cx-texto-2) !important;
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
@@ -880,7 +847,7 @@
 
 /* Garante o texto azul de Aniversário Hoje dentro da Janela */
 .popup-todos-aniversariantes .figma-row.is-birthday-today .figma-date-text {
-    color: #3B66F5 !important;
+    color: var(--cx-primaria) !important;
     font-weight: 600 !important;
 }
 
@@ -922,7 +889,97 @@
 /* Garante o fundo totalmente liso, plano e branco no cabeçalho */
 .ui-dialog .ui-dialog-titlebar {
     background-image: none !important;
-    background-color: #ffffff !important;
-    border-bottom: 1px solid #F3F4F6 !important;
+    background-color: var(--cx-superficie) !important;
+    border-bottom: 1px solid var(--cx-borda) !important;
     padding-top: var(--rw-dialog-strip-size, 1.25rem) !important; /* Compensa o espaço da barra removida */
+}
+
+
+/* ============================================================
+   11. CLASSES DO DESIGN SYSTEM (Home e cadastros)
+   ============================================================ */
+
+/* Cabeçalho de card com título + badge (ex.: Aniversariantes + mês) */
+.cx-cabecalho-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 12px;
+}
+
+.cx-cabecalho-card h3 {
+    margin: 0;
+    padding-left: 0;
+}
+
+/* Badge do mês: o texto vem do JS; capitaliza "outubro" -> "Outubro" */
+.figma-badge-mes {
+    text-transform: capitalize;
+}
+
+/* Ações secundárias lado a lado no rodapé do card (Meu gestor) */
+.cx-acoes-card {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px;
+}
+
+.cx-acoes-card .t-Button {
+    flex: 1;
+    justify-content: center;
+}
+
+/* Pessoa: foto + nome + detalhe (Meu gestor) */
+.cx-pessoa {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.cx-pessoa > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cx-pessoa__foto {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.cx-pessoa__nome {
+    font-size: 14px;
+    color: var(--cx-texto);
+}
+
+.cx-pessoa__detalhe {
+    font-size: 12px;
+    color: var(--cx-texto-3);
+}
+
+/* Título e descrição de página montados em região (ex.: Cadastro de usuários) */
+.cx-titulo {
+    margin: 0 0 4px;
+    font-size: 1.625rem;
+    font-weight: 700;
+    line-height: 2rem;
+    color: var(--cx-texto);
+}
+
+.cx-descricao {
+    margin: 0;
+    font-size: 14px;
+    color: var(--cx-texto-2);
+}
+
+/* Título de seção dentro de formulários (ex.: Cadastro de empresas) */
+.cx-titulo-secao {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--cx-texto);
 }

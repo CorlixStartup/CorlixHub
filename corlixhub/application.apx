@@ -36,7 +36,10 @@ app CORLIXHUB (
         timestampTimeZone: DS
     }
     css {
-        fileUrls: #APP_FILES#custom#MIN#.css
+        fileUrls: [
+            #APP_FILES#corlix-tema#MIN#.css
+            #APP_FILES#custom#MIN#.css
+        ]
     }
     authentication {
         scheme: @oracle-apex-accounts

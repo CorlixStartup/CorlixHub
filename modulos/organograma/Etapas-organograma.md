@@ -51,3 +51,54 @@ Os três arquivos estão prontos. No exemplo uso a página **10**. Se o número 
 - **Mais de 2 subordinados:** os cards quebram em linhas de 2, e os conectores ligam só a primeira linha.
 - **Gestor inativo:** se um gestor ficar inativo, quem se reporta a ele some da navegação até ser realocado. Vale tratar isso no cadastro de colaboradores.
 - **Fotos em BLOB:** o `DOWNLOAD_FOTO` precisa de um Application Item `ID_COLABORADOR`.
+
+---
+
+Vou adicionar o drawer de detalhes da pessoa e ajustar o organograma às mudanças do novo design. Agora, clicar no card abre os detalhes, e "Ver equipe" continua descendo um nível.
+
+Os três arquivos foram atualizados e substituem a versão anterior. O drawer de detalhes já está pronto.
+
+## O que mudou no organograma
+
+- **Clique no card:** abre os detalhes da pessoa. O card inteiro é clicável, e "Ver equipe" continua descendo um nível.
+- **Ver perfil:** o botão do card em foco agora abre o drawer. O link para a página de perfil passou para o rodapé do drawer, em "Ver perfil completo".
+- **Texto de ajuda:** atualizado para o novo texto do design.
+- **Nome da empresa:** virou a constante `c_nome_empresa` no package. A chamada da região fica só `pkg_organograma.render(...)`.
+
+## O drawer
+
+O drawer usa o elemento `<dialog>` nativo, criado pelo próprio JS. Por isso você ganha sem código extra o fundo escurecido, o fechamento com Esc ou clique fora e o foco preso dentro dele. Não precisa criar região nova para ele.
+
+O conteúdo segue o design:
+
+- **Cabeçalho:** avatar, nome, cargo e departamento, e o botão de fechar.
+- **Contato:** e-mail corporativo, clicável como `mailto`, e um botão de copiar que mostra um ✓ por 2 segundos.
+- **Na estrutura:**
+  - "Reporta-se a" mostra o gestor, ou "Topo da hierarquia".
+  - "Equipe direta" lista até 8 pessoas; acima disso aparece "e mais N".
+  - Clicar no gestor ou em alguém da equipe troca o conteúdo do drawer sem fechá-lo.
+  - "Ver equipe no organograma" fecha o drawer e navega para aquele nível.
+- **Sobre:**
+  - Departamento e empresa.
+  - "Na Corlix desde", calculado a partir de `DATA_ADMISSAO`, por exemplo "fevereiro de 2026 · 7 meses".
+  - Aniversário com dia e mês apenas, sem o ano.
+- **Rodapé:** "Conversar" (oculto quando a pessoa é o próprio usuário) e "Ver perfil completo".
+
+## Passos no APEX além dos anteriores
+
+1. **Banco:** rode de novo o `organograma.sql`. A view ganhou `email`, `data_admissao` e `data_de_nascimento`.
+2. **Processo do drawer:** crie um processo na página 10 com o tipo *Execute Code*, o ponto de execução *Ajax Callback* e o nome **`ORG_DETALHES`**:
+   ```sql
+   apex_util.prn(
+     p_clob   => pkg_organograma.render_detalhes(
+                   to_number(apex_application.g_x01 default null on conversion error)),
+     p_escape => false);
+   ```
+3. **Região do organograma:** simplifique o Source para:
+   ```sql
+   return pkg_organograma.render(
+            to_number(:P10_ID_FOCO default null on conversion error));
+   ```
+4. **CSS e JS:** substitua pelo conteúdo novo. A divisão do JS nos três blocos é a mesma de antes.
+
+A nota de privacidade do design afirma que só os dados visíveis a todos aparecem. Hoje o drawer mostra e-mail, data de admissão e aniversário para qualquer usuário logado. Se algum cliente não quiser expor o aniversário, o mais simples é uma flag de visibilidade no cadastro do colaborador; o drawer passa a respeitá-la com um ajuste pequeno.
