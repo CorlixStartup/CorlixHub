@@ -1,10 +1,11 @@
 # 05 · Banco de dados (modelo de dados reconstruído)
 
-> Documento para IAs/devs futuros. Reconstruído **a partir do código** do repositório (sem acesso ao banco).
+> Documento para IAs/devs futuros. Montado a partir do código do repositório e do snapshot de DDL `database/corlix-hub.sql` (atualizado em 06/10/2026). Não houve acesso direto ao banco.
 > Schema: `WKSP_CORLIXHUB` · Oracle Database **23ai** (usa `BOOLEAN`, `CREATE ... IF NOT EXISTS`, `MERGE ... USING (VALUES ...)`) · APEX **26.1.5** (app 100).
 >
 > Legenda de confiabilidade:
-> - **[DDL]** = definido em script versionado no repo (fonte de verdade).
+> - **[DDL]** = definido em script de módulo versionado no repo (fonte de verdade).
+> - **[DDL do banco]** = estrutura real extraída do banco, em `database/corlix-hub.sql` (snapshot; só estrutura, sem dados).
 > - **[INFERIDO DO USO]** = tabela/coluna sem DDL no repo; deduzida de queries, formulários APEX, `%type`, INSERTs de teste e de `00_verificar_schema.sql`. Tipos/tamanhos são prováveis, não garantidos.
 
 ---
@@ -15,24 +16,30 @@
 
 | Caminho | Conteúdo |
 |---|---|
-| `modulos/historico-carreira/` | Único DDL versionado: módulo Histórico de Carreira (tabelas, views, packages, triggers, seed, carga, testes). Instalador: `instalar.sql`. |
+| `database/corlix-hub.sql` | Snapshot do DDL do schema: 15 tabelas, constraints, índices, views `VW_CANAL_FEED`/`VW_MINHAS_EQUIPES`, função `CH_GET_CANAL_DIRETO`, packages `LOG_PKG`, `PKG_COMUNICADO`, `PKG_EQUIPE_CANAL`, `PKG_LOGS`. **Sem dados** e não serve como instalador (ver §4A). |
+| `database/dados/` | Exports de dados de tabelas. Hoje: `departamento.xlsx` (6 linhas, ver §3.2). |
+| `modulos/perfis-acesso/` | Tabela `CARGO_PAPEL`, seed de departamentos/cargos da empresa 1 e package `PKG_PERFIS_ACESSO` (§4B). Instalador: `instalar.sql`. |
+| `modulos/historico-carreira/` | DDL do módulo Histórico de Carreira (tabelas, views, packages, triggers, seed, carga, testes). Instalador: `instalar.sql`. |
 | `modulos/organograma/organograma.sql` | View `VW_ORG_COLABORADOR` + package `PKG_ORGANOGRAMA` (sem tabelas). |
 | `scripts/apex-limpar-sql-scripts.sql` | Bloco PL/SQL utilitário que apaga SQL Scripts do workspace (`APEX_APPLICATION_FILES`). Não cria objetos. |
 | `database/f100.sql` | Export SQL da app APEX 100 (12 MB). **Não contém DDL de tabelas**; o "Supporting Objects" (`create_install`) está vazio. Use só com `grep`. |
 | `corlixhub/pages/*.apx`, `corlixhub/shared-components/*.apx` | App em APEXlang; fonte das queries usadas para inferir as tabelas base. |
 
-**Confirmado:** `database/ddl/schema_corlixhub.sql` e `database/seed/seed_corlixhub.sql`, citados no `README.md` (seções "Modelo de dados" e "Migrations e seeds"), **NÃO existem** no repo (`database/` só tem `f100.sql`). O README também cita uma entidade `Movimentacao_Carreira`, que na prática é `HISTORICO_CARREIRA`. Não há ferramenta de migration (Flyway/Liquibase).
+**Confirmado:** `database/ddl/schema_corlixhub.sql` e `database/seed/seed_corlixhub.sql`, citados no `README.md` (seções "Modelo de dados" e "Migrations e seeds"), **NÃO existem** no repo. O DDL equivalente está em `database/corlix-hub.sql`; seed de dados não existe. A entidade `Movimentacao_Carreira` do README é a tabela legada `MOVIMENTACAO_CARREIRA` (§4.8), substituída no módulo novo por `HISTORICO_CARREIRA`. Não há ferramenta de migration (Flyway/Liquibase).
 
 ### 1.2 Grupos de objetos
 
 | Grupo | Objetos | Origem |
 |---|---|---|
-| Núcleo (multi-tenant) | `EMPRESA`, `DEPARTAMENTO`, `CARGO`, `COLABORADOR` | [INFERIDO DO USO] |
-| Comunicação | `COMUNICADO`, `CANAL_MENSAGEM`, `PRESENCA_COLABORADOR`, função `CH_GET_CANAL_DIRETO` | [INFERIDO DO USO] |
-| Equipes | `EQUIPE` | [INFERIDO DO USO] |
-| Logs da app | `APP_LOG`, package `LOG_PKG` | [INFERIDO DO USO] |
+| Núcleo (multi-tenant) | `EMPRESA`, `DEPARTAMENTO`, `CARGO`, `COLABORADOR` | [DDL do banco] |
+| Comunicados | `COMUNICADO`, `COMUNICADO_LEITURA`, `PKG_COMUNICADO` | [DDL do banco] |
+| Equipes e chat | `EQUIPE`, `EQUIPE_MEMBRO`, `CANAL`, `CANAL_PARTICIPANTE`, `CANAL_MENSAGEM`, `CANAL_MENSAGEM_ANEXO`, `PRESENCA_COLABORADOR`, `VW_CANAL_FEED`, `VW_MINHAS_EQUIPES`, `CH_GET_CANAL_DIRETO`, `PKG_EQUIPE_CANAL` | [DDL do banco] |
+| Logs da app | `APP_LOG`, `LOG_PKG`, `PKG_LOGS` (vazio) | [DDL do banco] |
+| Carreira legada | `MOVIMENTACAO_CARREIRA` | [DDL do banco] |
+| Utilitário APEX | `HTMLDB_PLAN_TABLE` | [DDL do banco] |
 | Histórico de Carreira | `CONFIG_CARREIRA`, `TIPO_MOVIMENTACAO`, `HISTORICO_CARREIRA`, `FORMACAO_COLABORADOR`, `SOLICITACAO_CORRECAO`, `LOG_ACESSO_SALARIAL`, `LOG_AUDITORIA_CARREIRA`, 4 views, 7 triggers, `PRC_SEED_TIPO_MOVIMENTACAO`, `FN_CARREIRA_VE_SALARIO`, `PKG_HISTORICO_CARREIRA`, `PKG_HISTORICO_CARREIRA_UI` | [DDL] |
 | Organograma | `VW_ORG_COLABORADOR`, `PKG_ORGANOGRAMA` | [DDL] |
+| Perfis de acesso | `CARGO_PAPEL`, `PKG_PERFIS_ACESSO` | [DDL] |
 
 ### 1.3 Convenções de nomes
 
@@ -61,7 +68,7 @@ Rodar no SQLcl como dono do schema: `cd modulos/historico-carreira && sql <usuar
 
 Organograma: rodar `modulos/organograma/organograma.sql` à parte (depende só de `COLABORADOR`, `CARGO`, `DEPARTAMENTO`).
 
-Pré-requisito: as tabelas do núcleo + `COMUNICADO` já precisam existir (FKs do módulo apontam para elas). Como o DDL delas não está no repo, uma instalação do zero é **impossível só com o repositório**.
+Pré-requisito: as tabelas do núcleo + `COMUNICADO` já precisam existir (FKs do módulo apontam para elas). O DDL delas está em `database/corlix-hub.sql`, mas o arquivo tem blocos duplicados: para instalar do zero, use só a primeira parte (tabelas, FKs, função e packages) e descarte os `CREATE INDEX` repetidos.
 
 ---
 
@@ -84,6 +91,16 @@ erDiagram
     COLABORADOR ||--o{ EQUIPE : "id_criador"
     COLABORADOR ||--o| PRESENCA_COLABORADOR : "id_colaborador"
     COLABORADOR ||--o{ CANAL_MENSAGEM : "id_colaborador (remetente)"
+    COMUNICADO ||--o{ COMUNICADO_LEITURA : "id_comunicado"
+    COLABORADOR ||--o{ COMUNICADO_LEITURA : "id_colaborador"
+    EQUIPE ||--o{ EQUIPE_MEMBRO : "id_equipe"
+    COLABORADOR ||--o{ EQUIPE_MEMBRO : "id_colaborador"
+    EQUIPE |o--o{ CANAL : "id_equipe (nulo = canal direto)"
+    CANAL ||--o{ CANAL_PARTICIPANTE : "id_canal"
+    COLABORADOR ||--o{ CANAL_PARTICIPANTE : "id_colaborador"
+    CANAL ||--o{ CANAL_MENSAGEM : "id_canal"
+    CANAL_MENSAGEM ||--o{ CANAL_MENSAGEM_ANEXO : "id_canal_mensagem"
+    COLABORADOR ||--o{ MOVIMENTACAO_CARREIRA : "id_colaborador (legado)"
 
     EMPRESA ||--o| CONFIG_CARREIRA : "PK = id_empresa"
     EMPRESA ||--o{ TIPO_MOVIMENTACAO : "id_empresa"
@@ -157,169 +174,355 @@ erDiagram
     }
 ```
 
-FKs das tabelas do núcleo/comunicação são **inferidas** (pelas junções usadas); as do módulo de carreira são declaradas no DDL. `CANAL_MENSAGEM.ID_CANAL` aponta para uma tabela de canais não identificada (ver Lacunas). `LOG_AUDITORIA_CARREIRA` referencia só `EMPRESA` (FK); `ID_REGISTRO` é polimórfico (PK da tabela em `NM_TABELA`).
+FKs do núcleo, comunicados, equipes e chat vêm do snapshot `corlix-hub.sql`. Exceções: `CARGO.ID_DEPARTAMENTO` não tem FK, e as FKs que apontam para `COLABORADOR` a partir de comunicados, equipes, chat e carreira legada estão **desabilitadas** (§4A). As do módulo de carreira são declaradas no DDL do módulo. `LOG_AUDITORIA_CARREIRA` referencia só `EMPRESA` (FK); `ID_REGISTRO` é polimórfico (PK da tabela em `NM_TABELA`).
 
 ---
 
-## 3. Tabelas do núcleo [INFERIDO DO USO]
+## 3. Tabelas do núcleo [DDL do banco]
 
-Fontes: `00_verificar_schema.sql` (lista as colunas que o módulo de carreira exige), `07_testes.sql` (INSERTs de fábrica), formulários APEX (`dataType`, `maxLength`, `valueRequired`), LOVs, queries das páginas, `%type` nos packages.
+Fonte: `database/corlix-hub.sql`, um snapshot do DDL do schema (só estrutura, **sem dados**). Tipos, `NOT NULL`, constraints e índices abaixo são os reais. A coluna "Usado em" vem da leitura do código da app.
+
+Todas as PKs `ID_*` são `NUMBER GENERATED BY DEFAULT AS IDENTITY` (aceitam valor explícito), exceto `APP_LOG.ID` (`GENERATED ALWAYS`).
 
 ### 3.1 `EMPRESA`
 
-Tenant. PK provavelmente identity (o teste insere sem PK e usa `returning id_empresa`).
+Tenant. Sem FKs de saída. Sem unique em `CNPJ`.
 
-| Coluna | Tipo provável | Nulo? | Observado em |
+| Coluna | Tipo | Nulo? | Usado em |
 |---|---|---|---|
-| `ID_EMPRESA` | NUMBER (PK, identity/default) | não | 00, P15, P16 (primaryKey), todas as FKs |
-| `NOME` | VARCHAR2 (form max 200) | obrigatório no form | 00, P16, P15, LOV `EMPRESA.NOME`, proc. `G_NOME_EMPRESA` |
-| `NOME_FANTASIA` | VARCHAR2 (form max 255) | obrigatório no form | 00, P16, `pkg_historico_carreira_ui.render` (`coalesce(nome_fantasia, nome)`) |
-| `CNPJ` | VARCHAR2 (max 20) | obrigatório no form | P16, testes |
-| `STATUS` | BOOLEAN | obrigatório no form | P16, P15 (LOV BOOLEAN), testes (`true`) |
-| `DATA_CRIACAO` | DATE | obrigatório no form | P16, P15, testes (`sysdate`) |
-| `EMAIL_CORPORATIVO` | VARCHAR2 (max 255) | obrigatório no form | P16 |
-| `TELEFONE` | VARCHAR2 (max 12) | obrigatório no form | P16 |
-| `CEP` | VARCHAR2 (max 8) | obrigatório no form | P16 (DA "endereço por CEP") |
-| `LOGRADOURO` | VARCHAR2 (max 100) | obrigatório | P16 |
-| `NUMERO` | VARCHAR2 (max 4) | obrigatório | P16 |
-| `COMPLEMENTO` | VARCHAR2 (max 30) | opcional | P16 |
-| `BAIRRO` | VARCHAR2 (max 50) | obrigatório | P16 |
-| `CIDADE` | VARCHAR2 (max 100) | obrigatório | P16 |
-| `UF` | VARCHAR2 (max 2) | obrigatório | P16 |
-| `LOGOTIPO_EMPRESA` | BLOB | opcional | P16 |
+| `ID_EMPRESA` | NUMBER identity, PK | não | P15, P16, todas as FKs |
+| `NOME` | VARCHAR2(200) | não | P16, P15, LOV `EMPRESA.NOME`, proc. `G_NOME_EMPRESA` |
+| `CNPJ` | VARCHAR2(20) | não | P16 |
+| `DATA_CRIACAO` | DATE default `SYSDATE` | não | P16, P15 |
+| `NOME_FANTASIA` | VARCHAR2(255) | não | P16, `pkg_historico_carreira_ui.render` |
+| `EMAIL_CORPORATIVO` | VARCHAR2(255) | não | P16 |
+| `TELEFONE` | VARCHAR2(12) | não | P16 |
+| `CEP` | VARCHAR2(8) | não | P16 (DA "endereço por CEP") |
+| `LOGRADOURO` | VARCHAR2(100) | não | P16 |
+| `NUMERO` | VARCHAR2(4) | não | P16 |
+| `COMPLEMENTO` | VARCHAR2(30) | sim | P16 |
+| `BAIRRO` | VARCHAR2(50) | não | P16 |
+| `CIDADE` | VARCHAR2(100) | não | P16 |
+| `UF` | VARCHAR2(2) | não | P16 |
+| `STATUS` | BOOLEAN | não | P16, P15 |
+| `LOGOTIPO_EMPRESA` | BLOB | sim | P16 |
 
-Leitura/escrita: P15 "Empresas cadastradas" (IR sobre a tabela), P16 "Cadastro de empresas" (form DML automático), P14 (LOV), proc. de app `G_NOME_EMPRESA`, LOV `EMPRESA.NOME` (usada em P26/P27), `prc_seed_tipo_movimentacao` (loop), `06_carga_inicial`, `pkg_historico_carreira_ui.render`.
-Obs.: "Obrigatório no form" ≠ `NOT NULL` no banco; não há como confirmar.
+Atenção: `07_testes.sql` insere em `EMPRESA` só `nome, nome_fantasia, cnpj, status, data_criacao`. Contra este DDL o INSERT falha (`EMAIL_CORPORATIVO`, `TELEFONE`, `CEP`, `LOGRADOURO`, `NUMERO`, `BAIRRO`, `CIDADE` e `UF` são `NOT NULL`).
 
 ### 3.2 `DEPARTAMENTO`
 
-| Coluna | Tipo provável | Observado em |
+| Coluna | Tipo | Nulo? |
 |---|---|---|
-| `ID_DEPARTAMENTO` | NUMBER PK (identity) | 00, testes, várias junções |
-| `ID_EMPRESA` | NUMBER FK→EMPRESA | 00, P14/P17 LOV (`where id_empresa = ...`), pkg (validação de tenant) |
-| `NOME` | VARCHAR2 | 00, views, LOV `DEPARTAMENTO.NOME` |
+| `ID_DEPARTAMENTO` | NUMBER identity, PK | não |
+| `ID_EMPRESA` | NUMBER, FK `FK_DEPARTAMENTO_EMPRESA` → `EMPRESA` (ativa) | não |
+| `NOME` | VARCHAR2(150) | não |
 
-Leitura: P1 (comunicados, `nvl(d.nome,'Geral')`), P4 (chat, agrupa contatos), P14 (LOV cascata por empresa), P17 (LOV por empresa do usuário), P26/P27 (LOV), `VW_ORG_COLABORADOR`, views de carreira, packages. Escrita: nenhuma página do repo (só `07_testes`).
-Mencionado em `Etapas-organograma.md`: tabela `DEPARTAMENTO_METRICA` e coluna `ID_LIDER` de uma versão anterior ("pode mantê-las") — existência não confirmada.
+- Não há unique em `(ID_EMPRESA, NOME)`: a mesma empresa pode ter dois departamentos com o mesmo nome.
+- Não existem a coluna `ID_LIDER` nem a tabela `DEPARTAMENTO_METRICA` citadas em `Etapas-organograma.md`.
+- Referenciada por FKs ativas de `COLABORADOR`, `COMUNICADO` e `EQUIPE`. `CARGO.ID_DEPARTAMENTO` **não** tem FK (ver §3.3).
+- Leitura: P1 (comunicados, `nvl(d.nome,'Geral')`), P4 (agrupa contatos), P14 (LOV em cascata por empresa), P17 (LOV pela empresa do usuário), P26/P27 (LOV `DEPARTAMENTO.NOME`), `VW_ORG_COLABORADOR`, views e packages de carreira. Escrita: nenhuma página da app (só `07_testes.sql`).
+- **Dados atuais** (`database/dados/departamento.xlsx`, export da tabela em 06/10/2026): **6 departamentos**, todos da empresa `1`.
+
+| `ID_DEPARTAMENTO` | `ID_EMPRESA` | `NOME` |
+|---|---|---|
+| 10 | 1 | Presidência |
+| 20 | 1 | Diretor de Recursos Humanos (CHRO) |
+| 30 | 1 | Diretoria Financeira e Administrativa |
+| 40 | 1 | Diretoria Comercial e de Marketing |
+| 50 | 1 | Diretoria de Operações |
+| 60 | 1 | Diretoria de Tecnologia e Informação |
+
+  - Os IDs foram atribuídos manualmente de 10 em 10 (a identity aceita valor explícito).
+  - O nome do id 20 é um cargo ("Diretor… (CHRO)"). `modulos/perfis-acesso/02_seed_departamentos_cargos.sql` renomeia para "Diretoria de Recursos Humanos" e acerta as identities de `DEPARTAMENTO` e `CARGO` (`start with limit value`).
+  - Os nomes do Figma ("Operações", "Vendas", "Diretoria") e os do `07_testes.sql` são exemplos e não batem com estes.
+  - Para atualizar a lista: `select id_departamento, id_empresa, nome from departamento order by 1;` no banco.
 
 ### 3.3 `CARGO`
 
-| Coluna | Tipo provável | Observado em |
+| Coluna | Tipo | Nulo? |
 |---|---|---|
-| `ID_CARGO` | NUMBER PK (identity) | 00, testes |
-| `ID_EMPRESA` | NUMBER FK→EMPRESA | 00, P14 LOV, pkg |
-| `ID_DEPARTAMENTO` | NUMBER FK→DEPARTAMENTO (anulável? o pkg trata `null`) | 00, P14 LOV cascata, pkg (regra cargo∈departamento, -20014) |
-| `NOME` | VARCHAR2 | 00, views, proc. `APP_USER_CARGO` |
+| `ID_CARGO` | NUMBER identity, PK | não |
+| `ID_EMPRESA` | NUMBER, FK `FK_CARGO_EMPRESA` → `EMPRESA` (ativa) | não |
+| `NOME` | VARCHAR2(150) | não |
+| `NIVEL` | VARCHAR2(50) | sim |
+| `ID_DEPARTAMENTO` | NUMBER, **sem FK** | não |
 
-Regra implícita: o LOV de gestor em P14 considera gestor quem tem `CARGO.NOME = 'Gestor'` (hard-coded).
-Leitura: P1, P4, P14, proc. `APP_USER_CARGO`, views, packages. Escrita: nenhuma página (só testes).
+- `ID_DEPARTAMENTO` é obrigatório, mas não tem FK para `DEPARTAMENTO`: o banco aceita id inexistente ou de outra empresa. A regra cargo ∈ departamento só é garantida pelo `PKG_HISTORICO_CARREIRA` (-20014).
+- `NIVEL` não é usado em nenhuma página nem package do repo.
+- Regra implícita: o LOV de gestor da P14 considera gestor quem tem `CARGO.NOME = 'Gestor'` (hard-coded).
+- Leitura: P1, P4, P14, proc. `APP_USER_CARGO`, views, packages. Escrita: nenhuma página (só testes).
 
 ### 3.4 `COLABORADOR` (tabela central)
 
-| Coluna | Tipo provável | Nulo? | Observado em |
+| Coluna | Tipo | Nulo? | Observação |
 |---|---|---|---|
-| `ID_COLABORADOR` | NUMBER PK (identity) | não | 00, P14 (primaryKey) |
-| `ID_EMPRESA` | NUMBER FK→EMPRESA | obrigatório (form) | 00, P14, P17 (default do item) |
-| `ID_DEPARTAMENTO` | NUMBER FK→DEPARTAMENTO | obrigatório (form) | 00, P14 |
-| `ID_CARGO` | NUMBER FK→CARGO | obrigatório (form) | 00, P14 |
-| `ID_GESTOR` | NUMBER FK→COLABORADOR (auto-relacionamento; nulo = topo) | sim | 00, P14, P1, organograma |
-| `NOME_COMPLETO` | VARCHAR2 (form max 200) | obrigatório | 00, P14, LOV `COLABORADOR.NOME_COMPLETO` |
-| `PRIMEIRO_NOME` | VARCHAR2 (max 30) | opcional | P14, P1, P4, testes |
-| `ULTIMO_NOME` | VARCHAR2 (max 30) | opcional | P14, P1, P4, testes |
-| `EMAIL` | VARCHAR2 (max 200) | obrigatório (form) | P14, `VW_ORG_COLABORADOR`, testes |
-| `LOGIN_APEX` | VARCHAR2 (max 255) | opcional | 00, P14; **chave de ligação com `:APP_USER`** (sempre comparada com `upper(trim())`) |
-| `DATA_ADMISSAO` | DATE | sim | 00, P14, pkg carreira (atualiza na readmissão) |
-| `DATA_DE_NASCIMENTO` | DATE | sim | P14, P1 (aniversariantes do mês), organograma (só dia/mês) |
-| `STATUS` | BOOLEAN (`true` = ativo; nulo/false = inativo) | — | 00, P14 (switch), P4, organograma, pkg carreira (desligamento → false) |
-| `FOTO_URL` | VARCHAR2 (nome de arquivo em `#APP_FILES#...`) | sim | 00, P1, P4, procs. `APP_USER_FOTO`, organograma |
-| `IMAGEM_PERFIL` | BLOB | sim | `VW_ORG_COLABORADOR` (`tem_imagem`); servido pelo processo `DOWNLOAD_FOTO` (fora do repo) |
+| `ID_COLABORADOR` | NUMBER identity, PK | não | |
+| `ID_EMPRESA` | NUMBER, FK `FK_COLAB_EMPRESA` (ativa) | não | |
+| `ID_DEPARTAMENTO` | NUMBER, FK `FK_COLAB_DEPARTAMENTO` (ativa) | não | índice `IDX_COLAB_DEPARTAMENTO` |
+| `ID_CARGO` | NUMBER, FK `FK_COLAB_CARGO` (ativa) | não | |
+| `ID_GESTOR` | NUMBER, FK `FK_COLAB_GESTOR` → `COLABORADOR` (ativa) | sim | nulo = topo; índice `IDX_COLAB_GESTOR` |
+| `NOME_COMPLETO` | VARCHAR2(200) | não | |
+| `EMAIL` | VARCHAR2(200) | não | **unique** `UQ_COLABORADOR_EMAIL` |
+| `DATA_ADMISSAO` | DATE default `SYSDATE` | sim | |
+| `LOGIN_APEX` | VARCHAR2(255) | sim | ligação com `:APP_USER` (`upper(trim())`); **sem unique** |
+| `DATA_DE_NASCIMENTO` | DATE | sim | |
+| `STATUS` | BOOLEAN | sim | `true` = ativo; nulo/false = inativo |
+| `PRIMEIRO_NOME` | VARCHAR2(30) | sim | |
+| `ULTIMO_NOME` | VARCHAR2(30) | sim | |
+| `FOTO_URL` | VARCHAR2(500) | sim | nome de arquivo em `#APP_FILES#...` |
+| `IMAGEM_PERFIL` | BLOB | sim | servido pelo processo `DOWNLOAD_FOTO` (fora do repo) |
+| `MIME_TYPE` | VARCHAR2(255) | sim | metadados do BLOB; não usado no repo |
+| `FILE_NAME` | VARCHAR2(255) | sim | idem |
+| `UPDATED` | DATE | sim | idem |
+| `DESCRIPTION` | VARCHAR2(255) | sim | não usado no repo |
 
-Índice/unique recomendado mas não confirmado: `upper(login_apex)` — o código trata `TOO_MANY_ROWS`, sinal de que não há unique garantido.
-Inconsistência de caminho de foto: P1 usa `#APP_FILES#Fotos Colaboradores/<FOTO_URL>`, `APP_USER_FOTO` e P1 (gestor) usam `#APP_FILES#fotos/<FOTO_URL>`, organograma usa `FOTO_URL` como URL completa.
-
-Quem lê: praticamente tudo (procs. de app `APP_USER_CARGO`, `APP_USER_FOTO`, `G_NOME_EMPRESA`; P1, P4, P14, P17; LOVs; views; packages).
-Quem escreve: P14 (form DML automático, insert) + processo `APEX_UTIL.CREATE_USER` (cria a conta APEX com `P14_LOGIN`); `PKG_HISTORICO_CARREIRA.efetivar_movimentacao` / `estornar_movimentacao` (`UPDATE` de `ID_CARGO`, `ID_DEPARTAMENTO`, `ID_GESTOR`, `STATUS`, `DATA_ADMISSAO`).
+- Sem unique em `LOGIN_APEX`: o código trata `TOO_MANY_ROWS`. Recomendado: unique em `upper(login_apex)`.
+- Inconsistência de caminho de foto: P1 usa `#APP_FILES#Fotos Colaboradores/<FOTO_URL>`; `APP_USER_FOTO` e P1 (gestor) usam `#APP_FILES#fotos/<FOTO_URL>`; o organograma usa `FOTO_URL` como URL completa.
+- Quem lê: praticamente tudo (procs. de app `APP_USER_CARGO`, `APP_USER_FOTO`, `G_NOME_EMPRESA`; P1, P4, P14, P17; LOVs; views; packages).
+- Quem escreve: P14 (form DML, insert) + `APEX_UTIL.CREATE_USER` (conta APEX com `P14_LOGIN`); `PKG_HISTORICO_CARREIRA.efetivar_movimentacao` / `estornar_movimentacao` (`UPDATE` de `ID_CARGO`, `ID_DEPARTAMENTO`, `ID_GESTOR`, `STATUS`, `DATA_ADMISSAO`).
 
 ### 3.5 `COMUNICADO`
 
-| Coluna | Tipo provável | Observado em |
-|---|---|---|
-| `ID_COMUNICADO` | NUMBER PK (identity; `returning` no pkg) | 00, P17 (primaryKey), P1 |
-| `ID_EMPRESA` | NUMBER FK→EMPRESA | 00, P17 (default = empresa do usuário) |
-| `ID_DEPARTAMENTO` | NUMBER FK→DEPARTAMENTO, **anulável** (nulo = "Geral") | 00, P17, P1 |
-| `ID_AUTOR` | NUMBER FK→COLABORADOR | 00, P17 (default = colaborador do `APP_USER`) |
-| `TITULO` | VARCHAR2 — form valida max **200**; o pkg trunca em **100** (`c_max_titulo_comunicado`, "confira o tamanho real") | 00, P17, P1 |
-| `CONTEUDO` | CLOB | 00, P17, P1 (`dbms_lob.substr(...,250,1)`) |
-| `DATA_PUBLICACAO` | DATE (default do item = `SYSDATE`) | 00, P17, P1 |
-| `IMAGEM` | BLOB (capa) | P17 (upload), P1 |
-| `MIME_TYPE` | VARCHAR2 | P17 (`mimeTypeColumn`), P1 |
-| `NOME_ARQUIVO` | VARCHAR2 | P17 (`filenameColumn`), P1 |
+| Coluna | Tipo | Nulo? | Observação |
+|---|---|---|---|
+| `ID_COMUNICADO` | NUMBER identity, PK | não | |
+| `ID_EMPRESA` | NUMBER, FK `FK_COM_EMPRESA` (ativa) | não | |
+| `ID_AUTOR` | NUMBER, FK `FK_COM_AUTOR` → `COLABORADOR` (**desabilitada**) | não | |
+| `ID_DEPARTAMENTO` | NUMBER, FK `FK_COM_DEPARTAMENTO` (ativa) | sim | nulo = empresa toda ("Geral"); índice `IDX_COM_DEPARTAMENTO` |
+| `TITULO` | VARCHAR2(200) | não | o pkg de carreira trunca em 100 (`c_max_titulo_comunicado`); pode subir para 200 |
+| `CONTEUDO` | CLOB | sim | |
+| `DATA_PUBLICACAO` | DATE default `SYSDATE` | sim | |
+| `IMAGEM` | BLOB | sim | capa |
+| `MIME_TYPE` | VARCHAR2(100) | sim | |
+| `NOME_ARQUIVO` | VARCHAR2(255) | sim | |
 
-Leitura: P1 (3 mais recentes, **sem filtro de empresa**). Escrita: P17 (form DML), `PKG_HISTORICO_CARREIRA.publicar_comunicado` (privada; INSERT na efetivação). Referenciada por `HISTORICO_CARREIRA.ID_COMUNICADO`.
+Leitura: P1 (3 mais recentes, **sem filtro de empresa**), `PKG_COMUNICADO.QTD_NAO_LIDOS`. Escrita: P17 (form DML), `PKG_COMUNICADO.CRIAR_COMUNICADO`, `PKG_HISTORICO_CARREIRA.publicar_comunicado` (privada). Referenciada por `COMUNICADO_LEITURA` e `HISTORICO_CARREIRA.ID_COMUNICADO`.
+
+### 3.6 `COMUNICADO_LEITURA`
+
+Registro de "lido" por colaborador.
+
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID_COMUNICADO_LEITURA` | NUMBER identity, PK | não |
+| `ID_COMUNICADO` | NUMBER, FK → `COMUNICADO` `ON DELETE CASCADE` (ativa) | não |
+| `ID_COLABORADOR` | NUMBER, FK → `COLABORADOR` (**desabilitada**) | não |
+| `DATA_LEITURA` | TIMESTAMP default `SYSTIMESTAMP` | não |
+
+Unique `UQ_COMLEITURA (ID_COMUNICADO, ID_COLABORADOR)`; índice `IDX_COMLEITURA_COLAB`. Escrita só por `PKG_COMUNICADO.MARCAR_COMO_LIDO`. Nenhuma página da app usa a tabela ainda.
 
 ---
 
-## 4. Outras tabelas sem DDL [INFERIDO DO USO]
+## 4. Equipes, chat, presença e logs [DDL do banco]
 
-### 4.1 `EQUIPE` (P26 "Central de equipes" = classic report; P27 "Nova equipe" = form DML)
+### 4.1 `EQUIPE` (P26 "Central de equipes"; P27 "Nova equipe" = form DML)
 
-| Coluna | Tipo provável | Observado |
+| Coluna | Tipo | Nulo? |
 |---|---|---|
-| `ID_EQUIPE` | NUMBER PK | P27 primaryKey |
-| `ID_EMPRESA` | NUMBER FK→EMPRESA (obrigatório) | LOV `EMPRESA.NOME` |
-| `ID_DEPARTAMENTO` | NUMBER FK→DEPARTAMENTO (opcional) | LOV `DEPARTAMENTO.NOME` |
-| `ID_CRIADOR` | NUMBER FK→COLABORADOR (obrigatório) | LOV `COLABORADOR.NOME_COMPLETO` |
-| `NOME` | VARCHAR2(150) obrigatório | P27 |
-| `DESCRICAO` | VARCHAR2(500) | P27 |
-| `STATUS` | BOOLEAN obrigatório | P27 |
-| `DATA_CRIACAO` | DATE obrigatório | P27 |
+| `ID_EQUIPE` | NUMBER identity, PK | não |
+| `ID_EMPRESA` | NUMBER, FK `FK_EQUIPE_EMPRESA` (ativa) | não |
+| `ID_DEPARTAMENTO` | NUMBER, FK `FK_EQUIPE_DEPARTAMENTO` (ativa) | sim |
+| `ID_CRIADOR` | NUMBER, FK → `COLABORADOR` (**desabilitada**) | não |
+| `NOME` | VARCHAR2(150) | não |
+| `DESCRICAO` | VARCHAR2(500) | sim |
+| `DATA_CRIACAO` | DATE default `SYSDATE` | não |
+| `STATUS` | BOOLEAN default `TRUE` | não |
 
-Não há tabela de membros de equipe referenciada no código.
+Índices `IDX_EQUIPE_EMPRESA`, `IDX_EQUIPE_DEPARTAMENTO`. A P27 grava direto na tabela e **não** usa `PKG_EQUIPE_CANAL.CRIAR_EQUIPE`, então o criador não entra como ADMIN em `EQUIPE_MEMBRO`.
 
-### 4.2 `CANAL_MENSAGEM` (P4 Chat, região `msgs`)
+### 4.2 `EQUIPE_MEMBRO`
 
-| Coluna | Tipo provável | Uso |
+| Coluna | Tipo | Nulo? |
 |---|---|---|
-| `ID_CANAL` | NUMBER (FK para tabela de canais não identificada) | `where m.id_canal = :P4_CANAL_ID` |
-| `ID_COLABORADOR` | NUMBER FK→COLABORADOR (remetente) | join; `lado = 'out'` se `login_apex = :APP_USER` |
-| `CORPO` | VARCHAR2/CLOB | texto exibido |
-| `DATA_ENVIO` | DATE ou TIMESTAMP | ordenação, separador de dia, `hh24:mi` |
-| `EXCLUIDA` | BOOLEAN (`nvl(excluida,false) = false`) | soft delete |
+| `ID_EQUIPE_MEMBRO` | NUMBER identity, PK | não |
+| `ID_EQUIPE` | NUMBER, FK → `EQUIPE` `ON DELETE CASCADE` (ativa) | não |
+| `ID_COLABORADOR` | NUMBER, FK → `COLABORADOR` (**desabilitada**) | não |
+| `PAPEL` | VARCHAR2(10) default `'MEMBRO'`, check `IN ('ADMIN','MEMBRO')` | não |
+| `DATA_ENTRADA` | DATE default `SYSDATE` | não |
 
-Provável PK (`ID_MENSAGEM`?) não aparece. **Nenhum INSERT de mensagem existe no repo** (o envio não está implementado na app versionada).
+Unique `UQ_EQUIPE_MEMBRO (ID_EQUIPE, ID_COLABORADOR)`; índice `IDX_EQMEMBRO_COLAB`. Escrita via `PKG_EQUIPE_CANAL`. Lida pela view `VW_MINHAS_EQUIPES`.
 
-### 4.3 `PRESENCA_COLABORADOR` (P4, lista de contatos)
+### 4.3 `CANAL`
 
-| Coluna | Tipo provável | Uso |
+| Coluna | Tipo | Nulo? |
 |---|---|---|
-| `ID_COLABORADOR` | NUMBER FK→COLABORADOR (provável PK, 1:1) | `left join` |
-| `DATA_ULTIMO_PING` | TIMESTAMP | online se < 5 min e `STATUS_PRESENCA='ONLINE'`; ausente se < 30 min; senão offline |
-| `STATUS_PRESENCA` | VARCHAR2 (`'ONLINE'`, …) | `upper(p.status_presenca)` |
+| `ID_CANAL` | NUMBER identity, PK | não |
+| `ID_EQUIPE` | NUMBER, FK → `EQUIPE` `ON DELETE CASCADE` (ativa) | sim (nulo em canal direto) |
+| `NOME` | VARCHAR2(100) | não |
+| `DESCRICAO` | VARCHAR2(500) | sim |
+| `DATA_CRIACAO` | DATE default `SYSDATE` | não |
+| `STATUS` | BOOLEAN default `TRUE` | não |
+| `TIPO` | VARCHAR2(10) default `'EQUIPE'`, check `IN ('EQUIPE','DIRETO')` | não |
 
-Nenhuma escrita (ping) no repo.
+Unique `UQ_CANAL_NOME_EQUIPE (ID_EQUIPE, NOME)`. Canais diretos (1:1) têm `ID_EQUIPE` nulo e nome `DM-<menor id>-<maior id>`. A tabela não tem `ID_EMPRESA`.
 
-### 4.4 Função `CH_GET_CANAL_DIRETO(p_eu NUMBER, p_contato NUMBER) RETURN NUMBER`
+### 4.4 `CANAL_PARTICIPANTE`
 
-Chamada pela DA "Selecionar contato" > ação "Obter canal direto" (P4, `executeServerSideCode`): resolve o colaborador do `APP_USER` e devolve o ID do canal 1:1 em `P4_CANAL_ID`. Provavelmente cria o canal se não existir. **Sem código no repo.**
+Participantes de canais diretos.
 
-### 4.5 `APP_LOG` + `LOG_PKG`
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID_CANAL` | NUMBER, FK `CANAL_PART_FK1` → `CANAL` `ON DELETE CASCADE` (ativa) | não |
+| `ID_COLABORADOR` | NUMBER, FK `CANAL_PART_FK2` → `COLABORADOR` (**desabilitada**) | não |
 
-`APP_LOG` (lida pela P7 "Monitor de logs", aba "Log da aplicação"; texto da região: "Erros capturados automaticamente e mensagens gravadas pelo código com `log_pkg`" · "Histórico de 30 dias"):
+PK composta `CANAL_PART_PK (ID_CANAL, ID_COLABORADOR)`; índice `CANAL_PART_COLAB_IX (ID_COLABORADOR, ID_CANAL)`.
 
-| Coluna | Tipo provável |
+### 4.5 `CANAL_MENSAGEM` (P4 Chat, região `msgs`)
+
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID_CANAL_MENSAGEM` | NUMBER identity, PK | não |
+| `ID_CANAL` | NUMBER, FK `FK_CANALMSG_CANAL` → `CANAL` `ON DELETE CASCADE` (ativa) | não |
+| `ID_COLABORADOR` | NUMBER, FK `FK_CANALMSG_COLAB` → `COLABORADOR` (**desabilitada**) | não |
+| `CORPO` | VARCHAR2(4000) | não |
+| `DATA_ENVIO` | TIMESTAMP default `SYSTIMESTAMP` | não |
+| `EDITADA` | BOOLEAN default `FALSE` | não |
+| `DATA_EDICAO` | TIMESTAMP | sim |
+| `EXCLUIDA` | BOOLEAN default `FALSE` | não (soft delete) |
+
+Índice `IDX_CANALMSG_CANAL_DATA (ID_CANAL, DATA_ENVIO)`. Envio via `PKG_EQUIPE_CANAL.ENVIAR_MENSAGEM_CANAL`, que só aceita membros da equipe dona do canal. **Em canal direto (`ID_EQUIPE` nulo) a validação sempre falha (-20010)**, então essa função não serve para o chat 1:1 da P4. A P4 ainda não envia mensagens.
+
+### 4.6 `CANAL_MENSAGEM_ANEXO`
+
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID_ANEXO` | NUMBER identity, PK | não |
+| `ID_CANAL_MENSAGEM` | NUMBER, FK → `CANAL_MENSAGEM` `ON DELETE CASCADE` (ativa) | não |
+| `NOME_ARQUIVO` | VARCHAR2(400) | não |
+| `MIME_TYPE` | VARCHAR2(200) | sim |
+| `TAMANHO` | NUMBER | sim |
+| `CONTEUDO` | BLOB | não |
+| `DATA_UPLOAD` | TIMESTAMP default `SYSTIMESTAMP` | não |
+
+Contada em `VW_CANAL_FEED.QTD_ANEXOS`. Nenhuma página da app grava anexos.
+
+### 4.7 `PRESENCA_COLABORADOR` (P4, lista de contatos)
+
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID_COLABORADOR` | NUMBER, PK e FK `FK_PRESENCA_COLAB` → `COLABORADOR` (**desabilitada**) | não |
+| `STATUS_PRESENCA` | VARCHAR2(10) default `'OFFLINE'`, check `IN ('ONLINE','AUSENTE','OFFLINE')` | não |
+| `DATA_ULTIMO_PING` | TIMESTAMP default `SYSTIMESTAMP` | não |
+
+Comentário da tabela: "Atualizada via heartbeat do navegador (Dynamic Action Interval). Um job periódico marca OFFLINE quem não dá ping há mais de N minutos." Escrita: `PKG_EQUIPE_CANAL.ATUALIZAR_PRESENCA` e `ATUALIZAR_OFFLINE` (default 3 min). O heartbeat (DA) e o job `DBMS_SCHEDULER` não estão no repo nem no snapshot. Regra de exibição na P4: online se ping < 5 min e `ONLINE`; ausente se < 30 min; senão offline.
+
+### 4.8 `MOVIMENTACAO_CARREIRA` (legado)
+
+Tabela antiga de carreira, anterior ao módulo `HISTORICO_CARREIRA`. É a entidade `Movimentacao_Carreira` citada no README raiz.
+
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID_MOVIMENTACAO` | NUMBER identity, PK | não |
+| `ID_COLABORADOR` | NUMBER, FK → `COLABORADOR` (**desabilitada**) | não |
+| `ID_CARGO_ANTERIOR` | NUMBER, FK → `CARGO` (ativa) | sim |
+| `ID_CARGO_NOVO` | NUMBER, FK → `CARGO` (ativa) | não |
+| `TIPO` | VARCHAR2(30), check `IN ('PROMOCAO','TRANSFERENCIA','MUDANCA_SALARIAL','ADMISSAO')` | não |
+| `DATA_MOVIMENTACAO` | DATE default `SYSDATE` | sim |
+
+Nenhuma página, view ou package do repo usa a tabela. Ela vira legado quando o módulo de Histórico de Carreira for instalado (ver §5).
+
+### 4.9 `APP_LOG` + `LOG_PKG`
+
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID` | NUMBER `GENERATED ALWAYS AS IDENTITY`, PK | não |
+| `LOG_TS` | TIMESTAMP WITH TIME ZONE default `systimestamp` | não |
+| `NIVEL` | VARCHAR2(10) (`ERRO` / `AVISO` / `INFO`) | não |
+| `APP_ID` | NUMBER | sim |
+| `PAGE_ID` | NUMBER | sim |
+| `APEX_USER` | VARCHAR2(255) | sim |
+| `SESSION_ID` | NUMBER | sim |
+| `ORIGEM` | VARCHAR2(255) | sim |
+| `MENSAGEM` | VARCHAR2(4000) | sim |
+| `DETALHE` | CLOB | sim |
+
+Índice `APP_LOG_TS_IX (SYS_EXTRACT_UTC(LOG_TS) DESC)`. Lida pela P7 "Monitor de logs".
+
+`LOG_PKG` (spec + body no snapshot):
+- `gravar(p_nivel, p_msg, p_origem, p_detalhe)`: `pragma autonomous_transaction`, grava mesmo se a transação principal der rollback. Se falhar, só escreve em `apex_debug` e nunca derruba a app.
+- `erro`, `aviso`, `info (p_msg, p_origem)`: atalhos de `gravar`.
+- `apex_error_handler(p_error)`: *Error Handling Function* da app (`application.apx`). Traduz o tipo do componente (Dynamic Action, Processo, Validação…) para `ORIGEM` e grava em `DETALHE` o `ORA-` da mensagem, o backtrace sem linhas `APEX_`/`SYS.` e o comando. Devolve `apex_error.init_error_result(p_error)` sem alterar a mensagem.
+  - **Não delega** os códigos -20001..-20099 a `pkg_historico_carreira.fn_tratar_erro`, ao contrário do que o guia do módulo recomenda.
+- O job de retenção de 30 dias citado na P7 não aparece no snapshot.
+
+`PKG_LOGS`: package com spec vazia (sem body). Não é usado; pode ser removido.
+
+### 4.10 `HTMLDB_PLAN_TABLE`
+
+Tabela utilitária do APEX/SQL Workshop (plano de execução). Não é do produto; ignore.
+
+---
+
+## 4A. Packages, função e views do núcleo [DDL do banco]
+
+### `PKG_COMUNICADO`
+
+| Rotina | Faz |
 |---|---|
-| `ID` | NUMBER (PK) |
-| `LOG_TS` | TIMESTAMP WITH TIME ZONE (a query faz `log_ts at time zone 'America/Sao_Paulo'`) |
-| `NIVEL` | VARCHAR2: `ERRO` / `AVISO` / `INFO` / (outro → DEBUG) |
-| `APP_ID` | NUMBER |
-| `PAGE_ID` | NUMBER |
-| `APEX_USER` | VARCHAR2 |
-| `SESSION_ID` | NUMBER |
-| `ORIGEM` | VARCHAR2 |
-| `MENSAGEM` | VARCHAR2 |
-| `DETALHE` | CLOB |
+| `CRIAR_COMUNICADO(p_id_empresa, p_id_autor, p_titulo, p_conteudo, p_id_departamento default null, p_imagem, p_mime_type, p_nome_arquivo) return number` | INSERT em `COMUNICADO` (`DATA_PUBLICACAO = SYSDATE`), **commit**; devolve o id. Departamento nulo = empresa toda. |
+| `MARCAR_COMO_LIDO(p_id_comunicado, p_id_colaborador)` | `MERGE` em `COMUNICADO_LEITURA` (idempotente), **commit**. |
+| `QTD_NAO_LIDOS(p_id_colaborador) return number` | Conta comunicados da empresa do colaborador (gerais ou do departamento dele) sem leitura registrada. |
 
-`LOG_PKG.APEX_ERROR_HANDLER` é a *Error Handling Function* da aplicação (`application.apx` → `errorHandling.errorHandlingFunctionName`). Assinatura obrigatória do APEX: `function apex_error_handler(p_error in apex_error.t_error) return apex_error.t_error_result`. Grava em `APP_LOG`. A retenção de 30 dias sugere um job de limpeza (não versionado). **Nem `LOG_PKG` nem `APP_LOG` têm código no repo.** O guia do módulo de carreira recomenda que o handler delegue os códigos -20001..-20099 a `pkg_historico_carreira.fn_tratar_erro` (`Etapas-historico-carreira.md` §1.3).
+Nenhuma página da app chama o package ainda: a P17 usa form DML direto.
+
+### `PKG_EQUIPE_CANAL`
+
+| Rotina | Faz | Erros |
+|---|---|---|
+| `CRIAR_EQUIPE(p_id_empresa, p_id_criador, p_nome, p_descricao, p_id_departamento) return number` | INSERT em `EQUIPE` + criador como `ADMIN` em `EQUIPE_MEMBRO`; commit | |
+| `ADICIONAR_MEMBRO(p_id_equipe, p_id_colaborador, p_papel default 'MEMBRO')` | `MERGE` (ignora quem já é membro); commit | |
+| `REMOVER_MEMBRO(p_id_equipe_membro)` | DELETE; bloqueia a remoção do último ADMIN; commit | -20011, -20012 |
+| `CRIAR_CANAL(p_id_equipe, p_nome, p_descricao) return number` | INSERT em `CANAL` (tipo `EQUIPE`); commit | |
+| `ENVIAR_MENSAGEM_CANAL(p_id_canal, p_id_colaborador, p_corpo) return number` | valida membro da equipe, INSERT em `CANAL_MENSAGEM`, marca presença `ONLINE`; commit | -20010 |
+| `ATUALIZAR_PRESENCA(p_id_colaborador, p_status default 'ONLINE')` | `MERGE` em `PRESENCA_COLABORADOR`; commit | |
+| `ATUALIZAR_OFFLINE(p_minutos_limite default 3)` | marca `OFFLINE` quem está sem ping; commit (para job) | |
+
+- Todas as rotinas fazem `COMMIT` próprio: chamá-las dentro de outra transação confirma o que veio antes.
+- **Conflito de códigos de erro:** -20010, -20011 e -20012 já significam outra coisa em `PKG_HISTORICO_CARREIRA` (retroativo, estorno e permissão/sessão sem empresa). Se o error handler passar a delegar -20001..-20099 para `fn_tratar_erro`, as mensagens deste package serão traduzidas errado. Ao mexer, mova os códigos para uma faixa própria.
+- Nenhuma rotina valida `ID_EMPRESA` (tenant) dos ids recebidos.
+
+### Função `CH_GET_CANAL_DIRETO(p_colab_a NUMBER, p_colab_b NUMBER) RETURN NUMBER`
+
+Chamada pela DA "Selecionar contato" > "Obter canal direto" (P4). Procura um canal `TIPO = 'DIRETO'` com os dois colaboradores em `CANAL_PARTICIPANTE`. Se não houver, cria `CANAL` (`DM-<menor>-<maior>`, `ID_EQUIPE` nulo) + 2 participantes e devolve o id. **Não faz commit**: depende do commit do processo APEX. Não checa se os dois são da mesma empresa.
+
+### Views
+
+| View | Colunas | Regra |
+|---|---|---|
+| `VW_CANAL_FEED` | `ID_CANAL_MENSAGEM`, `ID_CANAL`, `NOME_CANAL`, `ID_EQUIPE`, `ID_COLABORADOR`, `NOME_AUTOR`, `AUTOR_LOGIN`, `CORPO`, `DATA_ENVIO`, `EDITADA`, `EXCLUIDA`, `STATUS_AUTOR` (presença, default `OFFLINE`), `QTD_ANEXOS` | só mensagens com `EXCLUIDA = FALSE` |
+| `VW_MINHAS_EQUIPES` | `ID_COLABORADOR`, `LOGIN_APEX`, `ID_EQUIPE`, `NOME_EQUIPE`, `ID_EMPRESA`, `PAPEL`, `ID_CANAL`, `NOME_CANAL` | equipes ativas do colaborador + canais ativos (left join) |
+
+Nenhuma das duas é usada pelas páginas versionadas (a P4 consulta `CANAL_MENSAGEM` direto).
+
+### Sobre o arquivo `database/corlix-hub.sql`
+
+- É um snapshot de DDL (provavelmente export do SQL Developer/SQLcl), **não** um instalador. Ele repete `CREATE INDEX` e `COMMENT` e recria índices `SYS_C...` de PK. Rodado de ponta a ponta, falha com ORA-00955/ORA-01408 depois do primeiro bloco.
+- Não contém dados (`INSERT`), triggers, jobs, sequences nem os objetos dos módulos (`HISTORICO_CARREIRA`, `VW_ORG_COLABORADOR`, `PKG_ORGANOGRAMA`…). No momento do snapshot, os módulos não estavam instalados nesse banco.
+- **FKs desabilitadas:** todas as que apontam para `COLABORADOR` vindas de tabelas de comunicação/equipe/chat/carreira legada (`FK_COM_AUTOR`, `FK_COMLEITURA_COLAB`, `FK_EQUIPE_CRIADOR`, `FK_EQMEMBRO_COLAB`, `CANAL_PART_FK2`, `FK_CANALMSG_COLAB`, `FK_PRESENCA_COLAB`, `FK_MOV_COLABORADOR`). O banco aceita ids de colaborador inexistentes nessas colunas. Provável origem: uma recarga de `COLABORADOR` (o histórico do SQLcl mostra `DELETE FROM COLABORADOR` seguido de reimportação). Reative com `alter table ... enable validate constraint ...` depois de limpar os órfãos.
+
+---
+
+## 4B. Perfis de acesso [DDL] (`modulos/perfis-acesso/`)
+
+### `CARGO_PAPEL`
+
+| Coluna | Tipo | Nulo? |
+|---|---|---|
+| `ID_CARGO` | NUMBER, FK `FK_CARGO_PAPEL_CARGO` → `CARGO` `ON DELETE CASCADE` | não |
+| `CD_PAPEL` | VARCHAR2(100): Static ID do papel ACL no APEX (`gestor`, `diretoria`, `admin-rh`, `publicador-de-conteúdo`…) | não |
+| `DT_CRIACAO` | TIMESTAMP WITH TIME ZONE default `systimestamp` | não |
+| `USR_CRIACAO` | VARCHAR2(255) default usuário APEX/sessão | não |
+
+PK `(ID_CARGO, CD_PAPEL)`; índice `IDX_CARGO_PAPEL_PAPEL (CD_PAPEL)`. O papel `colaborador` não é gravado: o package dá a todos. A matriz cargo × papel da empresa 1 está em `02_seed_departamentos_cargos.sql` (30 cargos em 6 departamentos; cargos antigos chamados "Gestor" recebem `gestor`).
+
+### `PKG_PERFIS_ACESSO` (`authid definer`)
+
+| Rotina | Faz |
+|---|---|
+| `papeis_do_cargo(p_id_cargo) return apex_t_varchar2` | `colaborador` + `CD_PAPEL` do cargo |
+| `atribuir_papeis(p_login, p_id_cargo, p_application_id default APP_ID)` | Para cada papel: confere se existe em `APEX_APPL_ACL_ROLES` (-20102) e chama `apex_acl.add_user_role` se o usuário ainda não tem (`apex_acl.has_user_role`). Login vazio → -20101. Só adiciona: não remove papéis. Precisa de sessão APEX. |
+
+Usado pela P14 (processo "Atribuir papéis do cargo"). A LOV `P14_GESTOR` lista colaboradores da empresa cujo cargo tem `gestor` em `CARGO_PAPEL`.
 
 ---
 
@@ -528,8 +731,8 @@ Não há triggers em `COLABORADOR` (decisão: admissão automática é chamada p
 |---|---|---|
 | `PRC_SEED_TIPO_MOVIMENTACAO` (02) | `(p_id_empresa in number)` | `MERGE ... WHEN NOT MATCHED THEN INSERT` dos 11 tipos padrão para a empresa. Não sobrescreve personalizações. Sem commit. Chamada pelo script 02 (todas as empresas + commit), por `06_carga_inicial` e por `registrar_admissao_automatica` (empresa sem `ADMISSAO`). |
 | `FN_CARREIRA_VE_SALARIO` (03) | `return varchar2` | `'N'` fora de sessão APEX (`APEX$SESSION.APP_SESSION` nulo); dentro, `'S'` se `apex_authorization.is_authorized('ADMIN_RH')`; qualquer exceção (ex.: esquema de autorização inexistente) → `'N'`. |
-| `CH_GET_CANAL_DIRETO` | `(eu number, contato number) return number` | [INFERIDO; sem código] ver §4.4. |
-| `LOG_PKG.APEX_ERROR_HANDLER` | `(p_error apex_error.t_error) return apex_error.t_error_result` | [INFERIDO; sem código] ver §4.5. |
+| `CH_GET_CANAL_DIRETO` | `(p_colab_a number, p_colab_b number) return number` | Devolve ou cria o canal direto entre dois colaboradores. Ver §4A. |
+| `LOG_PKG.APEX_ERROR_HANDLER` | `(p_error apex_error.t_error) return apex_error.t_error_result` | Error handler da app; grava em `APP_LOG`. Ver §4.9. |
 
 ---
 
@@ -665,7 +868,7 @@ Não existe seed de `EMPRESA`/`COLABORADOR` etc. no repo (o `seed_corlixhub.sql`
 ## 14. Testes (`07_testes.sql`)
 
 - Rodar **fora do APEX** (SQLcl, SQL Developer ou SQL Workshop) como dono do schema, após instalar 01–06: `set serveroutput on` + `@07_testes.sql` (já é chamado ao fim do `instalar.sql`).
-- Cria 2 empresas fictícias (A e B), departamentos, cargos e 5 colaboradores cada (INSERTs diretos em `EMPRESA(nome, nome_fantasia, cnpj, status, data_criacao)`, `DEPARTAMENTO(id_empresa, nome)`, `CARGO(id_empresa, id_departamento, nome)`, `COLABORADOR(id_empresa, nome_completo, primeiro_nome, ultimo_nome, email, login_apex, data_admissao, data_de_nascimento, id_departamento, id_cargo, id_gestor, status)`). Premissa: PKs dessas tabelas são identity/default; se houver outra coluna NOT NULL, adicionar valor fictício.
+- Cria 2 empresas fictícias (A e B), departamentos, cargos e 5 colaboradores cada (INSERTs diretos em `EMPRESA(nome, nome_fantasia, cnpj, status, data_criacao)`, `DEPARTAMENTO(id_empresa, nome)`, `CARGO(id_empresa, id_departamento, nome)`, `COLABORADOR(id_empresa, nome_completo, primeiro_nome, ultimo_nome, email, login_apex, data_admissao, data_de_nascimento, id_departamento, id_cargo, id_gestor, status)`). PKs são identity, como o teste supõe. **O INSERT de `EMPRESA` falha contra o schema real**: `EMAIL_CORPORATIVO`, `TELEFONE`, `CEP`, `LOGRADOURO`, `NUMERO`, `BAIRRO`, `CIDADE` e `UF` são `NOT NULL` (§3.1). Ajuste `nova_empresa` com valores fictícios antes de rodar.
 - Tudo em uma transação; termina em **ROLLBACK** (nada fica no banco). Em erro inesperado imprime backtrace, zera contexto e faz rollback + raise.
 - Saída: linhas `[OK]`/`[FALHA]` e `=== Resumo: N OK | Falhas: 0 ===`.
 - Cobertura (T01–T42): admissão automática; rascunho vs efetivação; comunicado sem salário; cada código de erro -20003..-20019; isolamento entre empresas (T09–T12, T25–T28, T42); UPDATE/DELETE direto bloqueado (T13–T14); estorno em ordem e restauração (T17–T20); desligamento/readmissão (T21–T24); salário mascarado fora de ADMIN_RH (T29); `fn_tempo_no_cargo`/`fn_tempo_de_casa` (T31); trilha de auditoria (T32); mudança de gestão (T33–T35); solicitações (T36–T39); render da UI sem salário (T40–T41).
@@ -690,7 +893,7 @@ Processos de aplicação (On Load, todos `executeCode`): `APP_USER_CARGO` (CARGO
 | Página | Lê | Escreve |
 |---|---|---|
 | P1 Home | COLABORADOR, CARGO, COMUNICADO, DEPARTAMENTO | — |
-| P4 Chat | COLABORADOR, DEPARTAMENTO, CARGO, PRESENCA_COLABORADOR, CANAL_MENSAGEM, `ch_get_canal_direto` | (indireto via função) |
+| P4 Chat | COLABORADOR, DEPARTAMENTO, CARGO, PRESENCA_COLABORADOR, CANAL_MENSAGEM, `ch_get_canal_direto` | CANAL, CANAL_PARTICIPANTE (via função) |
 | P7 Monitor de logs | APEX_DEBUG_MESSAGES, APEX_WORKSPACE_ACTIVITY_LOG, APP_LOG | — |
 | P14 Cadastro de usuários | EMPRESA, DEPARTAMENTO, CARGO, COLABORADOR | COLABORADOR (insert) + conta APEX |
 | P15 Empresas cadastradas | EMPRESA | — |
@@ -704,11 +907,11 @@ Processos de aplicação (On Load, todos `executeCode`): `APP_USER_CARGO` (CARGO
 
 ## 16. Lacunas (referenciado sem DDL/código no repo)
 
-1. **DDL do núcleo:** `EMPRESA`, `DEPARTAMENTO`, `CARGO`, `COLABORADOR`, `COMUNICADO` (pré-requisitos do módulo de carreira). Arquivos do README `database/ddl/schema_corlixhub.sql` e `database/seed/seed_corlixhub.sql` não existem.
-2. **Outras tabelas:** `EQUIPE`, `CANAL_MENSAGEM`, tabela de canais (alvo de `ID_CANAL`; nome desconhecido, provável `CANAL`), `PRESENCA_COLABORADOR`, `APP_LOG`; possivelmente `DEPARTAMENTO_METRICA` (legado do organograma).
-3. **Código PL/SQL:** `LOG_PKG` (inclui `APEX_ERROR_HANDLER`), `CH_GET_CANAL_DIRETO`, processo `DOWNLOAD_FOTO`, job de retenção de 30 dias do `APP_LOG`, `fn_organograma_json` (legado, removível).
+1. **Dados:** só `DEPARTAMENTO` tem export no repo (`database/dados/departamento.xlsx`, §3.2). Empresas, cargos e colaboradores não têm; `corlix-hub.sql` é só estrutura e `f100.sql` é só a app.
+2. **Objetos fora do snapshot:** triggers (se houver), job de presença (`ATUALIZAR_OFFLINE`), job de retenção de 30 dias do `APP_LOG`, processo `DOWNLOAD_FOTO`, `fn_organograma_json` (legado, removível). `DEPARTAMENTO_METRICA` e `DEPARTAMENTO.ID_LIDER` não existem no snapshot.
+3. **Inconsistências do schema real:** `CARGO.ID_DEPARTAMENTO` sem FK; 8 FKs para `COLABORADOR` desabilitadas; sem unique em `COLABORADOR.LOGIN_APEX` nem em `DEPARTAMENTO (ID_EMPRESA, NOME)`; `CANAL` sem `ID_EMPRESA`; códigos -20010..-20012 repetidos entre `PKG_EQUIPE_CANAL` e `PKG_HISTORICO_CARREIRA`; `PKG_LOGS` vazio.
 4. **Configuração APEX esperada pelo módulo de carreira e ausente na app versionada:** item `G_ID_EMPRESA` + processo `SET_G_ID_EMPRESA`; papel/esquema `ADMIN_RH`, `GESTOR`, `COLABORADOR`; LOVs `LOV_TIPO_MOVIMENTACAO`, `LOV_DEPARTAMENTO_EMPRESA`, `LOV_COLABORADOR_ATIVO`, `LOV_TIPO_FORMACAO`; páginas 18–23; P13 e P3 ainda vazias; P14 **não** chama `registrar_admissao_automatica` (a especificação do package diz que chama). Sem `G_ID_EMPRESA`, qualquer chamada do package em sessão APEX falha com -20012.
-5. **Divergências a conferir no banco real:** tamanho de `COMUNICADO.TITULO` (form 200 vs pkg 100); obrigatoriedade real (NOT NULL) das colunas do núcleo; existência de unique em `COLABORADOR.LOGIN_APEX`; se `CARGO.ID_DEPARTAMENTO` é anulável; tipo de `CANAL_MENSAGEM.DATA_ENVIO` e `CORPO`.
+5. **Divergências resolvidas pelo snapshot:** `COMUNICADO.TITULO` é VARCHAR2(200) (o pkg de carreira trunca em 100 sem necessidade); NOT NULL reais estão nas tabelas das §3–4; `CARGO.ID_DEPARTAMENTO` é NOT NULL; `CANAL_MENSAGEM.DATA_ENVIO` é TIMESTAMP e `CORPO` é VARCHAR2(4000). `07_testes.sql` precisa de ajuste em `EMPRESA` (§14).
 6. **Ambiente:** `docker-compose.yml` e `.env.example` estão deletados no working tree (git status), embora o README ainda os descreva.
 
-Para fechar as lacunas com acesso ao banco: rodar a última consulta de `00_verificar_schema.sql` e `select dbms_metadata.get_ddl('TABLE', table_name) from user_tables;` e versionar o resultado em `database/ddl/`.
+Para manter o snapshot atualizado, exporte de novo o DDL (`select dbms_metadata.get_ddl(object_type, object_name) from user_objects ...`) e substitua `database/corlix-hub.sql`. Para os triggers e jobs, inclua `TRIGGER` e `select * from user_scheduler_jobs`.

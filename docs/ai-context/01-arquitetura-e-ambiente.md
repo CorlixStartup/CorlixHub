@@ -94,13 +94,13 @@ services:
 Variáveis: `ORACLE_PWD`, `APEX_PWD`, `DB_HOST_PORT=1522`, `ORDS_HOST_PORT=8081`.
 URLs locais: Builder `http://localhost:8081/ords`; app `http://localhost:8081/ords/r/wksp_corlixhub/corlixhub` (não confirmado).
 
-⚠️ **Consequências se essa deleção for commitada:** o job `validate` do CI roda `docker compose config` e vai falhar; `scripts/setup.*` também passam a não funcionar. Pergunte ao time antes de assumir qual é o ambiente atual (possivelmente migraram para uma instância APEX hospedada/OCI ou outra forma de rodar).
+⚠️ **Consequências se essa deleção for commitada:** o job `validate` do CI passou a ignorar a validação quando o arquivo não existe; `scripts/setup.*` também passam a não funcionar. Pergunte ao time antes de assumir qual é o ambiente atual (possivelmente migraram para uma instância APEX hospedada/OCI ou outra forma de rodar).
 
 ### 5.2 Pastas que nunca vão para o Git
 `apex/` (distribuição Oracle ~1,1 GB), `META-INF/`, `oracle_oradata/` (datafiles), `ords_config/` (contém wallet e chave TLS), `.env*` (exceto `.env.example`), `*.log`, `.DS_Store`. O CI bloqueia `apex/`, `oracle_oradata/`, `ords_config/`, `META-INF/`.
 
 ### 5.3 Instalando o banco de uma feature
-Os objetos de banco "core" (`COLABORADOR`, `CARGO`, `DEPARTAMENTO`, `EMPRESA`, `COMUNICADO`…) **não têm DDL no repositório** (o README cita `database/ddl/` e `database/seed/`, que não existem). Os módulos trazem seus próprios scripts:
+O DDL dos objetos de banco "core" (`COLABORADOR`, `CARGO`, `DEPARTAMENTO`, `EMPRESA`, `COMUNICADO`, equipes, chat, logs…) está em `database/corlix-hub.sql`, um snapshot só de estrutura, sem dados (o README cita `database/ddl/` e `database/seed/`, que não existem). Os módulos trazem seus próprios scripts:
 - Histórico de carreira: `modulos/historico-carreira/instalar.sql` (roda `00_…` a `07_…` em ordem).
 - Organograma: `modulos/organograma/organograma.sql`.
 Detalhes em [`05-banco-de-dados.md`](./05-banco-de-dados.md) e [`06-modulos.md`](./06-modulos.md).
@@ -115,7 +115,7 @@ Detalhes em [`05-banco-de-dados.md`](./05-banco-de-dados.md) e [`06-modulos.md`]
 | "Não há testes" | Existe `modulos/historico-carreira/07_testes.sql` |
 | `docs/` não existe | Agora existe `docs/ai-context/` |
 | Repo sem commits/remote | Remote `https://github.com/CorlixStartup/CorlixHub.git`; branches remotas `DEV` (HEAD), `UAT`, `PROD`, `main`, `feature/cadastro-empresas`; PR #1 mergeado |
-| Seis entidades: Empresa, Colaborador, Cargo, Departamento, Movimentacao_Carreira, Comunicado | `Movimentacao_Carreira` virou `HISTORICO_CARREIRA` + `TIPO_MOVIMENTACAO`; há também equipes, chat, logs, presença etc. |
+| Seis entidades: Empresa, Colaborador, Cargo, Departamento, Movimentacao_Carreira, Comunicado | `MOVIMENTACAO_CARREIRA` existe no banco como tabela legada, sem uso; o módulo novo a substitui por `HISTORICO_CARREIRA` + `TIPO_MOVIMENTACAO`; há também equipes, chat, logs, presença etc. |
 
 Quando o README e o código discordarem, **confie no código** e sinalize a divergência.
 
@@ -130,7 +130,7 @@ Quando o README e o código discordarem, **confie no código** e sinalize a dive
 
 ## 8. CI (`.github/workflows/ci.yml`)
 Roda em PR/push para `DEV`, `UAT`, `PROD`:
-1. `validate` — `docker compose config` (precisa do `docker-compose.yml`).
+1. `validate` — `docker compose config` só se existir `docker-compose.yml`; sem o arquivo, emite um aviso e passa.
 2. `secret-scan` — gitleaks 8.28.0 (CLI OSS) sobre todo o histórico.
 3. `forbidden-paths` — falha se `apex/`, `oracle_oradata/`, `ords_config/` ou `META-INF/` existirem.
 Não há deploy automatizado nem testes automatizados no CI.

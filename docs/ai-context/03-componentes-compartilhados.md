@@ -23,7 +23,7 @@
 | CSS globais | `#APP_FILES#corlix-tema#MIN#.css`, depois `#APP_FILES#custom#MIN#.css` | Ordem importa (tema → ajustes). **Mudança não commitada** (§13). |
 | Segurança | `runtimeApiUsage: modifyWorkspaceRepository` (`p_runtime_api_usage=>'W'`) | Permite APIs de runtime alterarem o repositório do workspace (ex.: `apex_util.create_user` na tela de cadastro de usuários). |
 | Session State Protection | habilitado (`p_page_protection_enabled_y_n=>'Y'`), `checksumSalt` fixo, `p_bookmark_checksum_function=>'SH512'` | Todas as páginas normais usam `pageAccessProtection: argumentsMustHaveChecksum` → **links com parâmetros precisam ser gerados por APEX** (`apex_page.get_url`, link builder, `f?p` com `:...` não funciona sem checksum). App items têm `p_protection_level=>'I'` (não podem ser setados pelo browser). |
-| Error handler | `errorHandlingFunctionName: log_pkg.apex_error_handler` | **O package `log_pkg` NÃO existe no repositório** (ver §11). |
+| Error handler | `errorHandlingFunctionName: log_pkg.apex_error_handler` | Fonte em `database/corlix-hub.sql` (ver §11). |
 | Runtime | `allowFeedback: true` | Feedback habilitado. |
 | Substituição | `APP_NAME` = `CorlixHub` | Use `&APP_NAME.` em textos. Em `supporting-objects/substitutions.apx` aparece `substitution APP_NAME ( )` vazio (artefato do export; valor real está em application.apx). |
 | Outros (f100.sql) | `p_flow_version=>'Release 1.0'`, `p_flow_status=>'AVAILABLE_W_EDIT_LINK'`, `p_browser_cache=>'N'`, `p_rejoin_existing_sessions=>'N'`, `p_exact_substitutions_only=>'Y'`, `p_file_storage=>'DB'`, `p_is_pwa=>'Y'` (não instalável, sem push), `p_page_view_logging=>'YES'`, `p_theme_style_by_user_pref=>false` | |
@@ -50,8 +50,11 @@ A Page 0 (`pages/p00000-global-page.apx`) injeta duas regiões Static Content (t
 | `diretoria` | `Diretoria` |
 | `equipe-do-corlix-hub` | `Equipe do Corlix Hub` |
 | `publicador-de-conteúdo` | `Publicador de Conteúdo` (static id com acento) |
+| `colaborador` | `Colaborador` (todo usuário) |
+| `gestor` | `Gestor` |
+| `admin-rh` | `Admin RH` (exigido pelo módulo de carreira via authorization `ADMIN_RH`) |
 
-Atribuição de usuários a roles é feita em *Shared Components > Application Access Control* (ou `apex_acl.add_user_role`); não está versionada no repo.
+Atribuição: na P14, o processo "Atribuir papéis do cargo" chama `pkg_perfis_acesso.atribuir_papeis`, que dá `colaborador` a todos e os papéis do cargo listados em `CARGO_PAPEL` (módulo `modulos/perfis-acesso/`, ver `06`). `equipe-do-corlix-hub` e ajustes pontuais continuam manuais em *Shared Components > Application Access Control*.
 
 ### 2.2 Authorizations (`authorizations.apx`) — todas `isInRoleOrGroup`, avaliadas `perSession`
 | Static ID (referência `@...`) | Nome exibido | Role exigida | Mensagem de erro |
@@ -59,6 +62,7 @@ Atribuição de usuários a roles é feita em *Shared Components > Application A
 | `administration-rights` | `Equipe Corlix Hub` | `Equipe do Corlix Hub` | "Acesso restrito à equipe do Corlix Hub." |
 | `publicador-de-conteudo` | `Publicador de Conteudo` | `Publicador de Conteúdo` | "Acesso restrito a publicadores de conteúdo." |
 | `somente-diretoria` | `Somente Diretoria` | `Diretoria` | "Acesso restrito à Diretoria." |
+| `admin-rh` | `ADMIN_RH` (nome exigido por `pkg_historico_carreira` / `fn_carreira_ve_salario`) | `Admin RH` | "Acesso restrito ao RH." |
 
 `perSession` = resultado em cache na sessão: após mudar a role de alguém, o usuário precisa **novo login**.
 
@@ -71,7 +75,7 @@ Atribuição de usuários a roles é feita em *Shared Components > Application A
 | Coluna `CAB_DEPT` do relatório de contatos do Chat (p4) | `@administration-rights` (cabeçalho de departamento só aparece para a equipe Corlix — provavelmente acidental) |
 
 **Pegadinha de segurança:** nenhuma página tem `authorizationScheme` em nível de página. As authorizations só **escondem itens do menu**; qualquer usuário autenticado acessa p14, p15, p16, p17 e **p7 (Monitor de Logs, sem nenhuma authorization)** digitando a URL. Para proteger de verdade, colocar `security { authorizationScheme: @... }` no `page`.
-O módulo `modulos/historico-carreira/` prevê authorizations novas (ex.: `ADMIN_RH`) e o app item `G_ID_EMPRESA`, que **ainda não existem** nos shared components.
+O módulo `modulos/historico-carreira/` prevê também as authorizations `GESTOR` e `COLABORADOR` (PL/SQL) e o app item `G_ID_EMPRESA`, que **ainda não existem** nos shared components. `ADMIN_RH` já existe (e ainda não protege nenhuma página).
 
 ---
 
@@ -267,7 +271,7 @@ Como referenciar:
 ---
 
 ## 10. Objetos de banco pressupostos (não criados pela app)
-Nenhum DDL acompanha a app (sem supporting objects). O `README.md` cita `database/ddl/schema_corlixhub.sql` e `database/seed/seed_corlixhub.sql`, mas **esses arquivos não existem** (`database/` só tem `f100.sql`). Apenas `modulos/historico-carreira/01_ddl_historico_carreira.sql` e `modulos/organograma/organograma.sql` (package `pkg_organograma`) têm DDL/PLSQL. Objetos que os shared components exigem:
+Nenhum DDL acompanha a app (sem supporting objects). O `README.md` cita `database/ddl/schema_corlixhub.sql` e `database/seed/seed_corlixhub.sql`, mas **esses arquivos não existem**. O DDL do schema base está em `database/corlix-hub.sql` (snapshot sem dados); os módulos têm o seu em `modulos/historico-carreira/01_ddl_historico_carreira.sql` e `modulos/organograma/organograma.sql`. Objetos que os shared components exigem:
 
 | Objeto | Colunas usadas | Por quem |
 |---|---|---|
@@ -284,13 +288,12 @@ Nenhum DDL acompanha a app (sem supporting objects). O `README.md` cita `databas
 ---
 
 ## 11. `log_pkg.apex_error_handler`
-Grep em todo o repositório: `log_pkg` aparece só em `application.apx`, `f100.sql` (linha 115 `p_error_handling_function` e texto da p7), `pages/p00007-monitor-logs.apx` (texto "mensagens gravadas pelo código com `log_pkg`") e `modulos/historico-carreira/Etapas-historico-carreira.md` (sugere alterar o handler). **Não há `create package log_pkg` em lugar nenhum.** Se o package não existir no schema, o APEX não consegue chamar o handler e cai no tratamento padrão/erro interno ao exibir qualquer erro. Ao recriar, ele deve gravar em `APP_LOG` e devolver `apex_error.t_error_result` (via `apex_error.init_error_result`).
-
+Fonte em `database/corlix-hub.sql` (spec + body). `gravar` usa `pragma autonomous_transaction` e grava em `APP_LOG`; `erro`/`aviso`/`info` são atalhos. `apex_error_handler` registra origem (tipo do componente), `ORA-`, backtrace sem linhas `APEX_`/`SYS.` e o comando, e devolve `apex_error.init_error_result(p_error)` sem alterar a mensagem. **Não delega** -20001..-20099 a `pkg_historico_carreira.fn_tratar_erro`, como o guia do módulo recomenda. Detalhes em `05` §4.9.
 ---
 
 ## 12. Pegadinhas e inconsistências (resumo)
 1. **Ordem dos CSS diverge** entre APEXlang (`corlix-tema` → `custom`) e `database/f100.sql` atual (`custom` → `corlix-tema`, linhas ~140–142). O correto, pelo comentário do próprio `corlix-tema.css`, é tema primeiro.
-2. `log_pkg` e todo o DDL base ausentes do repo; README aponta para arquivos inexistentes.
+2. README aponta para `database/ddl/` e `database/seed/`, que não existem; o DDL base está em `database/corlix-hub.sql`.
 3. Authorizations só no menu; páginas restritas (7, 14, 15, 16, 17) acessíveis por URL. Monitor de Logs sem authorization alguma.
 4. Caminho de foto `#APP_FILES#fotos/` (app process e card Gestor) vs pasta real `Fotos Colaboradores/`.
 5. 4 app processes sem condição em Before Header (custo por página, rodam no login). `APP_USER_NOME` órfão. `G_NOME_USUARIO` usa usuários do workspace, os demais usam `COLABORADOR.login_apex`.

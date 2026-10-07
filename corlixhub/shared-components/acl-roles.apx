@@ -10,3 +10,15 @@ role publicador-de-conteúdo (
     name: Publicador de Conteúdo
 )
 
+role colaborador (
+    name: Colaborador
+)
+
+role gestor (
+    name: Gestor
+)
+
+role admin-rh (
+    name: Admin RH
+)
+

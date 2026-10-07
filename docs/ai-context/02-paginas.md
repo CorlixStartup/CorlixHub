@@ -195,7 +195,7 @@ Placeholder idêntico à 2. O módulo real está sendo desenvolvido fora do app 
   1. seq 20 `executeJsCode`: `apex.item("P4_CONTATO_ID").setValue(this.triggeringElement.dataset.id)`; troca a classe `is-active`.
   2. seq 30 `executeServerSideCode` (submit P4_CONTATO_ID, retorna P4_CANAL_ID): busca `id_colaborador` do usuário (`upper(login_apex) = upper(:APP_USER)`) e `:P4_CANAL_ID := ch_get_canal_direto(l_eu, :P4_CONTATO_ID);`.
   3. seq 40 `refresh` da região `msgs`.
-- **Banco**: tabelas COLABORADOR, DEPARTAMENTO, CARGO, PRESENCA_COLABORADOR, CANAL_MENSAGEM; função `CH_GET_CANAL_DIRETO(p_eu, p_contato)` (deve criar/retornar canal direto). **Nenhuma dessas definições (função, PRESENCA_COLABORADOR, CANAL_MENSAGEM) existe em SQL versionado no repo** — só referências.
+- **Banco**: tabelas COLABORADOR, DEPARTAMENTO, CARGO, PRESENCA_COLABORADOR, CANAL_MENSAGEM; função `CH_GET_CANAL_DIRETO(p_colab_a, p_colab_b)` (devolve ou cria o canal direto em `CANAL`/`CANAL_PARTICIPANTE`). DDL em `database/corlix-hub.sql`; ver `05` §4–4A.
 - **Navegação**: nenhuma (tudo AJAX).
 - **Pegadinhas**:
   - **Bug provável principal**: a região `msgs` tem condição de servidor `P4_CANAL_ID is not null`; na carga inicial o item é nulo, então a região **não é renderizada** e o `refresh` da DA não tem o que atualizar → mensagens nunca aparecem sem recarregar a página. Solução típica: remover a condição e usar "Page Items to Submit = P4_CANAL_ID" na região (e retornar sem linhas quando nulo).
@@ -221,7 +221,7 @@ Placeholder: só breadcrumb `navegação-estrutural`. Template `@corlix-standard
   2. `apex_workspace_activity_log` "Erros de página (APEX)" (seq 20): view `apex_workspace_activity_log where error_message is not null`, data convertida de UTC para São Paulo; colunas app, pagina, nome_pagina, usuario, erro, tipo_componente, componente.
   3. `apex_debug_messages` "Debug detalhado (APEX)" (seq 30): view `apex_debug_messages`, nível 1/2/4 → ERRO/AVISO/INFO, senão DEBUG, badge igual; mensagens de "no data" em PT.
 - **Itens/botões/processos/DAs**: nenhum. CSS das classes `log-descricao`, `log-tag`, `log-detalhe` vem do tema global.
-- **Banco**: tabela `APP_LOG` + package `LOG_PKG` (não versionados neste repo além do f100.sql/scripts externos — verificar), views APEX `APEX_WORKSPACE_ACTIVITY_LOG`, `APEX_DEBUG_MESSAGES`.
+- **Banco**: tabela `APP_LOG` + package `LOG_PKG` (DDL em `database/corlix-hub.sql`; ver `05` §4.9), views APEX `APEX_WORKSPACE_ACTIVITY_LOG`, `APEX_DEBUG_MESSAGES`.
 - **Pegadinhas**: **sem autorização** na página e no menu → qualquer usuário logado vê logs/debug (dados sensíveis). As views APEX não são filtradas por `application_id` (mostram o workspace inteiro). Colunas DATA_HORA declaradas `dataType: DATE` mas a SQL retorna TIMESTAMP WITH TIME ZONE (máscara `DD/MM/YYYY HH24:MI:SS`). Mensagens "no data" só traduzidas no IR de debug. Também é destino do link rápido "Suporte TI" da Home.
 
 ### Página 8 — Notificações (`p00008-notificações.apx`)
@@ -255,20 +255,19 @@ Placeholder (só `breadcrumb`). Alias com acento `HISTÓRICO-DE-CARREIRA`. Módu
   | P14_EMPRESA | selectOne | ID_EMPRESA | dados | sim | `SELECT NOME d, ID_EMPRESA r FROM EMPRESA ORDER BY NOME` |
   | P14_DEPARTAMENTO | popupLov, cascata de P14_EMPRESA | ID_DEPARTAMENTO | dados | sim | `DEPARTAMENTO WHERE ID_EMPRESA = :P14_EMPRESA` |
   | P14_CARGO | popupLov, cascata de EMPRESA+DEPARTAMENTO | ID_CARGO | dados | sim | `CARGO WHERE ID_DEPARTAMENTO = :P14_DEPARTAMENTO AND ID_EMPRESA = :P14_EMPRESA` |
-  | P14_GESTOR | popupLov | ID_GESTOR | dados | não | `COLABORADOR c JOIN CARGO cg ... WHERE cg.NOME = 'Gestor'` (todas as empresas) |
+  | P14_GESTOR | popupLov, cascata de P14_EMPRESA | ID_GESTOR | dados | não | colaboradores da empresa escolhida cujo cargo tem o papel `gestor` em `CARGO_PAPEL` |
   | P14_STATUS | switch, boolean (sessão) | STATUS | status-do-registro | não | |
 - **Botões**: `salvar-usuario` (SALVAR_USUARIO, "Salvar Usuario", hot, slot create, `databaseAction: insert`, confirmação warning "Confirmar Cadastro..."); `cancelar` (CANCELAR, slot delete, redireciona para a própria página 14).
 - **DA** `new` ("Desabilitar campos caso a empresa não tenha sido selecionada"): change em P14_EMPRESA, condição cliente `itemIsNotNull P14_EMPRESA` → verdadeiro: `enable` DEPARTAMENTO/CARGO/GESTOR (seq 20); falso: `disable` (seq 30).
 - **Validação** `validar-confirmação-de-senha`: `RETURN :P14_SENHA = :P14_CONFIRMAR_SENHA;` (alwaysExecute), erro no item P14_CONFIRMAR_SENHA.
-- **Processos**: `inicializar-o-form-cadastros` (formInitialization, beforeHeader); `salvar-dados-colaborador` (formAutoRowProcessing, afterSubmit seq 10, msg "Colaborador cadastrado com sucesso!"); `criar-usuario-apex` (executeCode, afterSubmit seq 20): `APEX_UTIL.CREATE_USER(p_user_name=>:P14_LOGIN, p_email_address=>:P14_EMAIL, p_web_password=>:P14_SENHA, p_first_name=>:P14_PRIMEIRO_NOME, p_last_name=>:P14_ULTIMO_NOME, p_change_password_on_first_use=>'N')`, `WHEN OTHERS` → `raise_application_error(-20000, SQLERRM||backtrace)` (mesma mensagem de sucesso duplicada).
+- **Processos**: `inicializar-o-form-cadastros` (formInitialization, beforeHeader); `salvar-dados-colaborador` (formAutoRowProcessing, afterSubmit seq 10, msg "Colaborador cadastrado com sucesso!"); `criar-usuario-apex` (executeCode, afterSubmit seq 20): `APEX_UTIL.CREATE_USER(p_user_name=>:P14_LOGIN, p_email_address=>:P14_EMAIL, p_web_password=>:P14_SENHA, p_first_name=>:P14_PRIMEIRO_NOME, p_last_name=>:P14_ULTIMO_NOME, p_change_password_on_first_use=>'N')`, `WHEN OTHERS` → `raise_application_error(-20000, SQLERRM||backtrace)` (mesma mensagem de sucesso duplicada); `atribuir-papeis-do-cargo` (executeCode, afterSubmit seq 30, condição `P14_LOGIN` não nulo): `PKG_PERFIS_ACESSO.ATRIBUIR_PAPEIS(:P14_LOGIN, :P14_CARGO, :APP_ID)`.
 - **Branch**: "Limpar formulário após carregamento" (point processing) → página 14 com `clearCache: 14`, `action: clearRegions`.
-- **Banco**: COLABORADOR (insert), EMPRESA, DEPARTAMENTO, CARGO; API `APEX_UTIL.CREATE_USER` (usuário do workspace — por isso `G_NOME_USUARIO` lê `apex_workspace_apex_users`).
+- **Banco**: COLABORADOR (insert), EMPRESA, DEPARTAMENTO, CARGO, CARGO_PAPEL; `PKG_PERFIS_ACESSO`; APIs `APEX_UTIL.CREATE_USER` e `APEX_ACL` (usuário do workspace — por isso `G_NOME_USUARIO` lê `apex_workspace_apex_users`).
 - **Pegadinhas**:
   - Página sem autorização; só a entrada de menu exige `somente-diretoria`.
   - Senha/confirmação/login não são obrigatórios, mas `CREATE_USER` precisa deles; com ambos nulos a validação retorna NULL (`NULL = NULL`) — APEX trata como falha com mensagem enganosa.
-  - Grupos/roles (Diretoria, Publicador, Equipe) não são atribuídos ao criar o usuário (`p_group_ids` não usado).
+  - Os papéis vêm do cargo (`CARGO_PAPEL`). Se um papel de `CARGO_PAPEL` não existir na app, o cadastro inteiro falha com -20102. Trocar o cargo depois não ajusta os papéis.
   - O DA de habilitar/desabilitar depende do comportamento padrão "fire on initialization"; itens desabilitados no cliente não são enviados no submit (se o usuário limpar a empresa).
-  - LOV de gestor depende do nome literal de cargo `'Gestor'` e não filtra por empresa.
   - Form só faz insert (não há fluxo de edição; sem link para cá com ID).
   - Mudança não commitada: CARGO, DEPARTAMENTO, EMAIL, EMPRESA e NOME_COMPLETO passaram de `@/optional-floating` para `@/required-floating`; header trocou estilo inline por classes `cx-titulo`/`cx-descricao`.
 
@@ -412,7 +411,7 @@ Lista "emitir-comunicado" (wizard): 17 -> 18 -> 19   (18 e 19 NÃO EXISTEM)
 | APEX_UTIL.CREATE_USER, APEX_AUTHENTICATION.* | APIs APEX | 14, 9999 |
 
 Colunas relevantes inferidas: COLABORADOR(ID_COLABORADOR, NOME_COMPLETO, PRIMEIRO_NOME, ULTIMO_NOME, EMAIL, LOGIN_APEX, DATA_ADMISSAO, DATA_DE_NASCIMENTO, FOTO_URL, ID_EMPRESA, ID_DEPARTAMENTO, ID_CARGO, ID_GESTOR, STATUS boolean); CARGO(ID_CARGO, NOME, ID_DEPARTAMENTO, ID_EMPRESA); DEPARTAMENTO(ID_DEPARTAMENTO, NOME, ID_EMPRESA); EMPRESA(ID_EMPRESA, NOME, NOME_FANTASIA, CNPJ, DATA_CRIACAO, EMAIL_CORPORATIVO, TELEFONE, CEP, LOGRADOURO, NUMERO, COMPLEMENTO, BAIRRO, CIDADE, UF, STATUS boolean, LOGOTIPO_EMPRESA blob); COMUNICADO(ID_COMUNICADO, TITULO, CONTEUDO clob, DATA_PUBLICACAO, IMAGEM blob, MIME_TYPE, NOME_ARQUIVO, ID_DEPARTAMENTO, ID_AUTOR, ID_EMPRESA); EQUIPE(ID_EQUIPE, ID_EMPRESA, ID_DEPARTAMENTO, ID_CRIADOR, NOME, DESCRICAO, DATA_CRIACAO, STATUS boolean); PRESENCA_COLABORADOR(ID_COLABORADOR, DATA_ULTIMO_PING, STATUS_PRESENCA); CANAL_MENSAGEM(ID_CANAL, ID_COLABORADOR, CORPO, DATA_ENVIO, EXCLUIDA boolean); APP_LOG(ID, LOG_TS tstz, NIVEL, APP_ID, PAGE_ID, APEX_USER, SESSION_ID, ORIGEM, MENSAGEM, DETALHE clob).
-Nenhum DDL dessas tabelas, nem `CH_GET_CANAL_DIRETO`/`LOG_PKG`, está versionado como `.sql` separado no repo (só `database/f100.sql`, que é o export do app, e os módulos novos em `modulos/`).
+O DDL dessas tabelas, de `CH_GET_CANAL_DIRETO` e de `LOG_PKG` está em `database/corlix-hub.sql` (snapshot sem dados); detalhes em `05`.
 
 ---
 

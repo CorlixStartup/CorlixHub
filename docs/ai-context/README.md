@@ -9,7 +9,7 @@
 - **Stack:** Oracle APEX 26.1 (Universal Theme, visual Redwood Light) sobre Oracle Database 23ai e ORDS 25.4. Toda a lógica está em SQL/PL/SQL e nas definições declarativas do APEX. Não há Node/Java/Python.
 - **App:** ID `100`, alias `CORLIXHUB`, workspace/schema `WKSP_CORLIXHUB`, autenticação por contas APEX, idioma da UI pt-BR (idioma primário técnico `en`).
 - **Fonte da app:** `corlixhub/` em formato **APEXlang** (`.apx`). `database/f100.sql` é o mesmo app num export SQL de 12 MB: use só para consultar, nunca edite.
-- **Banco:** só o módulo de histórico de carreira tem DDL no repo (`modulos/historico-carreira/`). As tabelas base (`COLABORADOR`, `CARGO`, `DEPARTAMENTO`, `EMPRESA`, `COMUNICADO`, `EQUIPE`…) **não têm DDL versionado**; o schema delas foi inferido do uso.
+- **Banco:** o DDL das tabelas base (`COLABORADOR`, `CARGO`, `DEPARTAMENTO`, `EMPRESA`, `COMUNICADO`, `EQUIPE`, chat, logs…) está em `database/corlix-hub.sql`. É um snapshot só de estrutura, **sem dados**, e não serve como instalador. O módulo de histórico de carreira tem DDL próprio em `modulos/historico-carreira/`. Dados exportados ficam em `database/dados/` (hoje só `departamento.xlsx`: 6 departamentos da empresa 1).
 - **Em andamento:** redesign visual (tokens `--cx-*` em `corlix-tema.css`), módulos de Organograma e Histórico de carreira (prontos em `modulos/`, ainda **não integrados** às páginas 3 e 13) e ~28 telas-alvo em `figma/`.
 
 ## Documentos
@@ -59,5 +59,5 @@
 3. Toda query de negócio deve filtrar por `id_empresa`, e toda página administrativa precisa de `authorizationScheme` na própria página.
 4. Gere links com checksum (`apex_page.get_url`).
 5. Ao alterar um `.css`, altere também o `.min.css` e registre arquivos novos em `static-files.apx`.
-6. Se o README raiz divergir do código, confie no código. O que não estiver confirmado, pergunte ao time (ex.: o ambiente atual, já que `docker-compose.yml` foi apagado, e o fonte de `log_pkg`).
+6. Se o README raiz divergir do código, confie no código. O que não estiver confirmado, pergunte ao time (ex.: o ambiente atual, já que `docker-compose.yml` foi apagado, e os dados reais do banco).
 7. Ao mudar páginas, schema, tema ou módulos, **atualize o documento correspondente nesta pasta**.

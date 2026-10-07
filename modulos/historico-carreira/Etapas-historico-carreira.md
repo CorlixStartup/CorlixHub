@@ -49,7 +49,7 @@ O package recusa qualquer operação em sessão APEX sem `G_ID_EMPRESA`. Toda qu
 
 ### 1.2 Papel e esquemas de autorização
 
-1. **Application Access Control > Roles > Create**: Name `Admin RH`, Static ID `ADMIN_RH`. Atribua o papel aos usuários do RH em *Users and Roles*.
+1. O papel `Admin RH` (Static ID `admin-rh`) e o esquema `ADMIN_RH` já existem na app (módulo `modulos/perfis-acesso/`). Os usuários do RH recebem o papel automaticamente ao serem cadastrados na P14. Crie aqui só `GESTOR` e `COLABORADOR`.
 2. **Authorization Schemes > Create** (os nomes precisam ser exatamente estes, porque o package e a view consultam `ADMIN_RH` pelo nome):
 
 | Nome | Tipo | Configuração |

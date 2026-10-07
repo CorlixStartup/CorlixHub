@@ -20,12 +20,12 @@
 
 | Lacuna | Impacto |
 |---|---|
-| DDL das tabelas base (`COLABORADOR`, `CARGO`, `DEPARTAMENTO`, `EMPRESA`, `COMUNICADO`, `EQUIPE`, `PRESENCA_COLABORADOR`, `CANAL_MENSAGEM`, `APP_LOG`…) | Não é possível recriar o banco só com o repositório. O schema foi inferido do uso (ver `05`). |
-| `log_pkg` (error handler da app: `log_pkg.apex_error_handler`) | Está referenciado em `application.apx`, mas o fonte não está no repositório. |
+| Dados do banco (empresas, cargos, colaboradores) | Só `DEPARTAMENTO` tem export (`database/dados/departamento.xlsx`). `database/corlix-hub.sql` é só o DDL (snapshot com blocos duplicados, não roda de ponta a ponta) e `f100.sql` é só a app. Para contagens e listas, consulte o banco (ver `05` §3.2). |
+| Schema real com furos | `CARGO.ID_DEPARTAMENTO` sem FK; 8 FKs para `COLABORADOR` desabilitadas; códigos -20010..-20012 repetidos entre `PKG_EQUIPE_CANAL` e `PKG_HISTORICO_CARREIRA`; `07_testes.sql` falha no INSERT de `EMPRESA` (ver `05` §3–4A). |
 | Função `ch_get_canal_direto` (Chat) | Usada na p4, sem fonte. |
-| `docker-compose.yml` e `.env.example` | Deletados no working tree. O CI (`docker compose config`) e `scripts/setup.*` dependem deles. |
+| `docker-compose.yml` e `.env.example` | Deletados no working tree. `scripts/setup.*` dependem deles. O CI ignora a validação do compose quando o arquivo não existe. |
 | Supporting objects | Estão vazios: o export da app não instala nada do schema. |
-| Itens e roles exigidos pelos módulos (`G_ID_EMPRESA`, `ID_COLABORADOR`, `ADMIN_RH`, `GESTOR`, `COLABORADOR`, processo `DOWNLOAD_FOTO`, páginas 18–23) | Os módulos de organograma e de histórico de carreira ainda não estão integrados ao app. |
+| Itens e authorizations exigidos pelos módulos (`G_ID_EMPRESA`, `ID_COLABORADOR`, authorizations PL/SQL `GESTOR` e `COLABORADOR`, processo `DOWNLOAD_FOTO`, páginas 18–23) | Os módulos de organograma e de histórico de carreira ainda não estão integrados ao app. |
 
 ## 3. Pegadinhas por área
 

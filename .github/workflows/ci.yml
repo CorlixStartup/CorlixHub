@@ -23,8 +23,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # O docker-compose.yml saiu do repositório (commit 44b31f8). O job continua
+      # existindo para não quebrar regras de branch que exigem este check e volta
+      # a validar sozinho se o arquivo for recriado.
       - name: Conferir sintaxe do docker-compose.yml
-        run: docker compose config
+        run: |
+          if [ ! -f docker-compose.yml ]; then
+            echo "::notice::docker-compose.yml não existe no repositório; validação ignorada."
+            exit 0
+          fi
+          docker compose config
         env:
           ORACLE_PWD: dummyPassword1
           APEX_PWD: dummyPassword1

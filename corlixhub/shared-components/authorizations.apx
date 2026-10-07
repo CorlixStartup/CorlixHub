@@ -40,3 +40,17 @@ authorization somente-diretoria (
     }
 )
 
+authorization admin-rh (
+    name: ADMIN_RH
+    type: isInRoleOrGroup
+    settings {
+        names: Admin RH
+    }
+    error {
+        errorMessage: Acesso restrito ao RH.
+    }
+    advanced {
+        evaluationType: perSession
+    }
+)
+

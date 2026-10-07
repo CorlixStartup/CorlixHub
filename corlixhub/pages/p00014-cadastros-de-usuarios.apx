@@ -374,11 +374,19 @@ page 14 (
                 SELECT c.NOME_COMPLETO d,
                        c.ID_COLABORADOR r
                 FROM COLABORADOR c
-                JOIN CARGO cg
-                  ON cg.ID_CARGO = c.ID_CARGO
-                WHERE cg.NOME = 'Gestor'
+                WHERE c.ID_EMPRESA = :P14_EMPRESA
+                  AND EXISTS (
+                        SELECT 1
+                        FROM CARGO_PAPEL cp
+                        WHERE cp.ID_CARGO = c.ID_CARGO
+                          AND cp.CD_PAPEL = 'gestor'
+                      )
                 ORDER BY c.NOME_COMPLETO;
                 ```
+        }
+        cascadingLov {
+            parentItems: P14_EMPRESA
+            itemsToSubmit: P14_EMPRESA
         }
         layout {
             sequence: 90
@@ -725,6 +733,31 @@ page 14 (
         }
         advanced {
             executionMappingIdentifier: 9205761285147840
+        }
+    )
+
+    process atribuir-papeis-do-cargo (
+        name: Atribuir papéis do cargo
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                BEGIN
+                    PKG_PERFIS_ACESSO.ATRIBUIR_PAPEIS(
+                        p_login          => :P14_LOGIN,
+                        p_id_cargo       => :P14_CARGO,
+                        p_application_id => :APP_ID
+                    );
+                END;
+                ```
+        }
+        execution {
+            sequence: 30
+            point: afterSubmit
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P14_LOGIN
         }
     )
 
