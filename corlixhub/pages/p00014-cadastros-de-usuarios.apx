@@ -700,6 +700,79 @@ page 14 (
         }
     )
 
+    validation validar-data-de-admissão (
+        name: Validar data de admissão
+        execution {
+            sequence: 30
+        }
+        validation {
+            plsqlExpression:
+                ```plsql
+                BEGIN
+                    RETURN TO_DATE(:P14_DATA_ADMISSAO, 'YYYY-MM-DD')
+                           <= TRUNC(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE));
+                END;
+                ```
+        }
+        error {
+            errorMessage: A data de admissão não pode ser futura.
+            associatedItem: @P14_DATA_ADMISSAO
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P14_DATA_ADMISSAO
+        }
+    )
+
+    validation validar-idade-mínima (
+        name: Validar idade mínima
+        execution {
+            sequence: 20
+        }
+        validation {
+            plsqlExpression:
+                ```plsql
+                DECLARE
+                    l_hoje DATE := TRUNC(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE));
+                BEGIN
+                    RETURN TO_DATE(:P14_DATA_NASCIMENTO, 'YYYY-MM-DD') <= ADD_MONTHS(l_hoje, -16 * 12);
+                END;
+                ```
+        }
+        error {
+            errorMessage: O colaborador precisa ter pelo menos 16 anos.
+            associatedItem: @P14_DATA_NASCIMENTO
+        }
+        serverSideCondition {
+            type: itemIsNotNull
+            item: P14_DATA_NASCIMENTO
+        }
+    )
+
+    validation validar-idade-na-admissão (
+        name: Validar idade na admissão
+        execution {
+            sequence: 40
+        }
+        validation {
+            plsqlExpression:
+                ```plsql
+                BEGIN
+                    RETURN TO_DATE(:P14_DATA_ADMISSAO, 'YYYY-MM-DD')
+                           >= ADD_MONTHS(TO_DATE(:P14_DATA_NASCIMENTO, 'YYYY-MM-DD'), 16 * 12);
+                END;
+                ```
+        }
+        error {
+            errorMessage: Na data de admissão o colaborador precisa ter pelo menos 16 anos.
+            associatedItem: @P14_DATA_ADMISSAO
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P14_DATA_NASCIMENTO IS NOT NULL AND :P14_DATA_ADMISSAO IS NOT NULL
+        }
+    )
+
     process atribuir-papéis-do-cargo (
         name: Atribuir papéis do cargo
         type: executeCode
@@ -757,7 +830,6 @@ page 14 (
         }
         execution {
             sequence: 20
-            point: afterSubmit
         }
         successMessage {
             successMessage: Colaborador cadastrado com sucesso!
@@ -786,7 +858,6 @@ page 14 (
         formRegion: @novo
         execution {
             sequence: 10
-            point: afterSubmit
         }
         successMessage {
             successMessage: Colaborador cadastrado com sucesso!

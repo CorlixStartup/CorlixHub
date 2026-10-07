@@ -33,13 +33,13 @@ prompt APPLICATION 100 - Corlix Hub
 -- Application Export:
 --   Application:     100
 --   Name:            Corlix Hub
---   Date and Time:   03:19 Wednesday October 7, 2026
+--   Date and Time:   03:39 Wednesday October 7, 2026
 --   Exported By:     SARAHSILVA
 --   Flashback:       0
 --   Export Type:     Application Export
 --     Pages:                     19
 --       Items:                   54
---       Validations:              1
+--       Validations:              4
 --       Processes:               16
 --       Regions:                 48
 --       Buttons:                 17
@@ -116,12 +116,12 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'CorlixHub'
 ,p_created_on=>wwv_flow_imp.dz('20260707173547Z')
-,p_last_updated_on=>wwv_flow_imp.dz('20261007031326Z')
+,p_last_updated_on=>wwv_flow_imp.dz('20261007033612Z')
 ,p_created_by=>'SARAHSILVA'
 ,p_last_updated_by=>'SARAHSILVA'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>2461318012553
-,p_version_scn=>'47046970477530'
+,p_version_scn=>'47046971860097'
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -59693,7 +59693,7 @@ wwv_flow_imp_page.create_page(
 ,p_protection_level=>'C'
 ,p_page_component_map=>'02'
 ,p_created_on=>wwv_flow_imp.dz('20260708220127Z')
-,p_last_updated_on=>wwv_flow_imp.dz('20261007031326Z')
+,p_last_updated_on=>wwv_flow_imp.dz('20261007033612Z')
 ,p_created_by=>'SARAHSILVA'
 ,p_last_updated_by=>'SARAHSILVA'
 );
@@ -59956,7 +59956,7 @@ wwv_flow_imp_page.create_page_item(
   'min_date', 'NONE',
   'show_time', 'N')).to_clob
 ,p_created_on=>wwv_flow_imp.dz('20260722231237Z')
-,p_updated_on=>wwv_flow_imp.dz('20260802174258Z')
+,p_updated_on=>wwv_flow_imp.dz('20261007033339Z')
 ,p_created_by=>'SARAHSILVA'
 ,p_updated_by=>'SARAHSILVA'
 );
@@ -60284,6 +60284,74 @@ wwv_flow_imp_page.create_page_validation(
 ,p_created_by=>'SARAHSILVA'
 ,p_updated_by=>'SARAHSILVA'
 );
+wwv_flow_imp_page.create_page_validation(
+ p_id=>wwv_flow_imp.id(29919635356540302)
+,p_validation_name=>unistr('Validar data de admiss\00E3o')
+,p_static_id=>unistr('validar-data-de-admiss\00E3o')
+,p_validation_sequence=>30
+,p_validation=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'BEGIN',
+'    RETURN TO_DATE(:P14_DATA_ADMISSAO, ''YYYY-MM-DD'')',
+'           <= TRUNC(CAST(SYSTIMESTAMP AT TIME ZONE ''America/Sao_Paulo'' AS DATE));',
+'END;'))
+,p_validation2=>'PLSQL'
+,p_validation_type=>'EXPRESSION'
+,p_error_message=>unistr('A data de admiss\00E3o n\00E3o pode ser futura.')
+,p_validation_condition=>'P14_DATA_ADMISSAO'
+,p_validation_condition_type=>'ITEM_IS_NOT_NULL'
+,p_associated_item=>wwv_flow_imp.id(9202741556147810)
+,p_error_display_location=>'INLINE_WITH_FIELD_AND_NOTIFICATION'
+,p_created_on=>wwv_flow_imp.dz('20261007033527Z')
+,p_updated_on=>wwv_flow_imp.dz('20261007033527Z')
+,p_created_by=>'SARAHSILVA'
+,p_updated_by=>'SARAHSILVA'
+);
+wwv_flow_imp_page.create_page_validation(
+ p_id=>wwv_flow_imp.id(29919511824540301)
+,p_validation_name=>unistr('Validar idade m\00EDnima')
+,p_static_id=>unistr('validar-idade-m\00EDnima')
+,p_validation_sequence=>20
+,p_validation=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'DECLARE',
+'    l_hoje DATE := TRUNC(CAST(SYSTIMESTAMP AT TIME ZONE ''America/Sao_Paulo'' AS DATE));',
+'BEGIN',
+'    RETURN TO_DATE(:P14_DATA_NASCIMENTO, ''YYYY-MM-DD'') <= ADD_MONTHS(l_hoje, -16 * 12);',
+'END;'))
+,p_validation2=>'PLSQL'
+,p_validation_type=>'EXPRESSION'
+,p_error_message=>'O colaborador precisa ter pelo menos 16 anos.'
+,p_validation_condition=>'P14_DATA_NASCIMENTO'
+,p_validation_condition_type=>'ITEM_IS_NOT_NULL'
+,p_associated_item=>wwv_flow_imp.id(9205295637147835)
+,p_error_display_location=>'INLINE_WITH_FIELD_AND_NOTIFICATION'
+,p_created_on=>wwv_flow_imp.dz('20261007033426Z')
+,p_updated_on=>wwv_flow_imp.dz('20261007033426Z')
+,p_created_by=>'SARAHSILVA'
+,p_updated_by=>'SARAHSILVA'
+);
+wwv_flow_imp_page.create_page_validation(
+ p_id=>wwv_flow_imp.id(29919708601540303)
+,p_validation_name=>unistr('Validar idade na admiss\00E3o')
+,p_static_id=>unistr('validar-idade-na-admiss\00E3o')
+,p_validation_sequence=>40
+,p_validation=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'BEGIN',
+'    RETURN TO_DATE(:P14_DATA_ADMISSAO, ''YYYY-MM-DD'')',
+'           >= ADD_MONTHS(TO_DATE(:P14_DATA_NASCIMENTO, ''YYYY-MM-DD''), 16 * 12);',
+'END;'))
+,p_validation2=>'PLSQL'
+,p_validation_type=>'EXPRESSION'
+,p_error_message=>unistr('Na data de admiss\00E3o o colaborador precisa ter pelo menos 16 anos.')
+,p_validation_condition=>':P14_DATA_NASCIMENTO IS NOT NULL AND :P14_DATA_ADMISSAO IS NOT NULL'
+,p_validation_condition2=>'PLSQL'
+,p_validation_condition_type=>'EXPRESSION'
+,p_associated_item=>wwv_flow_imp.id(9202741556147810)
+,p_error_display_location=>'INLINE_WITH_FIELD_AND_NOTIFICATION'
+,p_created_on=>wwv_flow_imp.dz('20261007033612Z')
+,p_updated_on=>wwv_flow_imp.dz('20261007033612Z')
+,p_created_by=>'SARAHSILVA'
+,p_updated_by=>'SARAHSILVA'
+);
 wwv_flow_imp_page.create_page_da_event(
  p_id=>wwv_flow_imp.id(9741106205646706)
 ,p_name=>unistr('Desabilitar campos caso a empresa n\00E3o tenha sido selecionada')
@@ -60362,7 +60430,7 @@ wwv_flow_imp_page.create_page_process(
 wwv_flow_imp_page.create_page_process(
  p_id=>wwv_flow_imp.id(9205761285147840)
 ,p_process_sequence=>20
-,p_process_point=>'ON_SUBMIT_BEFORE_COMPUTATION'
+,p_process_point=>'AFTER_SUBMIT'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>unistr('Criar usu\00E1rio APEX')
 ,p_static_id=>'criar-usuario-apex'
@@ -60389,7 +60457,7 @@ wwv_flow_imp_page.create_page_process(
 ,p_process_success_message=>'Colaborador cadastrado com sucesso!'
 ,p_internal_uid=>9205761285147840
 ,p_created_on=>wwv_flow_imp.dz('20260722232500Z')
-,p_updated_on=>wwv_flow_imp.dz('20260729062024Z')
+,p_updated_on=>wwv_flow_imp.dz('20261007033339Z')
 ,p_created_by=>'SARAHSILVA'
 ,p_updated_by=>'SARAHSILVA'
 );
@@ -60410,7 +60478,7 @@ wwv_flow_imp_page.create_page_process(
 wwv_flow_imp_page.create_page_process(
  p_id=>wwv_flow_imp.id(9205500288147838)
 ,p_process_sequence=>10
-,p_process_point=>'ON_SUBMIT_BEFORE_COMPUTATION'
+,p_process_point=>'AFTER_SUBMIT'
 ,p_region_id=>wwv_flow_imp.id(9201806955147801)
 ,p_process_type=>'NATIVE_FORM_DML'
 ,p_process_name=>'Salvar Dados Colaborador'
@@ -60424,7 +60492,7 @@ wwv_flow_imp_page.create_page_process(
 ,p_process_success_message=>'Colaborador cadastrado com sucesso!'
 ,p_internal_uid=>9205500288147838
 ,p_created_on=>wwv_flow_imp.dz('20260722231858Z')
-,p_updated_on=>wwv_flow_imp.dz('20260729062024Z')
+,p_updated_on=>wwv_flow_imp.dz('20261007033339Z')
 ,p_created_by=>'SARAHSILVA'
 ,p_updated_by=>'SARAHSILVA'
 );
