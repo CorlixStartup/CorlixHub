@@ -105,19 +105,11 @@
     margin-left: 24px;
 }
 
-/* Ícone centralizado na vertical, dentro do campo (o input tem 36px de padding à esquerda) */
-.corlix-header__search .corlix-header__search-icon {
+.corlix-header__search-icon {
     position: absolute;
-    top: 50%;
     left: 12px;
-    z-index: 1;
-    width: 16px;
-    margin: 0;
-    transform: translateY(-50%);
     color: var(--cx-texto-3);
     font-size: 14px;
-    line-height: 1;
-    text-align: center;
     pointer-events: none;
 }
 
@@ -781,7 +773,8 @@
 .popup-todos-aniversariantes .t-Cards,
 .popup-todos-aniversariantes .a-CardView-items {
     display: flex !important;
-    flex-direction: column !important; /* Força lista única vertical */
+    flex-direction: column !important;
+    /* Força lista única vertical */
     gap: 0 !important;
     padding: 0 16px !important;
     margin-top: 5px !important;
@@ -891,7 +884,8 @@
     background-image: none !important;
     background-color: var(--cx-superficie) !important;
     border-bottom: 1px solid var(--cx-borda) !important;
-    padding-top: var(--rw-dialog-strip-size, 1.25rem) !important; /* Compensa o espaço da barra removida */
+    padding-top: var(--rw-dialog-strip-size, 1.25rem) !important;
+    /* Compensa o espaço da barra removida */
 }
 
 
@@ -937,7 +931,7 @@
     gap: 16px;
 }
 
-.cx-pessoa > div {
+.cx-pessoa>div {
     display: flex;
     flex-direction: column;
     gap: 2px;

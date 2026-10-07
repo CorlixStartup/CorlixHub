@@ -109,7 +109,7 @@ page 1 (
                 <div class="figma-row &CSS_NIVER_HOJE.">
                     <!-- Foto Circular com Fallback Corrigido para Usuário Padrão -->
                     <div class="figma-avatar-wrapper">
-                        <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='#APP_FILES#default-user.jpeg';">
+                        <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='https://dicebear.com.';">
                     </div>
                     
                     <!-- Bloco de Texto Empilhado -->
@@ -153,13 +153,15 @@ page 1 (
         source {
             htmlCode:
                 ```html
-                <div class="cx-cabecalho-card">
-                    <h3>Aniversariantes</h3>
-                    <!-- O mês é preenchido pelo JavaScript da página (classe figma-badge-mes) -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 16px 16px 12px 16px; font-family: 'Segoe UI', sans-serif; box-sizing: border-box;">
+                
+                    <!-- Título Principal alinhado -->
+                    <h3 style="margin: 0; text-transform: uppercase;">Aniversariantes</h3>
+                
+                    <!-- Badge Dinâmico do Mês -->
                     <span class="figma-badge-mes cx-badge cx-badge--info"></span>
                 </div>
-                
-                
                 ```
         }
         layout {
@@ -184,8 +186,8 @@ page 1 (
             htmlCode:
                 ```html
                 <h1>Bem-vindo, &G_NOME_USUARIO.! 👋</h1>
-                  <p>Sua jornada de carreira na <a href="#" class="link-empresa">&G_NOME_EMPRESA.</a> 
-                     está indo muito bem. Veja o que temos para hoje.</p>
+                <p>Sua jornada de carreira na <a href="#" class="link-empresa">&G_NOME_EMPRESA.</a>
+                    está indo muito bem. Veja o que temos para hoje.</p>
                 ```
         }
         layout {
@@ -272,15 +274,9 @@ page 1 (
             headerText: <h3>Meu gestor</h3>
             footerText:
                 ```html
-                <div class="cx-acoes-card">
-                    <a class="t-Button t-Button--icon t-Button--iconLeft" href="#">
-                        <span class="t-Icon t-Icon--left fa fa-comment-o" aria-hidden="true"></span>
-                        <span class="t-Button-label">Chat</span>
-                    </a>
-                    <a class="t-Button t-Button--icon t-Button--iconLeft" href="#">
-                        <span class="t-Icon t-Icon--left fa fa-envelope-o" aria-hidden="true"></span>
-                        <span class="t-Button-label">E-mail</span>
-                    </a>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:8px;justify-content:center;">
+                    <a href="#" style="background-color:#F6F6F8;padding:8px 55px;border-radius:8px;color:#111318;font-size:14px;font-weight:bold;">Chat</a>
+                    <a href="#" style="background-color:#F6F6F8;padding:8px 55px;border-radius:8px;color:#111318;font-size:14px;font-weight:bold;">E-mail</a>
                 </div>
                 ```
         }
@@ -288,11 +284,13 @@ page 1 (
             advancedFormatting: true
             htmlExpression:
                 ```html
-                <div class="cx-pessoa">
-                    <img src="&FOTO_GESTOR." alt="" class="cx-pessoa__foto" onerror="this.onerror=null; this.src='#APP_FILES#default-user.jpeg';">
-                    <div>
-                        <strong class="cx-pessoa__nome">&NOME_GESTOR.</strong>
-                        <span class="cx-pessoa__detalhe">&NOME_CARGO.</span>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:16px;margin-bottom:0;">
+                   <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='#APP_FILES#de
+                fault-user.jpeg';">
+                
+                    <div style="display:flex;flex-direction:column;">
+                        <span style="font-size:14px;font-weight:bold;color:#111318;margin-bottom:8px;">&NOME_GESTOR.</span>
+                        <span style="font-size:12px;color:#636F88;">&NOME_CARGO.</span>
                     </div>
                 </div>
                 ```
@@ -385,7 +383,7 @@ page 1 (
             htmlExpression:
                 ```html
                 <div class="cmt-meta">
-                  <span class="cx-etiqueta">&DEPARTAMENTO.</span>
+                  <span class="cmt-badge &CLASSE_DEPTO.">&DEPARTAMENTO.</span>
                   <span class="cmt-date">&TEMPO_PUBLICACAO.</span>
                 </div>
                 <div class="cmt-title">&TITULO.</div>
@@ -418,10 +416,10 @@ page 1 (
                     <span class="icon">
                       <!-- Ícone Holerite -->
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <rect x="1" y="3" width="16" height="12" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                        <circle cx="9" cy="9" r="2.5" fill="currentColor"/>
-                        <line x1="1" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="1"/>
-                        <line x1="1" y1="11" x2="17" y2="11" stroke="currentColor" stroke-width="1"/>
+                        <rect x="1" y="3" width="16" height="12" rx="2" ry="2" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
+                        <circle cx="9" cy="9" r="2.5" fill="#4f46e5"/>
+                        <line x1="1" y1="7" x2="17" y2="7" stroke="#4f46e5" stroke-width="1"/>
+                        <line x1="1" y1="11" x2="17" y2="11" stroke="#4f46e5" stroke-width="1"/>
                       </svg>
                     </span>
                     <span class="text">Holerite Digital</span>
@@ -432,8 +430,8 @@ page 1 (
                     <span class="icon">
                       <!-- Ícone Relógio -->
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                        <path d="M9 5v4l3 2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <circle cx="9" cy="9" r="7" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
+                        <path d="M9 5v4l3 2" stroke="#4f46e5" stroke-width="1.5" fill="none"/>
                       </svg>
                     </span>
                     <span class="text">Ponto Eletrônico</span>
@@ -444,7 +442,7 @@ page 1 (
                     <span class="icon">
                       <!-- Ícone Suporte -->
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <path d="M9 2a7 7 0 0 0-7 7v3a1.5 1.5 0 0 0 1.5 1.5H5v-4H3v-1a6 6 0 0 1 12 0v1h-2v4h1.5A1.5 1.5 0 0 0 16 12V9a7 7 0 0 0-7-7z" fill="currentColor"/>
+                        <path d="M9 2a7 7 0 0 0-7 7v3a1.5 1.5 0 0 0 1.5 1.5H5v-4H3v-1a6 6 0 0 1 12 0v1h-2v4h1.5A1.5 1.5 0 0 0 16 12V9a7 7 0 0 0-7-7z" fill="#4f46e5"/>
                       </svg>
                     </span>
                     <span class="text">Suporte TI</span>
@@ -562,42 +560,36 @@ page 1 (
 
     button B_VER_TODOS (
         buttonName: B_VER_TODOS
-        label: Ver todos
+        label: Ver Todos
         layout {
             sequence: 10
             region: @lista-aniversariantes
             slot: next
         }
         appearance {
-            buttonTemplate: @/text-with-icon
-            templateOptions: [
-                #DEFAULT#
-                t-Button--noUI
-                t-Button--iconRight
-            ]
-            icon: fa-arrow-right
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
             cssClasses: figma-footer-link
         }
         behavior {
             action: definedByDynamicAction
         }
+        advanced {
+            customAttributes: style="display: block !important; text-align: center !important; color: #3B66F5 !important; background: transparent !important; border: none !important; box-shadow: none !important; text-decoration: underline !important; font-weight: 600 !important; width: 100% !important; margin-top: 00px !important; font-size: 19px !important;"
+        }
     )
 
     button emitir-comunicado (
         buttonName: botao_emitir_comunicado
-        label: Novo comunicado
+        label: Emitir Comunicado
         layout {
             sequence: 10
             region: @botao-emitir-comunicado
             slot: regionBody
         }
         appearance {
-            buttonTemplate: @/text-with-icon
-            templateOptions: [
-                #DEFAULT#
-                t-Button--iconLeft
-            ]
-            icon: fa-plus
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
             cssClasses: botao-emitir-comunicado
         }
         behavior {

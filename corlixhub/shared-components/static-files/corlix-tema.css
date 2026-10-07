@@ -23,134 +23,142 @@
    ========================================================================== */
 
 :root {
-  /* --- Tokens Corlix ----------------------------------------------------- */
-  --cx-fonte:           var(--a-base-font-family);   /* Oracle Sans (Redwood) */
+    /* --- Tokens Corlix ----------------------------------------------------- */
+    --cx-fonte: var(--a-base-font-family);
+    /* Oracle Sans (Redwood) */
 
-  --cx-primaria:        var(--rw-palette-sky-120, #00688C);
-  --cx-primaria-hover:  var(--rw-palette-sky-130, #025E7E);
-  --cx-primaria-suave:  var(--rw-palette-sky-30,  #E4F1F7);
-  --cx-primaria-texto:  #1D5F84;   /* texto sobre fundo suave (avisos, pílulas) */
+    --cx-primaria: var(--rw-palette-sky-120, #00688C);
+    --cx-primaria-hover: var(--rw-palette-sky-130, #025E7E);
+    --cx-primaria-suave: var(--rw-palette-sky-30, #E4F1F7);
+    --cx-primaria-texto: #1D5F84;
+    /* texto sobre fundo suave (avisos, pílulas) */
 
-  --cx-fundo:           var(--rw-palette-neutral-30, #F1EFED);
-  --cx-superficie:      var(--rw-palette-neutral-0,  #FFFFFF);
-  --cx-superficie-2:    var(--rw-palette-neutral-10, #FBF9F8);
-  --cx-tag:             var(--rw-palette-neutral-20, #F5F4F2);
-  --cx-borda:           var(--rw-palette-neutral-40, #E4E1DD);
-  --cx-borda-campo:     #8A857F;
-  --cx-selecionado:     #EDEBE8;
+    --cx-fundo: var(--rw-palette-neutral-30, #F1EFED);
+    --cx-superficie: var(--rw-palette-neutral-0, #FFFFFF);
+    --cx-superficie-2: var(--rw-palette-neutral-10, #FBF9F8);
+    --cx-tag: var(--rw-palette-neutral-20, #F5F4F2);
+    --cx-borda: var(--rw-palette-neutral-40, #E4E1DD);
+    --cx-borda-campo: #8A857F;
+    --cx-selecionado: #EDEBE8;
 
-  --cx-texto:           var(--rw-palette-neutral-190, #161513);
-  --cx-texto-2:         #57534F;
-  --cx-texto-3:         #6B6661;
+    --cx-texto: var(--rw-palette-neutral-190, #161513);
+    --cx-texto-2: #57534F;
+    --cx-texto-3: #6B6661;
 
-  --cx-btn:             #EAE7E3;
-  --cx-btn-hover:       #DEDAD5;
-  --cx-escuro:          var(--rw-palette-neutral-170, #312D2A);
+    --cx-btn: #EAE7E3;
+    --cx-btn-hover: #DEDAD5;
+    --cx-escuro: var(--rw-palette-neutral-170, #312D2A);
 
-  --cx-sucesso:         #2F7D4F;
-  --cx-alerta:          #B3261E;
+    --cx-sucesso: #2F7D4F;
+    --cx-alerta: #B3261E;
 
-  --cx-raio:            .375rem;   /* 6px: busca do cabeçalho, menus, chips */
-  --cx-raio-card:       .5rem;     /* 8px: regiões e cards */
+    --cx-raio: .375rem;
+    /* 6px: busca do cabeçalho, menus, chips */
+    --cx-raio-card: .5rem;
+    /* 8px: regiões e cards */
 
-  /* --- Tipografia (fonte: a do Redwood) ---------------------------------- */
-  --ut-breadcrumb-title-font-size:      1.625rem;   /* 26px, título da página */
-  --ut-breadcrumb-title-line-height:    2rem;
+    /* --- Tipografia (fonte: a do Redwood) ---------------------------------- */
+    --ut-breadcrumb-title-font-size: 1.625rem;
+    /* 26px, título da página */
+    --ut-breadcrumb-title-line-height: 2rem;
 
-  /* --- Cor primária (Redwood usa o verde brandlight) ---------------------- */
-  --ut-palette-primary:           var(--cx-primaria);
-  --ut-palette-primary-contrast:  #FFFFFF;
-  --ut-palette-primary-shade:     var(--rw-palette-sky-10, #F6FAFC);
-  --ut-link-text-color:           var(--cx-primaria);
-  --ut-component-icon-background-color: var(--cx-primaria-suave);
-  --ut-component-icon-color:      var(--cx-primaria);
-  --u-color-5:                    var(--cx-primaria);
-  --u-color-5-contrast:           #FFFFFF;
+    /* --- Cor primária (Redwood usa o verde brandlight) ---------------------- */
+    --ut-palette-primary: var(--cx-primaria);
+    --ut-palette-primary-contrast: #FFFFFF;
+    --ut-palette-primary-shade: var(--rw-palette-sky-10, #F6FAFC);
+    --ut-link-text-color: var(--cx-primaria);
+    --ut-component-icon-background-color: var(--cx-primaria-suave);
+    --ut-component-icon-color: var(--cx-primaria);
+    --u-color-5: var(--cx-primaria);
+    --u-color-5-contrast: #FFFFFF;
 
-  /* Foco visível: 2px sólido na primária (Redwood usa tracejado de 1px) */
-  --ut-focus-outline:             2px solid var(--cx-primaria);
-  --ut-focus-outline-color:       var(--cx-primaria);
-  --ut-focus-outline-offset:      2px;
+    /* Foco visível: 2px sólido na primária (Redwood usa tracejado de 1px) */
+    --ut-focus-outline: 2px solid var(--cx-primaria);
+    --ut-focus-outline-color: var(--cx-primaria);
+    --ut-focus-outline-offset: 2px;
 
-  /* --- Estrutura da página ----------------------------------------------- */
-  --ut-body-background-color:     var(--cx-fundo);
-  --ut-body-text-color:           var(--cx-texto);
-  --ut-body-content-padding-x:    2rem;
-  --ut-body-content-padding-y:    2rem;
+    /* --- Estrutura da página ----------------------------------------------- */
+    --ut-body-background-color: var(--cx-fundo);
+    --ut-body-text-color: var(--cx-texto);
+    --ut-body-content-padding-x: 2rem;
+    --ut-body-content-padding-y: 2rem;
 
-  --ut-header-background-color:   var(--cx-superficie);
-  --ut-header-text-color:         var(--cx-texto);
-  --ut-header-border-color:       var(--cx-borda);
-  --ut-header-height:             3.5rem;
-  --ut-header-padding-x:          .5rem;
+    --ut-header-background-color: var(--cx-superficie);
+    --ut-header-text-color: var(--cx-texto);
+    --ut-header-border-color: var(--cx-borda);
+    --ut-header-height: 3.5rem;
+    --ut-header-padding-x: .5rem;
 
-  --ut-nav-width:                 15rem;   /* 240px */
-  --ut-body-nav-background-color: var(--cx-superficie);
-  --ut-body-nav-border-color:     var(--cx-borda);
-  --ut-body-nav-text-color:       var(--cx-texto);
+    --ut-nav-width: 15rem;
+    /* 240px */
+    --ut-body-nav-background-color: var(--cx-superficie);
+    --ut-body-nav-border-color: var(--cx-borda);
+    --ut-body-nav-text-color: var(--cx-texto);
 
-  --ut-body-title-background-color: var(--cx-superficie);
-  --ut-body-title-border-color:   var(--cx-borda);
-  --ut-body-title-border-width:   1px;
-  --ut-body-title-box-shadow:     none;
+    --ut-body-title-background-color: var(--cx-superficie);
+    --ut-body-title-border-color: var(--cx-borda);
+    --ut-body-title-border-width: 1px;
+    --ut-body-title-box-shadow: none;
 
-  /* --- Menu lateral ------------------------------------------------------ */
-  --a-treeview-node-font-size:                .875rem;
-  --a-treeview-node-line-height:              1.25rem;
-  --a-treeview-node-padding-y:                .625rem;   /* itens de 40px */
-  --a-treeview-node-text-color:               var(--cx-texto);
-  --a-treeview-node-hover-background-color:   rgba(22, 21, 19, .04);
-  --a-treeview-node-selected-background-color: var(--cx-selecionado);
-  --a-treeview-node-selected-text-color:      var(--cx-texto);
-  --ut-treeview-node-current-text-color:      var(--cx-texto);
+    /* --- Menu lateral ------------------------------------------------------ */
+    --a-treeview-node-font-size: .875rem;
+    --a-treeview-node-line-height: 1.25rem;
+    --a-treeview-node-padding-y: .625rem;
+    /* itens de 40px */
+    --a-treeview-node-text-color: var(--cx-texto);
+    --a-treeview-node-hover-background-color: rgba(22, 21, 19, .04);
+    --a-treeview-node-selected-background-color: var(--cx-selecionado);
+    --a-treeview-node-selected-text-color: var(--cx-texto);
+    --ut-treeview-node-current-text-color: var(--cx-texto);
 
-  /* --- Regiões e cards: borda fina, sem sombra ---------------------------- */
-  --ut-component-background-color:  var(--cx-superficie);
-  --ut-component-border-color:      var(--cx-borda);
-  --ut-component-border-radius:     var(--cx-raio);
-  --ut-component-text-title-color:  var(--cx-texto);
-  --ut-component-text-muted-color:  var(--cx-texto-2);
+    /* --- Regiões e cards: borda fina, sem sombra ---------------------------- */
+    --ut-component-background-color: var(--cx-superficie);
+    --ut-component-border-color: var(--cx-borda);
+    --ut-component-border-radius: var(--cx-raio);
+    --ut-component-text-title-color: var(--cx-texto);
+    --ut-component-text-muted-color: var(--cx-texto-2);
 
-  --ut-region-border-color:         var(--cx-borda);
-  --ut-region-border-radius:        var(--cx-raio-card);
-  --ut-region-box-shadow:           none;
-  --ut-region-header-border-color:  var(--cx-borda);
-  --ut-region-header-font-size:     .9375rem;   /* 15px */
-  --ut-region-header-line-height:   1.25rem;
-  --ut-region-header-padding-x:     1.25rem;
-  --ut-region-header-padding-y:     1rem;
-  --ut-region-body-padding-x:       1.25rem;
-  --ut-region-body-padding-y:       1rem;
+    --ut-region-border-color: var(--cx-borda);
+    --ut-region-border-radius: var(--cx-raio-card);
+    --ut-region-box-shadow: none;
+    --ut-region-header-border-color: var(--cx-borda);
+    --ut-region-header-font-size: .9375rem;
+    /* 15px */
+    --ut-region-header-line-height: 1.25rem;
+    --ut-region-header-padding-x: 1.25rem;
+    --ut-region-header-padding-y: 1rem;
+    --ut-region-body-padding-x: 1.25rem;
+    --ut-region-body-padding-y: 1rem;
 
-  --a-cv-shadow:                    none;
-  --a-cv-border-radius:             var(--cx-raio-card);
-  --ut-cardlist-box-shadow:         none;
+    --a-cv-shadow: none;
+    --a-cv-border-radius: var(--cx-raio-card);
+    --ut-cardlist-box-shadow: none;
 
-  /* --- Botões ------------------------------------------------------------ */
-  /* Primária = Hot (escuro #312D2A, já é o do Redwood). Secundária = padrão,
+    /* --- Botões ------------------------------------------------------------ */
+    /* Primária = Hot (escuro #312D2A, já é o do Redwood). Secundária = padrão,
      no cinza quente do protótipo. Terciária = Remove UI Decoration (ver abaixo).
      Cantos: os do Redwood. */
-  --a-button-background-color:        var(--cx-btn);
-  --a-button-hover-background-color:  var(--cx-btn-hover);
-  --a-button-active-background-color: #D2CDC7;
-  --a-button-text-color:              var(--cx-texto);
-  --a-button-font-weight:             600;
+    --a-button-background-color: var(--cx-btn);
+    --a-button-hover-background-color: var(--cx-btn-hover);
+    --a-button-active-background-color: #D2CDC7;
+    --a-button-text-color: var(--cx-texto);
+    --a-button-font-weight: 600;
 
-  /* --- Campos (Floating Label do Redwood; só o foco muda de cor) -------- */
-  --a-field-input-focus-border-color: var(--cx-primaria);
-  --ut-field-label-text-color:        var(--cx-texto-2);
-  --ut-field-fl-label-text-color:     var(--cx-texto-2);
+    /* --- Campos (Floating Label do Redwood; só o foco muda de cor) -------- */
+    --a-field-input-focus-border-color: var(--cx-primaria);
+    --ut-field-label-text-color: var(--cx-texto-2);
+    --ut-field-fl-label-text-color: var(--cx-texto-2);
 
-  /* --- Abas, badges, menus ---------------------------------------------- */
-  --ut-tabs-item-active-highlight-color: var(--cx-primaria);
-  --ut-navtabs-item-active-highlight-color: var(--cx-primaria);
-  /* Badge de status: pílula pequena (ver .cx-badge no fim do arquivo) */
-  --ut-badge-border-radius:           999px;
-  --ut-badge-font-size:               .75rem;
-  --ut-badge-font-weight:             600;
-  --ut-badge-padding-x:               .5rem;
-  --a-menu-border-radius:             var(--cx-raio);
-  --a-chip-border-radius:             var(--cx-raio);
+    /* --- Abas, badges, menus ---------------------------------------------- */
+    --ut-tabs-item-active-highlight-color: var(--cx-primaria);
+    --ut-navtabs-item-active-highlight-color: var(--cx-primaria);
+    /* Badge de status: pílula pequena (ver .cx-badge no fim do arquivo) */
+    --ut-badge-border-radius: 999px;
+    --ut-badge-font-size: .75rem;
+    --ut-badge-font-weight: 600;
+    --ut-badge-padding-x: .5rem;
+    --a-menu-border-radius: var(--cx-raio);
+    --a-chip-border-radius: var(--cx-raio);
 }
 
 
@@ -161,49 +169,54 @@
 /* Nome do app no cabeçalho: 18px, negrito */
 .t-Header-logo-link,
 .t-Header-logo-label {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--cx-texto);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--cx-texto);
 }
 
 /* Menu lateral: item atual com barra de 3px na primária e texto em negrito */
-.t-TreeNav .a-TreeView-node.is-current > .a-TreeView-row,
-.t-TreeNav .a-TreeView-node.is-current--top > .a-TreeView-row,
+.t-TreeNav .a-TreeView-node.is-current>.a-TreeView-row,
+.t-TreeNav .a-TreeView-node.is-current--top>.a-TreeView-row,
 .t-TreeNav .a-TreeView-row.is-selected {
-  background-color: var(--cx-selecionado);
-  box-shadow: inset 3px 0 0 var(--cx-primaria);
+    background-color: var(--cx-selecionado);
+    box-shadow: inset 3px 0 0 var(--cx-primaria);
 }
+
 .t-TreeNav .is-current,
 .t-TreeNav .is-current--top {
-  --a-treeview-node-font-weight: 700;
+    --a-treeview-node-font-weight: 700;
 }
+
 .t-TreeNav .a-TreeView-node .a-Icon,
 .t-TreeNav .a-TreeView-node .fa {
-  color: var(--cx-texto-2);
+    color: var(--cx-texto-2);
 }
 
 /* Título da página: fundo branco, borda de 1px, 24px x 32px de respiro.
    O Redwood redefine a borda em .t-Body-title (.375rem) e desenha uma faixa
    de textura em :after; o protótipo usa só a linha fina. */
 .t-Body-title {
-  --ut-body-title-border-width: 1px;
+    --ut-body-title-border-width: 1px;
 }
+
 .t-Body-title::after {
-  content: none;
+    content: none;
 }
+
 .t-Body-title .t-BreadcrumbRegion,
 .t-PageBody--showLeft .t-Body-title .t-BreadcrumbRegion {
-  --ut-breadcrumb-padding-x: 2rem;
-  --ut-breadcrumb-padding-y: 1.5rem;
+    --ut-breadcrumb-padding-x: 2rem;
+    --ut-breadcrumb-padding-y: 1.5rem;
 }
+
 .t-BreadcrumbRegion-titleText {
-  font-weight: 700;
+    font-weight: 700;
 }
 
 /* Regiões: título em negrito, sem caixa alta */
 .t-Region-title {
-  font-weight: 700;
-  text-transform: none;
+    font-weight: 700;
+    text-transform: none;
 }
 
 /* Botão terciário ("Ver todos ->"): Style > Remove UI Decoration, com texto
@@ -211,15 +224,15 @@
 .t-Button--link,
 .t-Button--noUI.t-Button--link,
 .t-Button--noUI:not(.t-Button--noLabel):not(.t-Button--header):not(.t-Button--closeAlert) {
-  --a-button-text-color: var(--cx-primaria);
-  --a-button-hover-text-color: var(--cx-primaria-hover);
+    --a-button-text-color: var(--cx-primaria);
+    --a-button-hover-text-color: var(--cx-primaria-hover);
 }
 
 /* Avatares de iniciais (Cards, Comments, Avatar component) no tom suave */
 .a-CardView-initials,
 .t-Avatar--initials {
-  background-color: var(--cx-primaria-suave);
-  color: var(--cx-primaria);
+    background-color: var(--cx-primaria-suave);
+    color: var(--cx-primaria);
 }
 
 /* ==========================================================================
@@ -233,41 +246,62 @@
    Variantes: --sucesso, --neutro, --erro, --aviso, --info
    ========================================================================== */
 .cx-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: .375rem;
-  padding: .125rem .5rem;
-  border-radius: 999px;
-  font-size: .75rem;
-  font-weight: 600;
-  line-height: 1rem;
-  white-space: nowrap;
-  background: var(--cx-tag);
-  color: var(--cx-texto-2);
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    padding: .125rem .5rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    white-space: nowrap;
+    background: var(--cx-tag);
+    color: var(--cx-texto-2);
 }
+
 .cx-badge::before {
-  content: "";
-  width: .375rem;
-  height: .375rem;
-  border-radius: 50%;
-  background: currentColor;
+    content: "";
+    width: .375rem;
+    height: .375rem;
+    border-radius: 50%;
+    background: currentColor;
 }
-.cx-badge--sucesso { background: var(--rw-palette-green-30,  #E4F5D3); color: var(--rw-palette-green-140,  #355617); }
-.cx-badge--neutro  { background: var(--rw-palette-neutral-30, #F1EFED); color: var(--cx-texto-2); }
-.cx-badge--erro    { background: var(--rw-palette-red-30,    #FFEBE8); color: var(--rw-palette-red-140,    #8F2719); }
-.cx-badge--aviso   { background: var(--rw-palette-orange-30, #FCEDDC); color: var(--rw-palette-orange-140, #724108); }
-.cx-badge--info    { background: var(--cx-primaria-suave);              color: var(--cx-primaria-texto); }
+
+.cx-badge--sucesso {
+    background: var(--rw-palette-green-30, #E4F5D3);
+    color: var(--rw-palette-green-140, #355617);
+}
+
+.cx-badge--neutro {
+    background: var(--rw-palette-neutral-30, #F1EFED);
+    color: var(--cx-texto-2);
+}
+
+.cx-badge--erro {
+    background: var(--rw-palette-red-30, #FFEBE8);
+    color: var(--rw-palette-red-140, #8F2719);
+}
+
+.cx-badge--aviso {
+    background: var(--rw-palette-orange-30, #FCEDDC);
+    color: var(--rw-palette-orange-140, #724108);
+}
+
+.cx-badge--info {
+    background: var(--cx-primaria-suave);
+    color: var(--cx-primaria-texto);
+}
 
 .cx-etiqueta {
-  display: inline-flex;
-  align-items: center;
-  padding: .125rem .5rem;
-  border-radius: .25rem;
-  background: var(--cx-tag);
-  box-shadow: inset 0 0 0 1px var(--cx-borda);
-  font-size: .75rem;
-  font-weight: 600;
-  line-height: 1rem;
-  color: var(--cx-texto-2);
-  white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    padding: .125rem .5rem;
+    border-radius: .25rem;
+    background: var(--cx-tag);
+    box-shadow: inset 0 0 0 1px var(--cx-borda);
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    color: var(--cx-texto-2);
+    white-space: nowrap;
 }

@@ -637,10 +637,7 @@ page 16 (
         }
         appearance {
             buttonTemplate: @/text
-            templateOptions: [
-                #DEFAULT#
-                t-Button--danger
-            ]
+            templateOptions: #DEFAULT#
         }
         behavior {
             executeValidations: false

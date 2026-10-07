@@ -17,245 +17,283 @@ page 4 (
                CHAT — Página 4
                ============================================ */
             
-            :root{
-              --ch-topbar-h: 40px;
-              --ch-list-w: 260px;
+            :root {
+                --ch-topbar-h: 40px;
+                --ch-list-w: 260px;
             
-              --ch-blue: var(--cx-primaria);
-              --ch-blue-soft: var(--cx-primaria-suave);
-              --ch-bubble-in: var(--cx-tag);
+                --ch-blue: var(--cx-primaria);
+                --ch-blue-soft: var(--cx-primaria-suave);
+                --ch-bubble-in: var(--cx-tag);
             
-              --ch-border: var(--cx-borda);
-              --ch-border-soft: var(--cx-borda);
-              --ch-surface: var(--cx-superficie-2);
+                --ch-border: var(--cx-borda);
+                --ch-border-soft: var(--cx-borda);
+                --ch-surface: var(--cx-superficie-2);
             
-              --ch-text: var(--cx-texto);
-              --ch-text-dim: var(--cx-texto-2);
-              --ch-text-faint: var(--cx-texto-3);
+                --ch-text: var(--cx-texto);
+                --ch-text-dim: var(--cx-texto-2);
+                --ch-text-faint: var(--cx-texto-3);
             
-              --ch-avatar-bg: var(--cx-primaria-suave);
-              --ch-avatar-fg: var(--cx-primaria);
+                --ch-avatar-bg: var(--cx-primaria-suave);
+                --ch-avatar-fg: var(--cx-primaria);
             
-              --ch-online: #22C55E;
-              --ch-ausente: #F59E0B;
-              --ch-offline: #D1D5DB;
+                --ch-online: #22C55E;
+                --ch-ausente: #F59E0B;
+                --ch-offline: #D1D5DB;
             
-              --ch-radius: var(--cx-raio-card);
-              --ch-avatar-size: 34px;
+                --ch-radius: var(--cx-raio-card);
+                --ch-avatar-size: 34px;
             }
             
             /* ---- reset do container do Universal Theme ---- */
-            html, body{ height:100%; }
+            html,
+            body {
+                height: 100%;
+            }
             
             .ch-page .t-Body-content,
             .ch-page .t-Body-contentInner,
-            .ch-page .t-Body-main{
-              padding: 0 !important;
-              margin: 0 !important;
-              max-width: none;
+            .ch-page .t-Body-main {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none;
             }
-            .ch-page .t-Body-content{ overflow: hidden; }
+            
+            .ch-page .t-Body-content {
+                overflow: hidden;
+            }
             
             /* ---- estrutura de duas colunas ---- */
-            .ch-shell{
-              display: grid;
-              grid-template-columns: var(--ch-list-w) 1fr;
-              grid-template-rows: minmax(0, 1fr);   /* impede a linha de crescer */
-              height: calc(100vh - var(--ch-topbar-h));
-              overflow: hidden;
-              background: #fff;
+            .ch-shell {
+                display: grid;
+                grid-template-columns: var(--ch-list-w) 1fr;
+                grid-template-rows: minmax(0, 1fr);
+                /* impede a linha de crescer */
+                height: calc(100vh - var(--ch-topbar-h));
+                overflow: hidden;
+                background: #fff;
             }
             
             /* wrappers do APEX somem do layout; .ch-list e .ch-chat viram grid items */
-            .ch-shell > div,
+            .ch-shell>div,
             .ch-shell .container,
-            .ch-shell .row{
-              display: contents;
+            .ch-shell .row {
+                display: contents;
             }
             
             /* ============================================
                Coluna de contatos
                ============================================ */
             
-            .ch-list{
-              background: #fff;
-              border-right: 1px solid var(--ch-border);
-              display: flex;
-              flex-direction: column;
-              min-height: 0;
-              overflow: hidden;
+            .ch-list {
+                background: #fff;
+                border-right: 1px solid var(--ch-border);
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                overflow: hidden;
             }
             
             /* repassa a altura: .js-apex-region → #report_catch */
-            .ch-list > div,
-            .ch-list > div > div{
-              display: flex;
-              flex-direction: column;
-              flex: 1 1 auto;
-              min-height: 0;
+            .ch-list>div,
+            .ch-list>div>div {
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                min-height: 0;
             }
             
-            .ch-contacts{
-              display: flex;
-              flex-direction: column;
-              flex: 1 1 auto;
-              min-height: 0;
-              overflow-y: auto;
+            .ch-contacts {
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow-y: auto;
             }
             
-            .ch-dept{
-              padding: 10px 16px;
-              font-size: 11px;
-              font-weight: 600;
-              letter-spacing: .04em;
-              text-transform: uppercase;
-              color: var(--ch-text-dim);
-              background: var(--ch-surface);
-              border-top: 1px solid var(--ch-border-soft);
-              border-bottom: 1px solid var(--ch-border-soft);
-              position: sticky;
-              top: 0;
-              z-index: 1;
-              flex: 0 0 auto;
-            }
-            .ch-dept:first-child{ border-top: none; }
-            
-            .ch-contact{
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              padding: 10px 16px;
-              text-decoration: none;
-              color: inherit;
-              border-left: 3px solid transparent;
-              transition: background .12s ease;
-              flex: 0 0 auto;
-            }
-            .ch-contact:hover{ background: var(--ch-surface); }
-            .ch-contact.is-active{
-              background: var(--ch-blue-soft);
-              border-left-color: var(--ch-blue);
+            .ch-dept {
+                padding: 10px 16px;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+                color: var(--ch-text-dim);
+                background: var(--ch-surface);
+                border-top: 1px solid var(--ch-border-soft);
+                border-bottom: 1px solid var(--ch-border-soft);
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                flex: 0 0 auto;
             }
             
-            .ch-avatar-wrap{
-              position: relative;
-              flex: 0 0 var(--ch-avatar-size);
-            }
-            .ch-avatar{
-              width: var(--ch-avatar-size);
-              height: var(--ch-avatar-size);
-              border-radius: 50%;
-              background: var(--ch-avatar-bg);
-              color: var(--ch-avatar-fg);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 12px;
-              font-weight: 600;
+            .ch-dept:first-child {
+                border-top: none;
             }
             
-            .ch-dot{
-              position: absolute;
-              right: -1px;
-              bottom: -1px;
-              width: 10px;
-              height: 10px;
-              border-radius: 50%;
-              border: 2px solid #fff;
+            .ch-contact {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                text-decoration: none;
+                color: inherit;
+                border-left: 3px solid transparent;
+                transition: background .12s ease;
+                flex: 0 0 auto;
             }
-            .ch-dot--online { background: var(--ch-online); }
-            .ch-dot--ausente{ background: var(--ch-ausente); }
-            .ch-dot--offline{ background: var(--ch-offline); }
             
-            .ch-contact-txt{
-              display: flex;
-              flex-direction: column;
-              min-width: 0;
+            .ch-contact:hover {
+                background: var(--ch-surface);
             }
-            .ch-contact-txt b{
-              font-size: 13px;
-              font-weight: 600;
-              color: var(--ch-text);
+            
+            .ch-contact.is-active {
+                background: var(--ch-blue-soft);
+                border-left-color: var(--ch-blue);
             }
-            .ch-contact-txt small{
-              font-size: 11px;
-              color: var(--ch-text-dim);
+            
+            .ch-avatar-wrap {
+                position: relative;
+                flex: 0 0 var(--ch-avatar-size);
+            }
+            
+            .ch-avatar {
+                width: var(--ch-avatar-size);
+                height: var(--ch-avatar-size);
+                border-radius: 50%;
+                background: var(--ch-avatar-bg);
+                color: var(--ch-avatar-fg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            
+            .ch-dot {
+                position: absolute;
+                right: -1px;
+                bottom: -1px;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                border: 2px solid #fff;
+            }
+            
+            .ch-dot--online {
+                background: var(--ch-online);
+            }
+            
+            .ch-dot--ausente {
+                background: var(--ch-ausente);
+            }
+            
+            .ch-dot--offline {
+                background: var(--ch-offline);
+            }
+            
+            .ch-contact-txt {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+            
+            .ch-contact-txt b {
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--ch-text);
+            }
+            
+            .ch-contact-txt small {
+                font-size: 11px;
+                color: var(--ch-text-dim);
             }
             
             /* ============================================
                Painel de conversa
                ============================================ */
             
-            .ch-chat{
-              background: #fff;
-              display: flex;
-              flex-direction: column;
-              min-height: 0;
-              overflow: hidden;
+            .ch-chat {
+                background: #fff;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                overflow: hidden;
             }
             
             /* repassa a altura pela cadeia de wrappers até .ch-msgs */
-            .ch-chat > div,
+            .ch-chat>div,
             .ch-chat .col,
-            .ch-chat .col > div,
-            .ch-chat .col > div > div{
-              display: flex;
-              flex-direction: column;
-              flex: 1 1 auto;
-              min-height: 0;
+            .ch-chat .col>div,
+            .ch-chat .col>div>div {
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                min-height: 0;
             }
             
-            .ch-msgs{
-              flex: 1 1 auto;
-              min-height: 0;
-              overflow-y: auto;
-              padding: 24px;
-              display: flex;
-              flex-direction: column;
-              gap: 18px;
-              background: #fff;
+            .ch-msgs {
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow-y: auto;
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+                background: #fff;
             }
             
-            .ch-sep{
-              text-align: center;
-              margin: 6px 0;
-              flex: 0 0 auto;
-            }
-            .ch-sep span{
-              font-size: 11px;
-              font-weight: 600;
-              color: var(--ch-text-faint);
-              letter-spacing: .04em;
+            .ch-sep {
+                text-align: center;
+                margin: 6px 0;
+                flex: 0 0 auto;
             }
             
-            .ch-msg{ display: flex; flex: 0 0 auto; }
-            .ch-msg--out{ justify-content: flex-end; }
-            
-            .ch-bubble{
-              max-width: 420px;
-              padding: 10px 13px;
-              border-radius: var(--ch-radius);
-              font-size: 13px;
-              line-height: 1.45;
-              word-break: break-word;
-            }
-            .ch-msg--in .ch-bubble{
-              background: var(--ch-bubble-in);
-              color: var(--ch-text);
-              border-top-left-radius: 4px;
-            }
-            .ch-msg--out .ch-bubble{
-              background: var(--ch-blue);
-              color: #fff;
-              border-top-right-radius: 4px;
+            .ch-sep span {
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--ch-text-faint);
+                letter-spacing: .04em;
             }
             
-            .ch-txt{ display: block; }
-            .ch-time{
-              display: block;
-              margin-top: 5px;
-              font-size: 11px;
-              opacity: .6;
+            .ch-msg {
+                display: flex;
+                flex: 0 0 auto;
+            }
+            
+            .ch-msg--out {
+                justify-content: flex-end;
+            }
+            
+            .ch-bubble {
+                max-width: 420px;
+                padding: 10px 13px;
+                border-radius: var(--ch-radius);
+                font-size: 13px;
+                line-height: 1.45;
+                word-break: break-word;
+            }
+            
+            .ch-msg--in .ch-bubble {
+                background: var(--ch-bubble-in);
+                color: var(--ch-text);
+                border-top-left-radius: 4px;
+            }
+            
+            .ch-msg--out .ch-bubble {
+                background: var(--ch-blue);
+                color: #fff;
+                border-top-right-radius: 4px;
+            }
+            
+            .ch-txt {
+                display: block;
+            }
+            
+            .ch-time {
+                display: block;
+                margin-top: 5px;
+                font-size: 11px;
+                opacity: .6;
             }
             ```
     }
