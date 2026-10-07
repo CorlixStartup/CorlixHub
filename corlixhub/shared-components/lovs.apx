@@ -1,0 +1,56 @@
+lov boolean (
+    name: BOOLEAN
+    source {
+        location: staticValues
+    }
+
+    entry false (
+        sequence: 2
+        display: No
+        return: FALSE
+    )
+
+    entry true (
+        sequence: 1
+        display: Yes
+        return: TRUE
+    )
+
+)
+
+lov colaborador-nome-completo (
+    name: COLABORADOR.NOME_COMPLETO
+    source {
+        tableName: COLABORADOR
+    }
+    columnMapping {
+        return: ID_COLABORADOR
+        display: NOME_COMPLETO
+        defaultSort: NOME_COMPLETO
+    }
+)
+
+lov departamento-nome (
+    name: DEPARTAMENTO.NOME
+    source {
+        tableName: DEPARTAMENTO
+    }
+    columnMapping {
+        return: ID_DEPARTAMENTO
+        display: NOME
+        defaultSort: NOME
+    }
+)
+
+lov empresa-nome (
+    name: EMPRESA.NOME
+    source {
+        tableName: EMPRESA
+    }
+    columnMapping {
+        return: ID_EMPRESA
+        display: NOME
+        defaultSort: NOME
+    }
+)
+

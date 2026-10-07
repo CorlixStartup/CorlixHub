@@ -1,0 +1,366 @@
+page 17 (
+    name: Emitir Comunicado
+    alias: COMUNICADO
+    title: Emitir novo comunicado
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/wizard-modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    dialog {
+        height: 600
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region buttons (
+        name: Buttons
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: wizardButtons
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region step-1 (
+        name: emitir-comunicado
+        title: Emitir novo comunicado
+        type: form
+        source {
+            location: localDatabase
+            tableName: COMUNICADO
+        }
+        layout {
+            sequence: 10
+            slot: wizardBody
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P17_CONTEUDO (
+        type: textarea
+        label {
+            label: Comunicado
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+            height: 5
+        }
+        source {
+            formRegion: @step-1
+            column: CONTEUDO
+            dataType: clob
+        }
+        sessionState {
+            dataType: clob
+        }
+    )
+
+    pageItem P17_DATA_PUBLICACAO (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+        }
+        source {
+            formRegion: @step-1
+            column: DATA_PUBLICACAO
+            dataType: date
+        }
+        default {
+            type: expression
+            plsqlExpression: SYSDATE;
+        }
+    )
+
+    pageItem P17_ID_AUTOR (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+        }
+        source {
+            formRegion: @step-1
+            column: ID_AUTOR
+            dataType: number
+        }
+        default {
+            type: sqlQuerySingleValue
+            sqlQuerySingleValue: SELECT ID_COLABORADOR FROM COLABORADOR WHERE LOGIN_APEX = :APP_USER;
+        }
+    )
+
+    pageItem P17_ID_COMUNICADO (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+        }
+        source {
+            formRegion: @step-1
+            column: ID_COMUNICADO
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P17_ID_DEPARTAMENTO (
+        type: selectList
+        label {
+            label: Departamento
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                SELECT DEPARTAMENTO.NOME,
+                       DEPARTAMENTO.ID_DEPARTAMENTO
+                FROM DEPARTAMENTO
+                WHERE DEPARTAMENTO.ID_EMPRESA = (
+                    SELECT COLABORADOR.ID_EMPRESA
+                    FROM COLABORADOR
+                    WHERE COLABORADOR.login_apex = :APP_USER
+                )
+                ORDER BY DEPARTAMENTO.NOME;
+                ```
+        }
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            height: 1
+        }
+        source {
+            formRegion: @step-1
+            column: ID_DEPARTAMENTO
+            dataType: number
+        }
+    )
+
+    pageItem P17_ID_EMPRESA (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+        }
+        source {
+            formRegion: @step-1
+            column: ID_EMPRESA
+            dataType: number
+        }
+        default {
+            type: sqlQuerySingleValue
+            sqlQuerySingleValue: SELECT ID_EMPRESA FROM COLABORADOR WHERE LOGIN_APEX = :APP_USER;
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P17_IMAGEM (
+        type: imageUpload
+        label {
+            label: Imagem do comunicado
+            alignment: left
+        }
+        storage {
+            mimeTypeColumn: MIME_TYPE
+            filenameColumn: NOME_ARQUIVO
+        }
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        source {
+            formRegion: @step-1
+            column: IMAGEM
+            dataType: blob
+        }
+    )
+
+    pageItem P17_MIME_TYPE (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+        }
+        source {
+            formRegion: @step-1
+            column: MIME_TYPE
+            dataType: varchar2
+        }
+    )
+
+    pageItem P17_NOME_ARQUIVO (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+        }
+        source {
+            formRegion: @step-1
+            column: NOME_ARQUIVO
+            dataType: varchar2
+        }
+    )
+
+    pageItem P17_TITULO (
+        type: textField
+        label {
+            label: Titulo
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @step-1
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            valueRequired: true
+            maxLength: 200
+        }
+        source {
+            formRegion: @step-1
+            column: TITULO
+            dataType: varchar2
+        }
+    )
+
+    button cancel (
+        buttonName: cancelar
+        label: Cancelar
+        layout {
+            sequence: 10
+            region: @buttons
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: triggerAction
+        }
+
+        triggerAction native-dialog-cancel (
+            action: cancelDialog
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    button next (
+        buttonName: enviar_comunicado
+        label: Enviar Comunicado
+        layout {
+            sequence: 30
+            region: @buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: t-Button--iconRight
+            icon: fa-chevron-right
+        }
+        behavior {
+            showProcessing: true
+            warnOnUnsavedChanges: doNotCheck
+            databaseAction: insert
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Certeza que deseja emitir o comunicado?
+            style: warning
+        }
+    )
+
+    process initialize-form-emitir-comunicado (
+        name: Initialize form Emitir Comunicado
+        type: formInitialization
+        formRegion: @step-1
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 9265647718807338
+        }
+    )
+
+    process processo-emissao-comunicado (
+        name: processo-emissao-comunicado
+        type: formAutoRowProcessing
+        formRegion: @step-1
+        target {
+            targetType: tableView
+            tableName: COMUNICADO
+        }
+        execution {
+            sequence: 10
+        }
+        successMessage {
+            successMessage: Comunicado Publicado com Sucesso!
+        }
+        error {
+            errorMessage: Não foi possível emitir o comunicado, tente novamente.
+        }
+        advanced {
+            executionMappingIdentifier: 10214262639327047
+        }
+    )
+
+)
+

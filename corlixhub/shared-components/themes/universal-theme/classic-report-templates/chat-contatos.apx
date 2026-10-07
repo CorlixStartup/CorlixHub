@@ -1,0 +1,33 @@
+classicReportTemplate chat-contatos (
+    name: Chat Contatos
+    templateClass: custom1
+    type: namedColumn
+    reportTemplate {
+        top: <div class="ch-contacts">
+        bottom: </div>
+    }
+    rowTemplate1 {
+        template:
+            ```html
+            #CAB_DEPT#
+            <a href="javascript:void(0)" class="ch-contact" data-id="#ID_COLABORADOR#">
+              <span class="ch-avatar-wrap">
+                <span class="ch-avatar">#INICIAIS#</span>
+                <i class="ch-dot ch-dot--#PRESENCA#"></i>
+              </span>
+              <span class="ch-contact-txt">
+                <b>#NOME_COMPLETO#</b>
+                <small>#CARGO#</small>
+              </span>
+            </a>
+            ```
+    }
+    pagination {
+        template: <span>#TEXT#</span>
+        nextPage: <a href="#LINK#">#PAGINATION_NEXT# <span class="a-Icon icon-right-arrow" aria-hidden="true"></span></a>
+        previousPage: <a href="#LINK#"><span class="a-Icon icon-left-arrow" aria-hidden="true"></span> #PAGINATION_PREVIOUS#</a>
+        nextSet: <a href="#LINK#">#PAGINATION_NEXT_SET# <span class="a-Icon icon-right-arrow" aria-hidden="true"></span></a>
+        previousSet: <a href="#LINK#"><span class="a-Icon icon-left-arrow" aria-hidden="true"></span> #PAGINATION_PREVIOUS_SET#</a>
+    }
+)
+

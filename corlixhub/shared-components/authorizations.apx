@@ -1,0 +1,56 @@
+authorization admin-rh (
+    name: ADMIN_RH
+    type: isInRoleOrGroup
+    settings {
+        names: Admin RH
+    }
+    error {
+        errorMessage: Acesso restrito ao RH.
+    }
+    advanced {
+        evaluationType: perSession
+    }
+)
+
+authorization administration-rights (
+    name: Equipe Corlix Hub
+    type: isInRoleOrGroup
+    settings {
+        names: Equipe do Corlix Hub
+    }
+    error {
+        errorMessage: Acesso restrito à equipe do Corlix Hub.
+    }
+    advanced {
+        evaluationType: perSession
+    }
+)
+
+authorization publicador-de-conteudo (
+    name: Publicador de Conteudo
+    type: isInRoleOrGroup
+    settings {
+        names: Publicador de Conteúdo
+    }
+    error {
+        errorMessage: Acesso restrito a publicadores de conteúdo.
+    }
+    advanced {
+        evaluationType: perSession
+    }
+)
+
+authorization somente-diretoria (
+    name: Somente Diretoria
+    type: isInRoleOrGroup
+    settings {
+        names: Diretoria
+    }
+    error {
+        errorMessage: Acesso restrito à Diretoria.
+    }
+    advanced {
+        evaluationType: perSession
+    }
+)
+
