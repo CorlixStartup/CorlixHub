@@ -97,7 +97,7 @@ Para cada arquivo:
 | Ordem | Arquivo | O que faz | Resultado esperado |
 |---|---|---|---|
 | 1 | `01_ddl_cargo_papel.sql` | Cria a tabela `CARGO_PAPEL` | 0 erros (pode rodar de novo sem problema) |
-| 2 | `02_seed_departamentos_cargos.sql` | Renomeia o departamento 20, corrige a numeração automática, cria 30 cargos e vincula os papéis | Mensagem `Cargos criados: N \| vínculos cargo-papel criados: M` e a lista "só colaborador" |
+| 2 | `02_seed_departamentos_cargos.sql` | Renomeia o departamento 20, corrige a numeração automática (departamento, cargo e colaborador), cria 30 cargos e vincula os papéis | Mensagem `Cargos criados: N \| vínculos cargo-papel criados: M` e a lista "só colaborador" |
 | 3 | `03_pkg_perfis_acesso.sql` | Cria o package `PKG_PERFIS_ACESSO` | 0 erros |
 
 Se preferir o SQLcl, os três rodam de uma vez:
@@ -167,6 +167,8 @@ Cargos com `papeis` vazio recebem só "Colaborador". Se algum cargo antigo preci
 
 "publicador" = `publicador-de-conteúdo`. Cargos antigos chamados exatamente "Gestor" também recebem `gestor`.
 
+> **Atenção: cargos que já existiam.** O script só reaproveita um cargo quando o nome é **idêntico** ao da matriz. Se os colaboradores estiverem em cargos com outros nomes (ex.: "Diretor Geral (CEO)" em vez de "Presidente (CEO)"), esses cargos ficam sem papel, e o script cria um cargo novo vazio. Depois de rodar o `02`, liste cargo × colaboradores × papéis e vincule os papéis aos cargos em uso (§7). Na empresa 1 isso já foi feito: veja [`Registro-implantacao.md`](./Registro-implantacao.md).
+
 **Equipe do Corlix Hub** não está na matriz de propósito: ela dá acesso à administração do sistema (empresas, logs) e deve ser atribuída à mão, só para quem administra o Corlix Hub (§6.1).
 
 ---
@@ -233,7 +235,7 @@ Com isso, ao trocar a empresa, a lista de gestores recarrega sozinha.
 
    **Execution**
    - **Sequence:** `30`. Precisa ser maior que a do `Criar usuário APEX` (20), porque o usuário tem que existir antes de receber papéis.
-   - **Point:** `Processing`
+   - **Point:** `Processing`. Os outros dois estão em `After Submit`, que roda antes de `Processing`, então a ordem fica garantida.
 
    **Success Message**
    - deixe em branco (a mensagem "Colaborador cadastrado com sucesso!" já vem dos outros processos)
@@ -319,31 +321,46 @@ O processo só age em cadastros novos. Quem já tinha conta precisa receber os p
 
 É assim também que se dá o papel **Equipe do Corlix Hub** para quem administra o sistema.
 
-### 6.2 Todos de uma vez (SQL Workshop)
+### 6.2 Todos de uma vez (SQLcl ou SQL Developer)
 
 Dá a cada colaborador com login os papéis do cargo atual dele. Pode rodar mais de uma vez sem duplicar nada.
 
-1. **SQL Workshop > SQL Commands**. Cole e execute:
+> **Não use o SQL Commands do APEX aqui.** O `apex_acl.add_user_role` precisa de uma sessão da aplicação 100. Sem ela, o resultado é `ORA-01403: no data found` em `WWV_FLOW_ACL_API`. E o SQL Commands bloqueia o `apex_session.create_session`, com `ORA-20987: Access to session state is disabled`. Para poucos usuários, use a §6.1.
+
+1. Conecte no **SQLcl** ou no **SQL Developer** como `WKSP_CORLIXHUB` e execute:
    ```sql
+   declare
+     l_erro varchar2(4000);
    begin
-     for c in (
-       select col.login_apex, col.id_cargo
-         from colaborador col
-        where col.login_apex is not null
-          and exists (
-                select 1
-                  from apex_workspace_apex_users u
-                 where u.user_name = upper(trim(col.login_apex))
-              )
-     ) loop
-       pkg_perfis_acesso.atribuir_papeis(c.login_apex, c.id_cargo, 100);
-     end loop;
-     commit;
+     apex_session.create_session(p_app_id => 100, p_page_id => 1, p_username => '<seu usuário APEX>');
+     begin
+       for c in (
+         select col.login_apex, col.id_cargo
+           from colaborador col
+          where col.login_apex is not null
+            and exists (
+                  select 1
+                    from apex_workspace_apex_users u
+                   where u.user_name = upper(trim(col.login_apex))
+                )
+       ) loop
+         pkg_perfis_acesso.atribuir_papeis(c.login_apex, c.id_cargo, 100);
+       end loop;
+       commit;
+     exception
+       when others then
+         l_erro := sqlerrm || chr(10) || dbms_utility.format_error_backtrace;
+     end;
+     apex_session.delete_session;
+     if l_erro is not null then
+       raise_application_error(-20000, l_erro);
+     end if;
    end;
+   /
    ```
 2. Confira com a consulta da §5.3, sem o filtro de `user_name`.
 
-Se aparecer um erro dizendo que não há workspace ou aplicação no contexto, rode antes, no mesmo bloco, `apex_session.create_session(p_app_id => 100, p_page_id => 1, p_username => '<seu usuário>');` e, no fim, `apex_session.delete_session;`.
+Só entram colaboradores cujo `LOGIN_APEX` (formato `NomeSobrenome`) corresponde a uma conta APEX existente. Contas sem registro em `COLABORADOR`, como as da equipe do Corlix Hub, não são afetadas e recebem papéis pela §6.1.
 
 ---
 
@@ -380,5 +397,6 @@ O repositório já tem estas mudanças em APEXlang (`corlixhub/shared-components
 | `ORA-04063` / `PLS-00201: PKG_PERFIS_ACESSO must be declared` | O script `03` não rodou ou deu erro | Rode o `03` de novo e confira `user_errors where name = 'PKG_PERFIS_ACESSO'` |
 | Lista de Gestor vazia | Empresa não selecionada, ou nenhum colaborador da empresa tem cargo com papel `gestor` | Selecione a empresa; confira os vínculos com a consulta da §3.2 |
 | O usuário recebeu o papel, mas o menu não aparece | Autorização avaliada uma vez por sessão | Sair e entrar de novo |
-| `ORA-00001` ao inserir departamento ou cargo novo | A numeração automática não foi ajustada | Rode o `02` de novo (os `alter table … start with limit value` estão no início dele) |
+| `ORA-00001` ao inserir departamento, cargo ou colaborador novo (ex.: ao salvar na P14) | A numeração automática não foi ajustada | Rode o `02` de novo (os `alter table … start with limit value` estão no início dele) ou só o `alter table` da tabela afetada |
 | Erro em `APEX_UTIL.CREATE_USER` | Login já existe no workspace ou senha fora da política | Use outro login ou ajuste a senha. O processo de papéis nem chega a rodar. |
+| `ORA-01403` em `WWV_FLOW_ACL_API` ou `ORA-20987: Access to session state is disabled` | `apex_acl` chamado no SQL Commands, sem sessão da aplicação | Use o Builder (§6.1) ou rode no SQLcl/SQL Developer com `apex_session.create_session` (§6.2) |

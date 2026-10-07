@@ -285,8 +285,7 @@ page 1 (
             htmlExpression:
                 ```html
                 <div style="display:flex;flex-direction:row;align-items:center;gap:16px;margin-bottom:0;">
-                   <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='#APP_FILES#de
-                fault-user.jpeg';">
+                   <img src="&FOTO_URL." class="figma-avatar-img" onerror="this.onerror=null; this.src='#APP_FILES#default-user.jpeg';">
                 
                     <div style="display:flex;flex-direction:column;">
                         <span style="font-size:14px;font-weight:bold;color:#111318;margin-bottom:8px;">&NOME_GESTOR.</span>
