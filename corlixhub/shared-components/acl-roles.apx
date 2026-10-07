@@ -1,9 +1,30 @@
+role admin-rh (
+    name: Admin RH
+    description {
+        description: Equipe de RH. Usado pela autorização ADMIN_RH.
+    }
+)
+
+role colaborador (
+    name: Colaborador
+    description {
+        description: Acesso básico. Dado a todo usuário cadastrado.
+    }
+)
+
 role diretoria (
     name: Diretoria
 )
 
 role equipe-do-corlix-hub (
     name: Equipe do Corlix Hub
+)
+
+role gestor (
+    name: Gestor
+    description {
+        description: Lidera equipe. Aparece na lista de gestores da P14.
+    }
 )
 
 role publicador-de-conteúdo (

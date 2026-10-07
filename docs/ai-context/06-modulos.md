@@ -10,7 +10,7 @@
 | `modulos/organograma/` | versionada (commit `bac2d69`), **com mudanças não commitadas** (+774/−80 linhas: drawer de detalhes) | p. 3 `Organograma` (`corlixhub/pages/p00003-organograma.apx`) | **Não.** A página só tem a região Breadcrumb |
 | `modulos/historico-carreira/` | **untracked** | p. 13 `Histórico de carreira` (`p00013-histórico-de-carreira.apx`) + páginas novas 18–23 | **Não.** A página 13 só tem a região Breadcrumb; páginas 18–23 não existem |
 | `modulos/tema/` | **untracked** | todas (tema global) | documentado em `04-tema-e-estilos.md` |
-| `modulos/perfis-acesso/` | **untracked** | p. 14 `Cadastro de Usuários` | **Sim** na app (papéis `colaborador`/`gestor`/`admin-rh`, authorization `ADMIN_RH`, processo e LOV de gestor na P14); o SQL (`instalar.sql`) precisa ser rodado no banco. Guia: `Etapas-perfis-acesso.md` |
+| `modulos/perfis-acesso/` | versionado | p. 14 `Cadastro de Usuários` | **Sim** na app (papéis `colaborador`/`gestor`/`admin-rh`, authorization `ADMIN_RH`, processo e LOV de gestor na P14); SQL instalado no banco em 06/10/2026, com papéis vinculados à mão aos cargos antigos. Guia: `Etapas-perfis-acesso.md`; histórico: `Registro-implantacao.md` |
 
 Também não há rastro dos objetos dos módulos em `database/f100.sql` (nenhuma ocorrência de `vw_org_colaborador`, `pkg_organograma`, `historico_carreira`, `tipo_movimentacao`, `G_ID_EMPRESA`), nem nos shared components (`app-items.apx` só tem `APP_USER_CARGO`, `APP_USER_FOTO`, `APP_USER_NOME`, `G_NOME_EMPRESA`, `G_NOME_USUARIO`; não existem `G_ID_EMPRESA`, `ID_COLABORADOR`, o processo `DOWNLOAD_FOTO`, nem os authorization schemes `GESTOR`/`COLABORADOR`). O papel `Admin RH` e a authorization `ADMIN_RH` foram criados pelo módulo `perfis-acesso`.
 

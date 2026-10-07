@@ -71,6 +71,10 @@
 - A spec de `pkg_historico_carreira` diz que a p14 chama `registrar_admissao_automatica`, mas a p14 não faz essa chamada.
 - `COMUNICADO.TITULO` aceita até 200 caracteres no formulário (p17), mas o package corta em 100.
 - O README do módulo de carreira fala em "nove códigos padrão" de movimentação, mas o seed cria 11.
+- Perfis de acesso: os papéis vêm de `CARGO_PAPEL`, mas os colaboradores da empresa 1 estão em cargos antigos (101–604) vinculados à mão. Os cargos 605–633 do seed estão vazios. Antes de mexer em cargos, leia `modulos/perfis-acesso/Registro-implantacao.md`.
+- `apex_acl` (atribuir papéis) não funciona no SQL Commands do APEX: sem sessão da app dá `ORA-01403`, e `apex_session.create_session` é bloqueado (`ORA-20987`). Use o Builder, a P14 ou o SQLcl/SQL Developer.
+- SQL Commands: um comando por vez (sem `;` final, sem `commit;` junto), mostra só 10 linhas por padrão (campo **Rows**) e não mistura `unistr()` (NVARCHAR2) com VARCHAR2 em `union` sem `to_char`.
+- As contas SARAHSILVA, EDUARDOMARINS e ALAIRTONROCHA são da equipe e não têm colaborador: "SEM VINCULO" na Home é esperado para elas.
 
 ### Configuração
 - O idioma primário da app é `en`, com máscaras de data `DS`. Para pt-BR, formate explicitamente com `to_char(..., 'dd/mm/yyyy')`. A LOV `BOOLEAN` mostra "Yes/No".

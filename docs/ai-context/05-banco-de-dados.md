@@ -233,7 +233,7 @@ Atenção: `07_testes.sql` insere em `EMPRESA` só `nome, nome_fantasia, cnpj, s
 | 60 | 1 | Diretoria de Tecnologia e Informação |
 
   - Os IDs foram atribuídos manualmente de 10 em 10 (a identity aceita valor explícito).
-  - O nome do id 20 é um cargo ("Diretor… (CHRO)"). `modulos/perfis-acesso/02_seed_departamentos_cargos.sql` renomeia para "Diretoria de Recursos Humanos" e acerta as identities de `DEPARTAMENTO` e `CARGO` (`start with limit value`).
+  - O nome do id 20 é um cargo ("Diretor… (CHRO)"). `modulos/perfis-acesso/02_seed_departamentos_cargos.sql` renomeia para "Diretoria de Recursos Humanos" e acerta as identities de `DEPARTAMENTO`, `CARGO` e `COLABORADOR` (`start with limit value`). Sem isso, inserir pela P14 dá `ORA-00001` na PK, porque os dados foram carregados com IDs manuais.
   - Os nomes do Figma ("Operações", "Vendas", "Diretoria") e os do `07_testes.sql` são exemplos e não batem com estes.
   - Para atualizar a lista: `select id_departamento, id_empresa, nome from departamento order by 1;` no banco.
 
@@ -249,7 +249,8 @@ Atenção: `07_testes.sql` insere em `EMPRESA` só `nome, nome_fantasia, cnpj, s
 
 - `ID_DEPARTAMENTO` é obrigatório, mas não tem FK para `DEPARTAMENTO`: o banco aceita id inexistente ou de outra empresa. A regra cargo ∈ departamento só é garantida pelo `PKG_HISTORICO_CARREIRA` (-20014).
 - `NIVEL` não é usado em nenhuma página nem package do repo.
-- Regra implícita: o LOV de gestor da P14 considera gestor quem tem `CARGO.NOME = 'Gestor'` (hard-coded).
+- O LOV de gestor da P14 considera gestor quem tem o papel `gestor` no cargo (`CARGO_PAPEL`).
+- Empresa 1: os colaboradores estão nos cargos com IDs 101–604. Os IDs 605–633 foram criados pelo seed de perfis de acesso e estão vazios (na maioria, duplicatas com nomes da matriz). Detalhes em `modulos/perfis-acesso/Registro-implantacao.md`.
 - Leitura: P1, P4, P14, proc. `APP_USER_CARGO`, views, packages. Escrita: nenhuma página (só testes).
 
 ### 3.4 `COLABORADOR` (tabela central)
@@ -513,14 +514,14 @@ Nenhuma das duas é usada pelas páginas versionadas (a P4 consulta `CANAL_MENSA
 | `DT_CRIACAO` | TIMESTAMP WITH TIME ZONE default `systimestamp` | não |
 | `USR_CRIACAO` | VARCHAR2(255) default usuário APEX/sessão | não |
 
-PK `(ID_CARGO, CD_PAPEL)`; índice `IDX_CARGO_PAPEL_PAPEL (CD_PAPEL)`. O papel `colaborador` não é gravado: o package dá a todos. A matriz cargo × papel da empresa 1 está em `02_seed_departamentos_cargos.sql` (30 cargos em 6 departamentos; cargos antigos chamados "Gestor" recebem `gestor`).
+PK `(ID_CARGO, CD_PAPEL)`; índice `IDX_CARGO_PAPEL_PAPEL (CD_PAPEL)`. O papel `colaborador` não é gravado: o package dá a todos. A matriz cargo × papel da empresa 1 está em `02_seed_departamentos_cargos.sql` (30 cargos em 6 departamentos; cargos antigos chamados "Gestor" recebem `gestor`). Na empresa 1, os nomes da matriz não batiam com os cargos em uso, e os papéis foram vinculados à mão aos cargos antigos (lista em `modulos/perfis-acesso/Registro-implantacao.md` §3.1).
 
 ### `PKG_PERFIS_ACESSO` (`authid definer`)
 
 | Rotina | Faz |
 |---|---|
 | `papeis_do_cargo(p_id_cargo) return apex_t_varchar2` | `colaborador` + `CD_PAPEL` do cargo |
-| `atribuir_papeis(p_login, p_id_cargo, p_application_id default APP_ID)` | Para cada papel: confere se existe em `APEX_APPL_ACL_ROLES` (-20102) e chama `apex_acl.add_user_role` se o usuário ainda não tem (`apex_acl.has_user_role`). Login vazio → -20101. Só adiciona: não remove papéis. Precisa de sessão APEX. |
+| `atribuir_papeis(p_login, p_id_cargo, p_application_id default APP_ID)` | Para cada papel: confere se existe em `APEX_APPL_ACL_ROLES` (-20102) e chama `apex_acl.add_user_role` se o usuário ainda não tem (`apex_acl.has_user_role`). Login vazio → -20101. Só adiciona: não remove papéis. Precisa de sessão da app: fora dela, `apex_acl.add_user_role` dá `ORA-01403`, e no SQL Commands não dá para criar sessão (`ORA-20987`). Use a P14, o Builder ou o SQLcl. |
 
 Usado pela P14 (processo "Atribuir papéis do cargo"). A LOV `P14_GESTOR` lista colaboradores da empresa cujo cargo tem `gestor` em `CARGO_PAPEL`.
 
