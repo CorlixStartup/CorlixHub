@@ -42,6 +42,8 @@ Desktop.ini
 .idea/
 
 ## Backups locais e temporários
+## backups/ é a saída do scripts/backup/backup.sh e contém dados pessoais.
+/backups/
 *.bak
 *.tmp
 *~

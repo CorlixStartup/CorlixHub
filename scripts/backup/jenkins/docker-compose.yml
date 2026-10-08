@@ -1,0 +1,20 @@
+# Jenkins local para o pipeline de backup. Uso e detalhes: scripts/backup/README.md.
+#   docker compose up -d --build
+#   docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+services:
+  jenkins:
+    build: .
+    container_name: jenkins
+    # Só para uso local: o usuário jenkins (UID 1000) não tem acesso ao
+    # docker.sock do Docker Desktop. Não use assim num servidor compartilhado.
+    user: root
+    ports:
+      - "8080:8080"
+    volumes:
+      # Volume nomeado: o Docker Pipeline repassa o workspace ao agente com
+      # --volumes-from. Uma pasta do host no lugar dele deixa o agente sem os arquivos.
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  jenkins_home:

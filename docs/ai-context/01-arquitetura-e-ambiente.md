@@ -52,7 +52,8 @@ CorlixHub/
 ├── scripts/
 │   ├── setup.sh / setup.ps1   # setup do ambiente Docker (macOS/Linux e Windows)
 │   ├── git-hooks/commit-msg   # valida Conventional Commits
-│   └── apex-limpar-sql-scripts.sql  # apaga SQL Scripts do workspace (dry-run por padrão)
+│   ├── apex-limpar-sql-scripts.sql  # apaga SQL Scripts do workspace (dry-run por padrão)
+│   └── backup/                # pipeline de backup (SQLcl + Jenkins): app, DDL e dados
 └── .github/workflows/ci.yml   # CI: valida docker-compose, gitleaks, bloqueia pastas proibidas
 ```
 
@@ -134,6 +135,15 @@ Roda em PR/push para `DEV`, `UAT`, `PROD`:
 2. `secret-scan` — gitleaks 8.28.0 (CLI OSS) sobre todo o histórico.
 3. `forbidden-paths` — falha se `apex/`, `oracle_oradata/`, `ords_config/` ou `META-INF/` existirem.
 Não há deploy automatizado nem testes automatizados no CI.
+
+## 8.1 Backup (`scripts/backup/`)
+Job Jenkins diário (02h, America/Sao_Paulo) que conecta no Autonomous Database (OCI) pelo SQLcl, com wallet, como o dono do schema, e gera um `.tar.gz` por ambiente com:
+- a app em APEXlang e em SQL (com checksum SHA-256);
+- usuários e grupos do workspace;
+- o DDL do schema (`dbms_metadata`, sem schema/tablespace, um arquivo por tipo);
+- um CSV por tabela, com BLOBs em base64.
+
+Os backups ficam como artefatos do Jenkins (30 dias) e nunca vão para o Git (`/backups/` no `.gitignore`), porque contêm dados pessoais. O `backup.sh` também roda local, e `scripts/backup/jenkins/` tem um `docker-compose.yml` que sobe um Jenkins local para testar o pipeline (fica fora da raiz, então o job `validate` do CI não o valida). Configuração, conteúdo e restauração em [`scripts/backup/README.md`](../../scripts/backup/README.md).
 
 ## 9. Estado do working tree no momento desta documentação
 Modificados (não commitados): `application.apx`, páginas 1, 4, 14, 16, 27, `static-files.apx`, `custom.css/.min.css`, `database/f100.sql`, arquivos de `modulos/organograma/`.
