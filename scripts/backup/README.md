@@ -13,6 +13,8 @@ Pipeline que copia, de um Autonomous Database na OCI:
 
 Tudo vai num `corlixhub-<ambiente>-<AAAAMMDD-HHMMSS>.tar.gz` com `.sha256` ao lado.
 
+**Primeira vez?** Siga o passo a passo em [`Etapas-backup.md`](./Etapas-backup.md): banco, Jenkins, credenciais, job, conferência e erros comuns.
+
 > **Os backups têm dados pessoais dos colaboradores.** Não os versione (a pasta `backups/` está no `.gitignore`) e restrinja quem pode ver os artefatos do job no Jenkins.
 
 ## Arquivos
@@ -23,6 +25,7 @@ Tudo vai num `corlixhub-<ambiente>-<AAAAMMDD-HHMMSS>.tar.gz` com `.sha256` ao la
 - `Dockerfile`: imagem do agente com Java 21 e SQLcl.
 - `jenkins/`: Jenkins local em Docker para testar o pipeline (ver seção 3.1).
 - `extrair-no-projeto.sh`: extrai um `.tar.gz` para `corlixhub/` e `database/` (ver seção 3.2).
+- `Etapas-backup.md`: guia passo a passo da configuração, com conferências e erros comuns.
 
 ## 1. Preparar o banco (uma vez por ambiente)
 
@@ -53,7 +56,7 @@ Saída em `backups/local/`. Todas as variáveis estão no cabeçalho do `backup.
    - `corlixhub-wallet-prd`: *Secret file* (o `Wallet_*.zip`)
 3. Ajuste o mapa `AMBIENTES` no `Jenkinsfile` com o alias de serviço de cada banco. Descomente o `DEV` quando ele existir.
 4. Crie um job *Pipeline* > *Pipeline script from SCM*, com o repositório na branch `PROD` e o *Script Path* `scripts/backup/Jenkinsfile`.
-5. Rode uma vez manualmente. O primeiro build só registra parâmetros e agendamento.
+5. Rode uma vez com **Build Now**. O primeiro build usa os valores padrão (`AMBIENTE = TODOS`) e registra os parâmetros e o agendamento. Depois aparece **Build with Parameters**.
 
 ### 3.1 Jenkins local em Docker
 
