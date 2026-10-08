@@ -50,6 +50,15 @@ falhar() {
     echo "--- últimas linhas de $OUT/sqlcl.log ---" >&2
     tail -n 40 "$OUT/sqlcl.log" >&2
   fi
+  # O DDL e os dados rodam com termout off: os erros ficam nos arquivos em spool.
+  # Mostra só as linhas ORA-/SP2- (sem conteúdo dos dados) e o arquivo de cada uma.
+  if [ -n "${OUT:-}" ] && [ -d "$OUT/ddl" ]; then
+    ERROS_SPOOL="$(grep -rHE '^(ORA|SP2)-[0-9]+' "$OUT/ddl" "$OUT/dados" 2>/dev/null | sed "s|^$OUT/||" | head -n 20 || true)"
+    if [ -n "$ERROS_SPOOL" ]; then
+      echo "--- erros nos arquivos em spool ---" >&2
+      echo "$ERROS_SPOOL" >&2
+    fi
+  fi
   exit 1
 }
 

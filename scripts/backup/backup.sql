@@ -33,7 +33,6 @@ apex export -applicationid &APP_ID -exptype SQL,CHECKSUM-SH256 -dir &OUT/sql -ex
 
 -- --- 2. DDL ------------------------------------------------------------------
 prompt [3/4] DDL do schema
-set termout off
 set long 2000000000 longchunksize 32767 pagesize 0 linesize 32767 trimspool on heading off
 
 -- Sem schema, tablespace e storage: o DDL recria os objetos em qualquer schema.
@@ -47,6 +46,10 @@ begin
     dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'EMIT_SCHEMA', false);
 end;
 /
+
+-- Com termout off, um erro só aparece no arquivo em spool; o backup.sh o
+-- procura em ddl/ e dados/ quando o SQLcl falha.
+set termout off
 
 spool &OUT/ddl/01-tipos.sql
 select dbms_metadata.get_ddl('TYPE_SPEC', o.object_name)

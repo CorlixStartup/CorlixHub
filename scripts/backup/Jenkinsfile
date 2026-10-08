@@ -49,6 +49,8 @@ pipeline {
     stages {
         stage('Backup') {
             steps {
+                // Sobras de um build anterior iriam junto para os artefatos e a cópia local.
+                sh 'rm -rf backups'
                 script {
                     def alvos = params.AMBIENTE == 'TODOS' ? AMBIENTES.keySet().toList() : [params.AMBIENTE]
                     for (amb in alvos) {
@@ -85,27 +87,32 @@ pipeline {
             // Em caso de falha a pasta parcial fica no workspace; guarda só o log.
             archiveArtifacts artifacts: 'backups/**/sqlcl.log', allowEmptyArchive: true
             script {
-                // Jenkins local (scripts/backup/jenkins): copia os .tar.gz para a
-                // pasta backups/ do projeto no host, com a mesma retenção de 30 dias.
-                // O agente recebe o destino em DESTINO_LOCAL: o Docker Pipeline não repassa
-                // ao container variáveis com o mesmo nome e valor do ambiente do Jenkins.
-                if (env.CORLIXHUB_BACKUP_DIR) {
-                    withEnv(["DESTINO_LOCAL=${env.CORLIXHUB_BACKUP_DIR}"]) {
-                        sh '''
-                            : "${DESTINO_LOCAL:?DESTINO_LOCAL vazia no agente}"
-                            if [ -d backups ]; then
-                              find backups -mindepth 1 -maxdepth 1 -type d | while read -r amb; do
-                                dest="$DESTINO_LOCAL/$(basename "$amb")"
-                                mkdir -p "$dest"
-                                find "$amb" -maxdepth 1 -type f \\( -name '*.tar.gz' -o -name '*.tar.gz.sha256' \\) -exec cp {} "$dest"/ \\;
-                              done
-                            fi
-                            find "$DESTINO_LOCAL" -type f \\( -name 'corlixhub-*.tar.gz' -o -name 'corlixhub-*.tar.gz.sha256' \\) -mtime +30 -delete
-                        '''
+                try {
+                    // Jenkins local (scripts/backup/jenkins): copia os .tar.gz para a
+                    // pasta backups/ do projeto no host, com a mesma retenção de 30 dias.
+                    // O agente recebe o destino em DESTINO_LOCAL: o Docker Pipeline não repassa
+                    // ao container variáveis com o mesmo nome e valor do ambiente do Jenkins.
+                    if (env.CORLIXHUB_BACKUP_DIR) {
+                        withEnv(["DESTINO_LOCAL=${env.CORLIXHUB_BACKUP_DIR}"]) {
+                            sh '''
+                                : "${DESTINO_LOCAL:?DESTINO_LOCAL vazia no agente}"
+                                if [ -d backups ]; then
+                                  find backups -mindepth 1 -maxdepth 1 -type d | while read -r amb; do
+                                    dest="$DESTINO_LOCAL/$(basename "$amb")"
+                                    mkdir -p "$dest"
+                                    find "$amb" -maxdepth 1 -type f \\( -name '*.tar.gz' -o -name '*.tar.gz.sha256' \\) -exec cp {} "$dest"/ \\;
+                                  done
+                                fi
+                                find "$DESTINO_LOCAL" -type f \\( -name 'corlixhub-*.tar.gz' -o -name 'corlixhub-*.tar.gz.sha256' \\) -mtime +30 -delete
+                            '''
+                        }
                     }
+                } finally {
+                    // Mesmo se a cópia falhar: os backups têm dados pessoais e não
+                    // devem ficar no workspace.
+                    sh 'rm -rf backups'
                 }
             }
-            sh 'rm -rf backups'
         }
     }
 }
