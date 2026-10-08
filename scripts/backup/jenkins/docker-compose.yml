@@ -11,10 +11,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # O Jenkinsfile copia os .tar.gz para cá; é a pasta backups/ do projeto (fora do Git).
-      CORLIXHUB_BACKUP_DIR: /backups-projeto
+      # Raiz do projeto montada abaixo. O Jenkinsfile copia os .tar.gz para
+      # backups/ (fora do Git) e extrai o backup do ambiente em CORLIXHUB_EXTRAIR
+      # para corlixhub/ e database/ (ver scripts/backup/extrair-no-projeto.sh).
+      # Deixe CORLIXHUB_EXTRAIR vazio para só copiar.
+      CORLIXHUB_PROJETO: /projeto
+      CORLIXHUB_EXTRAIR: PRD
     volumes:
-      - ../../../backups:/backups-projeto
+      - ../../..:/projeto
       # Volume nomeado: o Docker Pipeline repassa o workspace ao agente com
       # --volumes-from. Uma pasta do host no lugar dele deixa o agente sem os arquivos.
       - jenkins_home:/var/jenkins_home

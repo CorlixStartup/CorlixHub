@@ -88,22 +88,35 @@ pipeline {
             archiveArtifacts artifacts: 'backups/**/sqlcl.log', allowEmptyArchive: true
             script {
                 try {
-                    // Jenkins local (scripts/backup/jenkins): copia os .tar.gz para a
-                    // pasta backups/ do projeto no host, com a mesma retenção de 30 dias.
-                    // O agente recebe o destino em DESTINO_LOCAL: o Docker Pipeline não repassa
+                    // Jenkins local (scripts/backup/jenkins): copia os .tar.gz para a pasta
+                    // backups/ do projeto no host (retenção de 30 dias) e extrai o backup do
+                    // ambiente em CORLIXHUB_EXTRAIR para corlixhub/ e database/.
+                    // O agente recebe os valores com outros nomes: o Docker Pipeline não repassa
                     // ao container variáveis com o mesmo nome e valor do ambiente do Jenkins.
-                    if (env.CORLIXHUB_BACKUP_DIR) {
-                        withEnv(["DESTINO_LOCAL=${env.CORLIXHUB_BACKUP_DIR}"]) {
+                    if (env.CORLIXHUB_PROJETO) {
+                        withEnv(["PROJETO_LOCAL=${env.CORLIXHUB_PROJETO}",
+                                 "EXTRAIR_LOCAL=${(env.CORLIXHUB_EXTRAIR ?: '').toLowerCase()}"]) {
                             sh '''
-                                : "${DESTINO_LOCAL:?DESTINO_LOCAL vazia no agente}"
+                                : "${PROJETO_LOCAL:?PROJETO_LOCAL vazia no agente}"
+                                destino_raiz="$PROJETO_LOCAL/backups"
                                 if [ -d backups ]; then
                                   find backups -mindepth 1 -maxdepth 1 -type d | while read -r amb; do
-                                    dest="$DESTINO_LOCAL/$(basename "$amb")"
+                                    dest="$destino_raiz/$(basename "$amb")"
                                     mkdir -p "$dest"
                                     find "$amb" -maxdepth 1 -type f \\( -name '*.tar.gz' -o -name '*.tar.gz.sha256' \\) -exec cp {} "$dest"/ \\;
                                   done
                                 fi
-                                find "$DESTINO_LOCAL" -type f \\( -name 'corlixhub-*.tar.gz' -o -name 'corlixhub-*.tar.gz.sha256' \\) -mtime +30 -delete
+                                if [ -d "$destino_raiz" ]; then
+                                  find "$destino_raiz" -type f \\( -name 'corlixhub-*.tar.gz' -o -name 'corlixhub-*.tar.gz.sha256' \\) -mtime +30 -delete
+                                fi
+
+                                # Só extrai o backup gerado neste build.
+                                if [ -n "$EXTRAIR_LOCAL" ] && [ -d "backups/$EXTRAIR_LOCAL" ]; then
+                                  novo="$(find "backups/$EXTRAIR_LOCAL" -maxdepth 1 -type f -name 'corlixhub-*.tar.gz' | sort | tail -n 1)"
+                                  if [ -n "$novo" ]; then
+                                    bash scripts/backup/extrair-no-projeto.sh "$novo" "$PROJETO_LOCAL"
+                                  fi
+                                fi
                             '''
                         }
                     }

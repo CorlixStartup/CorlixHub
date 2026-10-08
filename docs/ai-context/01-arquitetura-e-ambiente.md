@@ -111,7 +111,7 @@ Detalhes em [`05-banco-de-dados.md`](./05-banco-de-dados.md) e [`06-modulos.md`]
 | README diz | Realidade no repo |
 |---|---|
 | App exportada em `f100/application/pages/*.sql` + `f100/install.sql` | App está em `corlixhub/` (APEXlang `.apx`) e `database/f100.sql` (single file) |
-| `database/ddl/schema_corlixhub.sql` e `database/seed/seed_corlixhub.sql` | Não existem |
+| `database/ddl/schema_corlixhub.sql` e `database/seed/seed_corlixhub.sql` | Não existem. `database/ddl/` agora é gerada pelo backup (`01-tipos.sql` … `11-sinonimos.sql`, ver §8.1); não há seed |
 | "Não há packages PL/SQL próprios" | Existem `pkg_historico_carreira`, `pkg_historico_carreira_ui`, `pkg_organograma`; a app usa `log_pkg.apex_error_handler` |
 | "Não há testes" | Existe `modulos/historico-carreira/07_testes.sql` |
 | `docs/` não existe | Agora existe `docs/ai-context/` |
@@ -143,7 +143,7 @@ Job Jenkins diário (02h, America/Sao_Paulo) que conecta no Autonomous Database 
 - o DDL do schema (`dbms_metadata`, sem schema/tablespace, um arquivo por tipo);
 - um CSV por tabela, com BLOBs em base64.
 
-Os backups ficam como artefatos do Jenkins (30 dias) e nunca vão para o Git (`/backups/` no `.gitignore`), porque contêm dados pessoais. O `backup.sh` também roda local, e `scripts/backup/jenkins/` tem um `docker-compose.yml` que sobe um Jenkins local para testar o pipeline e copia cada `.tar.gz` para `backups/<ambiente>/` do projeto (fica fora da raiz, então o job `validate` do CI não o valida). Configuração, conteúdo e restauração em [`scripts/backup/README.md`](../../scripts/backup/README.md).
+Os backups ficam como artefatos do Jenkins (30 dias) e nunca vão para o Git (`/backups/` no `.gitignore`), porque contêm dados pessoais. O `backup.sh` também roda local, e `scripts/backup/jenkins/` tem um `docker-compose.yml` que sobe um Jenkins local para testar o pipeline, copia cada `.tar.gz` para `backups/<ambiente>/` do projeto e, com `scripts/backup/extrair-no-projeto.sh`, atualiza `corlixhub/`, `database/f100.sql` e `database/ddl/` (pulando destinos com alterações não commitadas) e põe os CSVs em `database/dados/backup/` (ignorado pelo Git) (o compose fica fora da raiz, então o job `validate` do CI não o valida). Configuração, conteúdo e restauração em [`scripts/backup/README.md`](../../scripts/backup/README.md).
 
 ## 9. Estado do working tree no momento desta documentação
 Modificados (não commitados): `application.apx`, páginas 1, 4, 14, 16, 27, `static-files.apx`, `custom.css/.min.css`, `database/f100.sql`, arquivos de `modulos/organograma/`.

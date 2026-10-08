@@ -22,6 +22,7 @@ Tudo vai num `corlixhub-<ambiente>-<AAAAMMDD-HHMMSS>.tar.gz` com `.sha256` ao la
 - `Jenkinsfile`: agenda (todo dia às 02h, horário de Brasília), roda por ambiente e arquiva os `.tar.gz`.
 - `Dockerfile`: imagem do agente com Java 21 e SQLcl.
 - `jenkins/`: Jenkins local em Docker para testar o pipeline (ver seção 3.1).
+- `extrair-no-projeto.sh`: extrai um `.tar.gz` para `corlixhub/` e `database/` (ver seção 3.2).
 
 ## 1. Preparar o banco (uma vez por ambiente)
 
@@ -68,10 +69,29 @@ Abra http://localhost:8080, conclua o assistente e siga os passos 2 a 5 acima. O
 
 - O container roda como `root` para acessar o socket do Docker Desktop. Use assim só na sua máquina.
 - Mantenha o `jenkins_home` como volume nomeado: o Docker Pipeline repassa o workspace ao agente com `--volumes-from`, e uma pasta do host no lugar dele deixa o agente sem os arquivos.
-- Cada build também copia o `.tar.gz` e o `.sha256` para a pasta `backups/<ambiente>/` do projeto (montada em `/backups-projeto`, variável `CORLIXHUB_BACKUP_DIR`), apagando ali os arquivos com mais de 30 dias. A pasta está no `.gitignore`. Num Jenkins sem essa variável a cópia não acontece.
+- Cada build copia o `.tar.gz` e o `.sha256` para `backups/<ambiente>/` do projeto, apagando ali os arquivos com mais de 30 dias, e extrai o backup do ambiente em `CORLIXHUB_EXTRAIR` (padrão `PRD`) com o `extrair-no-projeto.sh` (seção 3.2). O projeto inteiro é montado em `/projeto` (variável `CORLIXHUB_PROJETO`). Num Jenkins sem essa variável não há cópia nem extração.
 - Builds, credenciais e artefatos ficam no volume. `docker compose down` preserva tudo; `docker compose down -v` apaga, inclusive os backups arquivados.
 
 No IntelliJ, os plugins *Jenkins Control* (jobs e builds) e *Jenkins Pipeline Linter Connector* (validar o `Jenkinsfile`) conectam em `http://localhost:8080` com um API token do seu usuário no Jenkins.
+
+### 3.2 Extrair o backup no projeto
+
+```bash
+scripts/backup/extrair-no-projeto.sh backups/prd/corlixhub-prd-<data>.tar.gz
+```
+
+O Jenkins local roda isso sozinho a cada build. O script atualiza:
+
+| Do backup | Para | Git |
+|---|---|---|
+| `apexlang/corlixhub/` | `corlixhub/` (pasta inteira trocada) | versionado |
+| `sql/f100.sql` | `database/f100.sql` | versionado |
+| `ddl/` | `database/ddl/` (pasta inteira trocada) | versionado |
+| `dados/` + `manifesto.txt` | `database/dados/backup/` | **ignorado** (dados pessoais) |
+
+- Um destino versionado com alteração não commitada, inclusive arquivo novo não rastreado, é pulado com aviso no log. Commite ou descarte suas mudanças e rode de novo. Na primeira extração, `database/ddl/` só volta a ser atualizada depois de commitada.
+- Os arquivos de texto têm o fim de linha convertido para LF, como pede o `.gitattributes`.
+- Depois da extração, revise com `git status` e `git diff` antes de commitar: o que mudou no APEX Builder aparece como alteração em `corlixhub/` e `database/f100.sql`.
 
 Retenção: os artefatos ficam 30 dias e o histórico dos builds 90 (`buildDiscarder`). Rodando local, o `backup.sh` apaga `.tar.gz` com mais de `RETENCAO_DIAS` (30).
 
