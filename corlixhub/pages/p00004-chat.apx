@@ -363,6 +363,9 @@ page 4 (
             template: @/blank-with-attributes
             templateOptions: #DEFAULT#
         }
+        reportLayout {
+            numberOfRows: 1000
+        }
         componentAppearance {
             template: @chat-contatos
             templateOptions: "[object Object]"
@@ -516,7 +519,7 @@ page 4 (
                 ```sql
                 select m.corpo,
                        to_char(m.data_envio, 'hh24:mi') as hora,
-                       case when col.login_apex = :APP_USER then 'out' else 'in' end as lado,
+                       case when upper(col.login_apex) = upper(:APP_USER) then 'out' else 'in' end as lado,
                        case when row_number() over (
                                    partition by trunc(m.data_envio)
                                    order by m.data_envio
@@ -531,6 +534,14 @@ page 4 (
                 join   colaborador col on col.id_colaborador = m.id_colaborador
                 where  m.id_canal = :P4_CANAL_ID
                 and    nvl(m.excluida, false) = false
+                -- só exibe canais dos quais o usuário logado participa
+                and    exists (
+                         select 1
+                         from   canal_participante cp
+                         join   colaborador eu on eu.id_colaborador = cp.id_colaborador
+                         where  cp.id_canal = m.id_canal
+                         and    upper(eu.login_apex) = upper(:APP_USER)
+                       )
                 order  by m.data_envio
                 ```
         }
@@ -545,10 +556,6 @@ page 4 (
         }
         advanced {
             customAttributes: class="ch-msgs-wrap"
-        }
-        serverSideCondition {
-            type: itemIsNotNull
-            item: P4_CANAL_ID
         }
         componentAppearance {
             template: @chat-mensagens
@@ -694,9 +701,14 @@ page 4 (
                       select id_colaborador
                       into   l_eu
                       from   colaborador
-                      where  upper(login_apex) = upper(:APP_USER);
+                      where  upper(login_apex) = upper(:APP_USER)
+                      fetch  first 1 row only;
                     
                       :P4_CANAL_ID := ch_get_canal_direto(l_eu, :P4_CONTATO_ID);
+                    exception
+                      when no_data_found then
+                        raise_application_error(-20001,
+                          'Seu usuário não está vinculado a um colaborador.');
                     end;
                     ```
                 itemsToSubmit: P4_CONTATO_ID
