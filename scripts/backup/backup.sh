@@ -106,7 +106,8 @@ log "Backup de $AMBIENTE (app $APP_ID, serviço $DB_SERVICE) em $OUT"
     echo "whenever sqlerror continue"
     echo "define WS_ID = 0"
     echo "column workspace_id new_value WS_ID noprint"
-    echo "select workspace_id from apex_applications where application_id = $APP_ID;"
+    # to_char: como número, o SQLcl arredonda o ID (16+ dígitos) ao formatar a coluna.
+    echo "select to_char(workspace_id) as workspace_id from apex_applications where application_id = $APP_ID;"
     echo "apex export -expworkspace -workspaceid &WS_ID -expminimal -dir $OUT/workspace -skipexportdate -overwrite-files"
   fi
   echo "exit"
