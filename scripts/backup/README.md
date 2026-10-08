@@ -68,6 +68,7 @@ Abra http://localhost:8080, conclua o assistente e siga os passos 2 a 5 acima. O
 
 - O container roda como `root` para acessar o socket do Docker Desktop. Use assim só na sua máquina.
 - Mantenha o `jenkins_home` como volume nomeado: o Docker Pipeline repassa o workspace ao agente com `--volumes-from`, e uma pasta do host no lugar dele deixa o agente sem os arquivos.
+- Cada build também copia o `.tar.gz` e o `.sha256` para a pasta `backups/<ambiente>/` do projeto (montada em `/backups-projeto`, variável `CORLIXHUB_BACKUP_DIR`), apagando ali os arquivos com mais de 30 dias. A pasta está no `.gitignore`. Num Jenkins sem essa variável a cópia não acontece.
 - Builds, credenciais e artefatos ficam no volume. `docker compose down` preserva tudo; `docker compose down -v` apaga, inclusive os backups arquivados.
 
 No IntelliJ, os plugins *Jenkins Control* (jobs e builds) e *Jenkins Pipeline Linter Connector* (validar o `Jenkinsfile`) conectam em `http://localhost:8080` com um API token do seu usuário no Jenkins.

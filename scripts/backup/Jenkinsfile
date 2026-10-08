@@ -84,6 +84,22 @@ pipeline {
             archiveArtifacts artifacts: 'backups/**/*.tar.gz, backups/**/*.sha256', fingerprint: true, allowEmptyArchive: true
             // Em caso de falha a pasta parcial fica no workspace; guarda só o log.
             archiveArtifacts artifacts: 'backups/**/sqlcl.log', allowEmptyArchive: true
+            script {
+                // Jenkins local (scripts/backup/jenkins): copia os .tar.gz para a
+                // pasta backups/ do projeto no host, com a mesma retenção de 30 dias.
+                if (env.CORLIXHUB_BACKUP_DIR) {
+                    sh '''
+                        if [ -d backups ]; then
+                          find backups -mindepth 1 -maxdepth 1 -type d | while read -r amb; do
+                            dest="$CORLIXHUB_BACKUP_DIR/$(basename "$amb")"
+                            mkdir -p "$dest"
+                            find "$amb" -maxdepth 1 -type f \\( -name '*.tar.gz' -o -name '*.tar.gz.sha256' \\) -exec cp {} "$dest"/ \\;
+                          done
+                        fi
+                        find "$CORLIXHUB_BACKUP_DIR" -type f \\( -name 'corlixhub-*.tar.gz' -o -name 'corlixhub-*.tar.gz.sha256' \\) -mtime +30 -delete
+                    '''
+                }
+            }
             sh 'rm -rf backups'
         }
     }
