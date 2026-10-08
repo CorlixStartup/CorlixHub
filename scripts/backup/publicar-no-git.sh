@@ -8,7 +8,8 @@
 # 2. Extrai o backup nela com o extrair-no-projeto.sh.
 # 3. Commita só corlixhub/, database/f100.sql e database/ddl/ (os CSVs com dados
 #    pessoais nunca entram) com a mensagem
-#    "chore(backup): Backup - Corlix Hub - dd/MM/yyyy as HH:mm" e faz push.
+#    "chore(backup): Backup - Corlix Hub - dd/MM/yyyy as HH:mm" e faz push. Sem
+#    mudanças no banco o commit é vazio, como registro de que o backup rodou.
 # 4. Abre um PR de BRANCH_BACKUP para BRANCH_PR (PROD), se ainda não houver um
 #    aberto. Com um PR aberto, o push já o atualiza.
 #
@@ -72,17 +73,20 @@ bash "$SCRIPT_DIR/extrair-no-projeto.sh" "$ARQUIVO" "$CLONE"
 # se o .gitignore mudar.
 git -C "$CLONE" add -A -- corlixhub database/f100.sql database/ddl
 
+# Toda execução gera um commit: sem mudanças no banco, ele é vazio e serve de
+# registro de que o backup rodou.
+DETALHE="Gerado pelo Jenkins a partir de $(basename "$ARQUIVO").${BUILD_URL:+ Build: $BUILD_URL}"
 if git -C "$CLONE" diff --cached --quiet; then
-  log "Nada mudou no banco desde o último commit em $BRANCH_BACKUP; sem commit."
+  log "Nada mudou no banco desde o último commit em $BRANCH_BACKUP; commit vazio."
+  DETALHE="$DETALHE
+Sem mudanças na app nem no DDL."
 else
   git -C "$CLONE" diff --cached --stat | tail -n 1 | sed 's/^/[publicar] /'
-  git -C "$CLONE" commit --quiet --no-verify \
-    -m "$MENSAGEM" \
-    -m "Gerado pelo Jenkins a partir de $(basename "$ARQUIVO").${BUILD_URL:+ Build: $BUILD_URL}"
-  git -C "$CLONE" push --quiet origin "HEAD:refs/heads/$BRANCH_BACKUP" \
-    || falhar "push para $BRANCH_BACKUP recusado. Confira o token e se a branch exige PR (proteção de branch)."
-  log "Commit $(git -C "$CLONE" rev-parse --short HEAD) enviado para $BRANCH_BACKUP: $MENSAGEM"
 fi
+git -C "$CLONE" commit --quiet --no-verify --allow-empty -m "$MENSAGEM" -m "$DETALHE"
+git -C "$CLONE" push --quiet origin "HEAD:refs/heads/$BRANCH_BACKUP" \
+  || falhar "push para $BRANCH_BACKUP recusado. Confira o token e se a branch exige PR (proteção de branch)."
+log "Commit $(git -C "$CLONE" rev-parse --short HEAD) enviado para $BRANCH_BACKUP: $MENSAGEM"
 
 # --- Pull request BRANCH_BACKUP -> BRANCH_PR --------------------------------
 api() {

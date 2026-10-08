@@ -103,7 +103,7 @@ O Jenkins local roda isso sozinho a cada build. O script atualiza:
 Com o parâmetro `PUBLICAR_GIT` marcado (padrão, inclusive na execução agendada), o stage **Publicar no Git** roda o `publicar-no-git.sh` com o backup do ambiente em `AMBIENTE_GIT` (`PRD`) gerado no build:
 
 1. Clona a `DEV` numa pasta temporária e extrai o backup nela com o `extrair-no-projeto.sh`.
-2. Commita só `corlixhub/`, `database/f100.sql` e `database/ddl/` (os CSVs nunca entram), com a mensagem `chore(backup): Backup - Corlix Hub - dd/MM/yyyy as HH:mm` no horário de Brasília, e faz push para a `DEV`. Se nada mudou no banco, não há commit.
+2. Commita só `corlixhub/`, `database/f100.sql` e `database/ddl/` (os CSVs nunca entram), com a mensagem `chore(backup): Backup - Corlix Hub - dd/MM/yyyy as HH:mm` no horário de Brasília, e faz push para a `DEV`. Se nada mudou no banco, o commit é vazio, só como registro de que o backup rodou.
 3. Abre um PR `DEV` → `PROD` com o título `Backup - Corlix Hub - dd/MM/yyyy as HH:mm`. Se já houver um aberto, o push só o atualiza.
 
 Requisitos:
