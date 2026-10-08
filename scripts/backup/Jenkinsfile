@@ -1,0 +1,131 @@
+// -----------------------------------------------------------------------------
+// Corlix Hub — backup diário da aplicação APEX, do DDL e dos dados
+//
+// Job: Pipeline "from SCM" apontando para a branch PROD, Script Path
+// scripts/backup/Jenkinsfile. Configuração completa: scripts/backup/README.md.
+//
+// Requisitos no Jenkins: plugins Pipeline, Docker Pipeline e Credentials
+// Binding; Docker no agente.
+// -----------------------------------------------------------------------------
+
+// Um item por ambiente. "servico" é o alias do tnsnames.ora da wallet do
+// Autonomous Database; as credenciais são cadastradas no Jenkins com esses IDs:
+//   credBanco  -> "Username with password" (dono do schema e senha)
+//   credWallet -> "Secret file" (Wallet_*.zip baixado do OCI)
+// Descomente o DEV quando o ambiente existir.
+AMBIENTES = [
+    PRD: [servico: 'corlixhub_low', credBanco: 'corlixhub-db-prd', credWallet: 'corlixhub-wallet-prd'],
+    // DEV: [servico: 'corlixhubdev_low', credBanco: 'corlixhub-db-dev', credWallet: 'corlixhub-wallet-dev'],
+]
+
+pipeline {
+    agent {
+        dockerfile {
+            dir 'scripts/backup'
+            filename 'Dockerfile'
+        }
+    }
+
+    parameters {
+        choice(name: 'AMBIENTE', choices: ['TODOS'] + AMBIENTES.keySet().toList(),
+               description: 'Ambiente a copiar. A execução agendada usa TODOS.')
+        string(name: 'APP_ID', defaultValue: '100', description: 'ID da aplicação APEX.')
+        booleanParam(name: 'EXPORTAR_WORKSPACE', defaultValue: true,
+                     description: 'Exporta também usuários e grupos do workspace APEX.')
+    }
+
+    triggers {
+        cron('TZ=America/Sao_Paulo\nH 2 * * *')
+    }
+
+    options {
+        // Os backups ficam como artefatos do build: 30 dias para os arquivos,
+        // 90 dias para o histórico dos builds.
+        buildDiscarder(logRotator(daysToKeepStr: '90', artifactDaysToKeepStr: '30'))
+        disableConcurrentBuilds()
+        timeout(time: 1, unit: 'HOURS')
+    }
+
+    stages {
+        stage('Backup') {
+            steps {
+                // Sobras de um build anterior iriam junto para os artefatos e a cópia local.
+                sh 'rm -rf backups'
+                script {
+                    def alvos = params.AMBIENTE == 'TODOS' ? AMBIENTES.keySet().toList() : [params.AMBIENTE]
+                    for (amb in alvos) {
+                        def cfg = AMBIENTES[amb]
+                        stage("Backup ${amb}") {
+                            // Um ambiente com erro não impede o backup dos outros.
+                            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                                withCredentials([
+                                    usernamePassword(credentialsId: cfg.credBanco, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD'),
+                                    file(credentialsId: cfg.credWallet, variable: 'DB_WALLET'),
+                                ]) {
+                                    withEnv([
+                                        "AMBIENTE=${amb}",
+                                        "DB_SERVICE=${cfg.servico}",
+                                        "APP_ID=${params.APP_ID}",
+                                        "EXPORTAR_WORKSPACE=${params.EXPORTAR_WORKSPACE}",
+                                        "BACKUP_ROOT=${env.WORKSPACE}/backups",
+                                        'RETENCAO_DIAS=0',
+                                    ]) {
+                                        sh 'bash scripts/backup/backup.sh'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'backups/**/*.tar.gz, backups/**/*.sha256', fingerprint: true, allowEmptyArchive: true
+            // Em caso de falha a pasta parcial fica no workspace; guarda só o log.
+            archiveArtifacts artifacts: 'backups/**/sqlcl.log', allowEmptyArchive: true
+            script {
+                try {
+                    // Jenkins local (scripts/backup/jenkins): copia os .tar.gz para a pasta
+                    // backups/ do projeto no host (retenção de 30 dias) e extrai o backup do
+                    // ambiente em CORLIXHUB_EXTRAIR para corlixhub/ e database/.
+                    // O agente recebe os valores com outros nomes: o Docker Pipeline não repassa
+                    // ao container variáveis com o mesmo nome e valor do ambiente do Jenkins.
+                    if (env.CORLIXHUB_PROJETO) {
+                        withEnv(["PROJETO_LOCAL=${env.CORLIXHUB_PROJETO}",
+                                 "EXTRAIR_LOCAL=${(env.CORLIXHUB_EXTRAIR ?: '').toLowerCase()}"]) {
+                            sh '''
+                                : "${PROJETO_LOCAL:?PROJETO_LOCAL vazia no agente}"
+                                destino_raiz="$PROJETO_LOCAL/backups"
+                                if [ -d backups ]; then
+                                  find backups -mindepth 1 -maxdepth 1 -type d | while read -r amb; do
+                                    dest="$destino_raiz/$(basename "$amb")"
+                                    mkdir -p "$dest"
+                                    find "$amb" -maxdepth 1 -type f \\( -name '*.tar.gz' -o -name '*.tar.gz.sha256' \\) -exec cp {} "$dest"/ \\;
+                                  done
+                                fi
+                                if [ -d "$destino_raiz" ]; then
+                                  find "$destino_raiz" -type f \\( -name 'corlixhub-*.tar.gz' -o -name 'corlixhub-*.tar.gz.sha256' \\) -mtime +30 -delete
+                                fi
+
+                                # Só extrai o backup gerado neste build.
+                                if [ -n "$EXTRAIR_LOCAL" ] && [ -d "backups/$EXTRAIR_LOCAL" ]; then
+                                  novo="$(find "backups/$EXTRAIR_LOCAL" -maxdepth 1 -type f -name 'corlixhub-*.tar.gz' | sort | tail -n 1)"
+                                  if [ -n "$novo" ]; then
+                                    bash scripts/backup/extrair-no-projeto.sh "$novo" "$PROJETO_LOCAL"
+                                  fi
+                                fi
+                            '''
+                        }
+                    }
+                } finally {
+                    // Mesmo se a cópia falhar: os backups têm dados pessoais e não
+                    // devem ficar no workspace.
+                    sh 'rm -rf backups'
+                }
+            }
+        }
+    }
+}

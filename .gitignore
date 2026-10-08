@@ -42,6 +42,10 @@ Desktop.ini
 .idea/
 
 ## Backups locais e temporários
+## backups/ é a saída do scripts/backup/backup.sh e contém dados pessoais.
+/backups/
+## database/dados/backup/ recebe os CSVs extraídos pelo scripts/backup/extrair-no-projeto.sh.
+/database/dados/backup/
 *.bak
 *.tmp
 *~
