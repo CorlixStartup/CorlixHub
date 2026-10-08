@@ -1,5 +1,5 @@
-# Agente do Jenkins para o backup do Corlix Hub: Java 21 + Oracle SQLcl + git
-# (o git é usado pelo extrair-no-projeto.sh para conferir alterações locais).
+# Agente do Jenkins para o backup do Corlix Hub: Java 21 + Oracle SQLcl + git + jq
+# (git e jq: extrair-no-projeto.sh e publicar-no-git.sh; tzdata: data em horário de Brasília).
 # Usado pelo scripts/backup/Jenkinsfile (agent dockerfile).
 FROM eclipse-temurin:21-jre
 
@@ -8,7 +8,7 @@ FROM eclipse-temurin:21-jre
 ARG SQLCL_VERSAO=26.2.2.233.1901
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends curl unzip git \
+ && apt-get install -y --no-install-recommends curl unzip git jq tzdata \
  && curl -fsSL "https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-${SQLCL_VERSAO}.zip" -o /tmp/sqlcl.zip \
  && unzip -q /tmp/sqlcl.zip -d /opt \
  && rm -f /tmp/sqlcl.zip \
