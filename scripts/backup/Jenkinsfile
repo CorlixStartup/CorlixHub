@@ -18,6 +18,12 @@ AMBIENTES = [
     // DEV: [servico: 'corlixhubdev_low', credBanco: 'corlixhub-db-dev', credWallet: 'corlixhub-wallet-dev'],
 ]
 
+// Publicação no GitHub (stage "Publicar no Git"): o backup deste ambiente é
+// commitado na DEV e vira um PR para a PROD. A credencial é "Username with
+// password" com o usuário do GitHub e um token (Contents + Pull requests).
+AMBIENTE_GIT = 'PRD'
+CREDENCIAL_GIT = 'corlixhub-github'
+
 pipeline {
     agent {
         dockerfile {
@@ -32,6 +38,8 @@ pipeline {
         string(name: 'APP_ID', defaultValue: '100', description: 'ID da aplicação APEX.')
         booleanParam(name: 'EXPORTAR_WORKSPACE', defaultValue: true,
                      description: 'Exporta também usuários e grupos do workspace APEX.')
+        booleanParam(name: 'PUBLICAR_GIT', defaultValue: true,
+                     description: 'Commita o backup na DEV e abre PR para a PROD.')
     }
 
     triggers {
@@ -79,6 +87,32 @@ pipeline {
                 }
             }
         }
+
+        stage('Publicar no Git') {
+            // "!= false": no primeiro build depois de criar o parâmetro ele ainda vem nulo.
+            when { expression { params.PUBLICAR_GIT != false } }
+            steps {
+                script {
+                    // Só o backup gerado neste build (o workspace é limpo no início).
+                    def novo = ''
+                    withEnv(["PASTA_GIT=backups/${AMBIENTE_GIT.toLowerCase()}"]) {
+                        novo = sh(returnStdout: true, script: '''
+                            [ -d "$PASTA_GIT" ] || exit 0
+                            find "$PASTA_GIT" -maxdepth 1 -type f -name 'corlixhub-*.tar.gz' | sort | tail -n 1
+                        ''').trim()
+                    }
+                    if (!novo) {
+                        echo "Sem backup de ${AMBIENTE_GIT} neste build; nada a publicar."
+                        return
+                    }
+                    withCredentials([usernamePassword(credentialsId: CREDENCIAL_GIT, usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                        withEnv(["BACKUP_GIT=${novo}"]) {
+                            sh 'bash scripts/backup/publicar-no-git.sh "$BACKUP_GIT"'
+                        }
+                    }
+                }
+            }
+        }
     }
 
     post {
@@ -90,12 +124,14 @@ pipeline {
                 try {
                     // Jenkins local (scripts/backup/jenkins): copia os .tar.gz para a pasta
                     // backups/ do projeto no host (retenção de 30 dias) e extrai o backup do
-                    // ambiente em CORLIXHUB_EXTRAIR para corlixhub/ e database/.
+                    // ambiente em CORLIXHUB_EXTRAIR para corlixhub/ e database/. Com
+                    // PUBLICAR_GIT a extração local é pulada: as mudanças chegam pela DEV
+                    // (git pull) e não ficam pendentes na pasta do projeto.
                     // O agente recebe os valores com outros nomes: o Docker Pipeline não repassa
                     // ao container variáveis com o mesmo nome e valor do ambiente do Jenkins.
                     if (env.CORLIXHUB_PROJETO) {
                         withEnv(["PROJETO_LOCAL=${env.CORLIXHUB_PROJETO}",
-                                 "EXTRAIR_LOCAL=${(env.CORLIXHUB_EXTRAIR ?: '').toLowerCase()}"]) {
+                                 "EXTRAIR_LOCAL=${params.PUBLICAR_GIT != false ? '' : (env.CORLIXHUB_EXTRAIR ?: '').toLowerCase()}"]) {
                             sh '''
                                 : "${PROJETO_LOCAL:?PROJETO_LOCAL vazia no agente}"
                                 destino_raiz="$PROJETO_LOCAL/backups"

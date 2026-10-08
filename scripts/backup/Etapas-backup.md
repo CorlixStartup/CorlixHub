@@ -29,7 +29,8 @@ Todo dia, entre 02:00 e 02:59 (horário de Brasília), o Jenkins:
 1. Baixa o `Jenkinsfile` do GitHub e monta o agente a partir de `scripts/backup/Dockerfile`.
 2. Roda o `backup.sh`, que conecta no banco pelo SQLcl e exporta a app, o workspace, o DDL e os dados.
 3. Gera um `corlixhub-prd-<AAAAMMDD-HHMMSS>.tar.gz` com `.sha256` e o guarda como artefato do build por 30 dias.
-4. Copia o arquivo para `backups/prd/` do projeto e o extrai em `corlixhub/` e `database/` com o `extrair-no-projeto.sh`.
+4. Clona a `DEV`, extrai o backup nela, commita `corlixhub/`, `database/f100.sql` e `database/ddl/` com a mensagem `chore(backup): Backup - Corlix Hub - dd/MM/yyyy as HH:mm` e abre um PR `DEV` → `PROD` (stage **Publicar no Git**).
+5. Copia o arquivo para `backups/prd/` do projeto. Com `PUBLICAR_GIT` desmarcado, em vez do passo 4 ele extrai o backup na pasta local do projeto.
 
 Hoje existe um único ambiente, chamado `PRD` no `Jenkinsfile`. O nome é só um rótulo do banco atual.
 
@@ -151,7 +152,24 @@ Caminho: **Manage Jenkins** > **Credentials** > na tabela *Stores scoped to Jenk
 | File | o `Wallet_<nome>.zip` do passo 2.2 |
 | ID | `corlixhub-wallet-prd` (exatamente assim) |
 
-**Confira:** a lista *Global credentials* mostra os dois IDs. Se o campo ID ficar em branco, o Jenkins gera um ID aleatório e o build falha com *credentials not found*.
+### 4.3 Credencial do GitHub
+
+Usada pelo stage **Publicar no Git** para commitar na `DEV` e abrir o PR para a `PROD`.
+
+1. No GitHub: **Settings** > **Developer settings** > **Personal access tokens** > **Fine-grained tokens** > **Generate new token**. *Resource owner* `CorlixStartup`, *Repository access* só `CorlixHub`, permissões **Contents: Read and write** e **Pull requests: Read and write**.
+2. No Jenkins:
+
+| Campo | Valor |
+|---|---|
+| Kind | **Username with password** |
+| Scope | Global |
+| Username | seu usuário do GitHub |
+| Password | o token |
+| ID | `corlixhub-github` (exatamente assim) |
+
+Se a `DEV` tiver proteção de branch que exige PR, adicione esse usuário no *bypass* da regra.
+
+**Confira:** a lista *Global credentials* mostra os três IDs. Se o campo ID ficar em branco, o Jenkins gera um ID aleatório e o build falha com *credentials not found*.
 
 ---
 
@@ -232,11 +250,13 @@ Os arquivos também ficam em **Build Artifacts**, na página do build.
 
 ## 7. Rotina depois do backup
 
-A cada backup, `corlixhub/`, `database/f100.sql` e `database/ddl/` passam a refletir o que está no banco. Assim, tudo o que alguém mudou no **APEX Builder** aparece no `git status` do projeto.
+A cada backup, o Jenkins commita na `DEV` o que mudou no **APEX Builder** e deixa um PR `DEV` → `PROD` aberto (ou atualizado).
 
-1. Rode `git status` e `git diff`.
-2. Revise as mudanças. Elas devem ser alterações feitas de propósito no Builder.
-3. Commite numa branch `feature/*` e abra PR para `DEV`, como qualquer mudança:
+1. Abra o PR `Backup - Corlix Hub - …` no GitHub e revise o diff. As mudanças devem ser alterações feitas de propósito no Builder. O PR também traz outros commits da `DEV` que ainda não estão na `PROD`.
+2. Faça o merge quando estiver tudo certo.
+3. Na sua máquina, `git pull` na `DEV` traz o commit do backup.
+
+**Com `PUBLICAR_GIT` desmarcado** (fluxo manual), a extração vai para a pasta do projeto e as mudanças aparecem no `git status`. Revise com `git diff`, commite numa branch `feature/*` e abra PR para `DEV`:
    ```bash
    git add corlixhub database/f100.sql database/ddl
    git commit -m "chore(apex): sincroniza a app e o DDL com o banco"
@@ -294,6 +314,9 @@ Use para reaplicar um backup depois de commitar suas mudanças, ou para voltar o
 | `docker: not found` | O Jenkins não foi iniciado pelo `docker-compose.yml` desta pasta. | Suba com `docker compose up -d --build` (passo 3.1). |
 | `PROJETO_LOCAL vazia no agente` | O container foi criado com um `docker-compose.yml` antigo. | `cd scripts/backup/jenkins && docker compose up -d` |
 | `[extrair] AVISO: <pasta> tem alterações não commitadas` | Proteção do trabalho local (passo 7). | Commite ou descarte e rode o passo 8.2. |
+| `push para DEV recusado` | Token sem **Contents: Read and write** ou a `DEV` exige PR. | Ajuste o token ou libere o usuário no *bypass* da proteção de branch (passo 4.3). |
+| `não consegui listar os PRs` / `Bad credentials` | Token inválido, expirado ou sem acesso ao repositório. | Gere outro token e atualize a credencial `corlixhub-github` (passo 4.3). |
+| `PR não aberto: ... No commits between PROD and DEV` | A `PROD` já tem tudo o que está na `DEV`. | Nada a fazer. |
 | `AVISO: export do workspace não gerou arquivos` | O `WKSP_CORLIXHUB` não tem permissão para exportar o workspace. O resto do backup está completo. | Opcional: desmarque `EXPORTAR_WORKSPACE` ou peça a permissão ao administrador do APEX. |
 | `--- erros nos arquivos em spool ---` seguido de `ORA-...` | Um erro do Oracle durante o DDL ou os dados. A linha mostra o arquivo e a mensagem. | Pesquise o código ORA-. Se for passageiro (rede, banco reiniciando), rode o build de novo. |
 | `ERRO: SQLcl terminou com erro.` sem detalhe | Conexão interrompida, por exemplo com o computador dormindo durante o build. | Rode de novo. Se repetir, mande o `sqlcl.log` dos *Build Artifacts* para o time. |
@@ -331,8 +354,9 @@ A extração no projeto continua usando só o ambiente definido em `CORLIXHUB_EX
 - [ ] `WKSP_CORLIXHUB` desbloqueado, com senha guardada (2.1)
 - [ ] Wallet baixada e alias `_low` conferido (2.2, 2.3)
 - [ ] Jenkins em http://localhost:8080 com o seu usuário admin (3)
-- [ ] Credenciais `corlixhub-db-prd` (usuário `WKSP_CORLIXHUB`) e `corlixhub-wallet-prd` (4)
+- [ ] Credenciais `corlixhub-db-prd` (usuário `WKSP_CORLIXHUB`), `corlixhub-wallet-prd` e `corlixhub-github` (4)
 - [ ] Job `corlixhub-backup` apontando para a branch certa (5)
-- [ ] Build com `Finished: SUCCESS` e as linhas `[extrair]` no log (6.2)
+- [ ] Build com `Finished: SUCCESS` e as linhas `[extrair]` e `[publicar]` no log (6.2)
+- [ ] Commit `chore(backup): Backup - Corlix Hub - …` na `DEV` e PR para a `PROD` aberto (7)
 - [ ] `.sha256` confere e `manifesto.txt` mostra `usuario=WKSP_CORLIXHUB` (6.3)
 - [ ] Restauração ensaiada num schema de teste ([README, seção 4](./README.md#4-restauração))
