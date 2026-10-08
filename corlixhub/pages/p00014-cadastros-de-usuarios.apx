@@ -706,7 +706,8 @@ page 14 (
             sequence: 30
         }
         validation {
-            plsqlExpression:
+            type: functionBodyReturningBoolean
+            plsqlFunctionBody:
                 ```plsql
                 BEGIN
                     RETURN TO_DATE(:P14_DATA_ADMISSAO, 'YYYY-MM-DD')
@@ -730,7 +731,8 @@ page 14 (
             sequence: 20
         }
         validation {
-            plsqlExpression:
+            type: functionBodyReturningBoolean
+            plsqlFunctionBody:
                 ```plsql
                 DECLARE
                     l_hoje DATE := TRUNC(CAST(SYSTIMESTAMP AT TIME ZONE 'America/Sao_Paulo' AS DATE));
@@ -755,7 +757,8 @@ page 14 (
             sequence: 40
         }
         validation {
-            plsqlExpression:
+            type: functionBodyReturningBoolean
+            plsqlFunctionBody:
                 ```plsql
                 BEGIN
                     RETURN TO_DATE(:P14_DATA_ADMISSAO, 'YYYY-MM-DD')
