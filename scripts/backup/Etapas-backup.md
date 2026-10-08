@@ -29,7 +29,7 @@ Todo dia, entre 02:00 e 02:59 (horário de Brasília), o Jenkins:
 1. Baixa o `Jenkinsfile` do GitHub e monta o agente a partir de `scripts/backup/Dockerfile`.
 2. Roda o `backup.sh`, que conecta no banco pelo SQLcl e exporta a app, o workspace, o DDL e os dados.
 3. Gera um `corlixhub-prd-<AAAAMMDD-HHMMSS>.tar.gz` com `.sha256` e o guarda como artefato do build por 30 dias.
-4. Clona a `DEV`, extrai o backup nela, commita `corlixhub/`, `database/f100.sql` e `database/ddl/` com a mensagem `chore(backup): Backup - Corlix Hub - dd/MM/yyyy as HH:mm` e abre um PR `DEV` → `PROD` (stage **Publicar no Git**).
+4. Clona a `DEV`, extrai o backup nela, commita `corlixhub/`, `database/f100.sql` e `database/ddl/` com a mensagem `chore(backup): Backup - Corlix Hub - dd/MM/yyyy as HH:mm` (vazio se nada mudou no banco) e abre um PR `DEV` → `PROD` (stage **Publicar no Git**).
 5. Copia o arquivo para `backups/prd/` do projeto. Com `PUBLICAR_GIT` desmarcado, em vez do passo 4 ele extrai o backup na pasta local do projeto.
 
 Hoje existe um único ambiente, chamado `PRD` no `Jenkinsfile`. O nome é só um rótulo do banco atual.
