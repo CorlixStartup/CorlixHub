@@ -275,8 +275,8 @@ Itens (crie os que não vierem do assistente):
 | `P18_ID_DEPARTAMENTO_ATUAL` | Hidden | Source: nenhum · Default (SQL): `select id_departamento from colaborador where id_colaborador = :P18_ID_COLABORADOR and id_empresa = :G_ID_EMPRESA` |
 | `P18_ID_TIPO_MOVIMENTACAO` | Select List | LOV `LOV_TIPO_MOVIMENTACAO` · obrigatório |
 | `P18_DT_EFETIVA` | Date Picker | Format Mask `DD/MM/YYYY` · obrigatório |
-| `P18_NM_CARGO_ANTERIOR` | Display Only | Label "Cargo atual" · Default (SQL): `select cg.nome from colaborador c join cargo cg on cg.id_cargo = c.id_cargo where c.id_colaborador = :P18_ID_COLABORADOR` |
-| `P18_NM_DEPARTAMENTO_ANTERIOR` | Display Only | Label "Departamento atual" · Default (SQL) equivalente com `departamento` |
+| `P18_NM_CARGO_ANTERIOR` | Display Only | Label "Cargo atual" · Source: Database Column `NM_CARGO_ANTERIOR` · Settings › Based On: **Page Item Value** · **Default** › Type: **SQL Query** (não use List of Values): `select cg.nome from colaborador c join cargo cg on cg.id_cargo = c.id_cargo where c.id_colaborador = :P18_ID_COLABORADOR and c.id_empresa = :G_ID_EMPRESA` |
+| `P18_NM_DEPARTAMENTO_ANTERIOR` | Display Only | Label "Departamento atual" · mesma configuração do item acima, com Source `NM_DEPARTAMENTO_ANTERIOR` e Default (SQL Query): `select d.nome from colaborador c join departamento d on d.id_departamento = c.id_departamento where c.id_colaborador = :P18_ID_COLABORADOR and c.id_empresa = :G_ID_EMPRESA` |
 | `P18_ID_DEPARTAMENTO_NOVO` | Popup LOV | LOV `LOV_DEPARTAMENTO_EMPRESA` · Label "Novo departamento" |
 | `P18_ID_CARGO_NOVO` | Popup LOV | Label "Novo cargo" · LOV em cascata (abaixo) |
 | `P18_ID_GESTOR_NOVO` | Popup LOV | LOV `LOV_COLABORADOR_ATIVO` · Label "Novo gestor" |

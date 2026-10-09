@@ -145,15 +145,15 @@ select h.id_empresa,
                  'Entrada como ' || nvl(cn.nome, 'cargo não informado')
                  || nvl2(dn.nome, ' em ' || dn.nome, '')
                when t.cd_tipo in ('PROMOCAO', 'MUDANCA_CARGO') then
-                 nvl(ca.nome, '?') || unistr(' \2192 ') || nvl(cn.nome, '?')
+                 nvl(ca.nome, '?') || to_char(unistr(' \2192 ')) || nvl(cn.nome, '?')
                when t.cd_tipo = 'TRANSFERENCIA_DEPTO' then
-                 nvl(da.nome, '?') || unistr(' \2192 ') || nvl(dn.nome, '?')
+                 nvl(da.nome, '?') || to_char(unistr(' \2192 ')) || nvl(dn.nome, '?')
                  || case when cn.id_cargo <> ca.id_cargo then ' (' || cn.nome || ')' end
              end
              || case
                   when h.ds_motivo is not null
                    and t.cd_tipo in ('ADMISSAO', 'PROMOCAO', 'MUDANCA_CARGO', 'TRANSFERENCIA_DEPTO')
-                    then unistr(' \00B7 ') || h.ds_motivo
+                    then to_char(unistr(' \00B7 ')) || h.ds_motivo
                   else h.ds_motivo
                 end)
        end                                              as ds_descricao,
@@ -191,11 +191,11 @@ select f.id_empresa,
        end                                              as ds_tipo,
        f.ds_titulo                                      as ds_titulo,
        f.ds_instituicao
-       || case when f.dt_conclusao is null then unistr(' \00B7 ') || 'em andamento' end
+       || case when f.dt_conclusao is null then to_char(unistr(' \00B7 ')) || 'em andamento' end
        || case when f.nr_carga_horaria is not null
-               then unistr(' \00B7 ') || to_char(f.nr_carga_horaria, 'fm99990') || 'h' end
+               then to_char(unistr(' \00B7 ')) || to_char(f.nr_carga_horaria, 'fm99990') || 'h' end
        || case when f.dt_validade is not null
-               then unistr(' \00B7 ') || 'válida até ' || to_char(f.dt_validade, 'dd/mm/yyyy') end
+               then to_char(unistr(' \00B7 ')) || 'válida até ' || to_char(f.dt_validade, 'dd/mm/yyyy') end
                                                         as ds_descricao,
        case f.tp_formacao
          when 'CERTIFICACAO' then 'fa-certificate'

@@ -271,7 +271,9 @@ Feito (no módulo): DDL, seed, views, package de regras, package de UI, triggers
 - Carga inicial: inativos pré-instalação recebem só admissão (sem desligamento) → turnover histórico incompleto.
 - Comunicados automáticos não têm imagem; o card da Home reserva 260px para capa.
 - `c_pagina_painel_rh = 20` colide com o `c_pagina_perfil = 20` do organograma (ver 1.7). `c_item_organograma = 'P3_ID_FOCO'` exige que o organograma seja montado na p. 3 com esse nome de item (o guia do organograma usa `P10_`).
+- Enquanto o organograma não estiver instalado, `c_pagina_organograma` fica `null` em `08_pkg_historico_carreira_ui.sql` (o link "Ver no organograma" some). Ao integrar o organograma na p. 3, volte para `3` e rode o arquivo de novo.
 - O IG (até 24.2) não fazia upload; por isso a modal 21 — verificar se a 26.1.5 já tem coluna de upload.
+- Instalação manual (sem `instalar.sql`): rode `04_pkg_historico_carreira.pks` **antes** do `.pkb` e os dois antes do `08_pkg_historico_carreira_ui.sql`. Rodar fora de ordem gera `PLS-00201`/`PLS-00304` (ver 08 §3, "SQL e PL/SQL").
 - Salvar e efetivar na mesma submissão: se a efetivação falha, o rascunho também é desfeito (sem commit no package).
 
 ---

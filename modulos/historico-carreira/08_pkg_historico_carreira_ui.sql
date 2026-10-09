@@ -17,7 +17,7 @@
 create or replace package pkg_historico_carreira_ui authid definer as
 
   -- Destinos dos links (ajuste para o app). Página nula = o link não aparece.
-  c_pagina_organograma constant pls_integer  := 3;
+  c_pagina_organograma constant pls_integer  := null;  -- organograma ainda não instalado; volte para 3 depois
   c_item_organograma   constant varchar2(30) := 'P3_ID_FOCO';
   c_pagina_comunicado  constant pls_integer  := 11;
   c_item_comunicado    constant varchar2(30) := null;   -- ex.: 'P11_ID_COMUNICADO'

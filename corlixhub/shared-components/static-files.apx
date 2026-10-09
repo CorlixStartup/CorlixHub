@@ -1478,6 +1478,16 @@ file custom.min.css (
     charSet: utf-8
 )
 
+file historico-carreira.css (
+    mimeType: text/css
+    charSet: utf-8
+)
+
+file historico-carreira.min.css (
+    mimeType: text/css
+    charSet: utf-8
+)
+
 file default-user.jpeg (
     mimeType: image/jpeg
     charSet: utf-8

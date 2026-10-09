@@ -76,6 +76,17 @@
 - SQL Commands: um comando por vez (sem `;` final, sem `commit;` junto), mostra só 10 linhas por padrão (campo **Rows**) e não mistura `unistr()` (NVARCHAR2) com VARCHAR2 em `union` sem `to_char`.
 - As contas SARAHSILVA, EDUARDOMARINS e ALAIRTONROCHA são da equipe e não têm colaborador: "SEM VINCULO" na Home é esperado para elas.
 
+### SQL e PL/SQL
+Os erros já vistos (ORA-12704, PLS-00201/00304, PLS-00231, ORA-02000, ORA-01403, Access Denied etc.), com causa, correção e prevenção, estão em [09 · Erros e soluções](./09-erros-e-solucoes.md). Consulte o checklist da §5 desse documento antes de entregar SQL ou PL/SQL.
+
+Regras gerais para scripts PL/SQL:
+- Todo bloco `create or replace package|package body|procedure|function|trigger|type` e todo bloco anônimo `begin … end;` termina com `/` sozinho na linha seguinte. Sem a `/`, o SQLcl não executa o bloco e o próximo comando é anexado a ele.
+- Comandos SQL simples (`create view`, `comment`, `insert`) terminam com `;`, sem `/`. Um `;` seguido de `/` executa o comando duas vezes.
+- Spec e body ficam em arquivos separados (`.pks` e `.pkb`), cada um com sua `/`, e são instalados nessa ordem.
+- Depois de compilar, confira com `show errors package body <nome>` (SQLcl) ou com `select * from user_errors where name = '<NOME>'`. O APEX mostra só a primeira linha do erro.
+- `set define off` no início do script: sem ele, `&` em strings (HTML, URLs) vira variável de substituição.
+- Ao ler `Error at line N`, conte as linhas **a partir do início do comando** (`create or replace …`), não do arquivo.
+
 ### Configuração
 - O idioma primário da app é `en`, com máscaras de data `DS`. Para pt-BR, formate explicitamente com `to_char(..., 'dd/mm/yyyy')`. A LOV `BOOLEAN` mostra "Yes/No".
 - `deployments/default.json` está com `debugging: true`.
@@ -88,4 +99,5 @@
 - [ ] Os links foram gerados com checksum (`apex_page.get_url`)?
 - [ ] Os textos estão em pt-BR e as datas formatadas explicitamente?
 - [ ] O SQL novo está num script numerado e idempotente (`create table if not exists`, `create or replace`) e foi adicionado ao `instalar.sql` do módulo?
+- [ ] O SQL/PL/SQL novo passa no checklist da §5 do [09 · Erros e soluções](./09-erros-e-solucoes.md)?
 - [ ] A documentação em `docs/ai-context/` foi atualizada se a mudança altera páginas, schema, tema ou módulos?

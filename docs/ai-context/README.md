@@ -24,12 +24,14 @@
 | 06 | [Módulos](./06-modulos.md) | Organograma e Histórico de carreira: arquitetura, integração no APEX, API JS, template de novo módulo |
 | 07 | [Design (Figma)](./07-design-figma.md) | Descrição detalhada de cada tela-alvo e mapeamento para componentes APEX; features sem backend |
 | 08 | [Convenções e pegadinhas](./08-convencoes-e-pegadinhas.md) | **Leia antes de editar qualquer coisa.** Regras de trabalho, lacunas, bugs conhecidos, checklist |
+| 09 | [Erros e soluções](./09-erros-e-solucoes.md) | Erros de SQL, PL/SQL e APEX já vistos: como ler a mensagem, causa, correção, prevenção e checklist |
 
 ### Guia por tipo de tarefa
 - **Mexer numa página existente:** 08 → 02 (seção da página) → 03 (componentes que ela usa) → 04 (classes CSS).
 - **Criar uma página ou tela do Figma:** 07 (tela) → 02 §1 (sintaxe) → 04 §8 (aplicar tema) → 08.
 - **Mexer no banco ou criar tabela:** 05 → 06 §4 (padrão de módulo) → 08.
 - **Integrar organograma ou histórico de carreira:** 06 → 05 → 02 (páginas 3/13).
+- **Apareceu um erro (ORA-, PLS-, Access denied):** 09.
 - **Ambiente, deploy ou CI:** 01.
 
 ## Páginas (visão rápida)
