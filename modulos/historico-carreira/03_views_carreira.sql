@@ -95,6 +95,8 @@ select h.id_historico_carreira,
        h.st_registro,
        h.id_registro_estornado,
        case when h.id_registro_estornado is not null then 'S' else 'N' end as fl_estorno,
+       h.id_aprovador,
+       ap.nome_completo               as nm_aprovador,
        h.dt_efetivacao,
        h.usr_efetivacao,
        h.dt_criacao,
@@ -109,7 +111,8 @@ select h.id_historico_carreira,
   left join colaborador   ga on ga.id_colaborador      = h.id_gestor_anterior
   left join cargo         cn on cn.id_cargo            = h.id_cargo_novo
   left join departamento  dn on dn.id_departamento     = h.id_departamento_novo
-  left join colaborador   gn on gn.id_colaborador      = h.id_gestor_novo;
+  left join colaborador   gn on gn.id_colaborador      = h.id_gestor_novo
+  left join colaborador   ap on ap.id_colaborador      = h.id_aprovador;
 
 comment on table vw_historico_carreira is 'Lançamentos do histórico com nomes resolvidos. VL_SALARIO_* só é preenchido para ADMIN_RH (FN_CARREIRA_VE_SALARIO).';
 

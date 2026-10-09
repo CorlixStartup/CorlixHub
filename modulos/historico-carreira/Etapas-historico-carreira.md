@@ -245,7 +245,7 @@ Esse refresh vale também para a modal "Solicitar correção" (página 22): a co
 ### 2.8 O que o protótipo mostra e ainda não tem dado
 
 - **PDI e Resultados 360:** os módulos de Avaliações, Resultados 360 e Plano de desenvolvimento não existem no app. A aba "Desenvolvimento" mostra, por enquanto, as formações e certificações. Quando esses módulos existirem, basta acrescentar um `union all` no cursor `c_eventos`, com `ds_grupo = 'DEV'`.
-- **"Aprovado por":** o histórico registra quem efetivou o lançamento (RH), mas não há fluxo de aprovação. Por isso o rodapé mostra só "Registrado por ... (RH) em ...".
+- **"Aprovado por":** não há fluxo de aprovação no app. O RH informa quem aprovou (`P18_ID_APROVADOR` → `HISTORICO_CARREIRA.ID_APROVADOR`) ao lançar a movimentação, e o rodapé mostra "Aprovado por ..." ao lado de "Registrado por ... (RH) em ...". Sem aprovador informado, só a linha do registro aparece.
 - **"CLT · efetivado":** o cadastro não guarda o regime de contratação. A linha "Contrato" aparece como "Efetivado em dd/mm/aaaa" quando existe uma movimentação `EFETIVACAO_CONTRATO`.
 
 ---
@@ -283,6 +283,7 @@ Itens (crie os que não vierem do assistente):
 | `P18_VL_SALARIO_ANTERIOR` | Number Field | Server-side Condition: Authorization `ADMIN_RH` · sem Format Mask |
 | `P18_VL_SALARIO_NOVO` | Number Field | Server-side Condition: Authorization `ADMIN_RH` · sem Format Mask |
 | `P18_DS_MOTIVO` | Textarea | Max 1000 |
+| `P18_ID_APROVADOR` | Popup LOV | LOV `LOV_COLABORADOR_ATIVO` · Label "Aprovado por" · opcional (em geral a gestão que aprovou; não pode ser o próprio colaborador) · aparece em todos os tipos |
 | `P18_DS_OBSERVACAO` | Textarea | |
 | `P18_DS_MOTIVO_ESTORNO` | Textarea | Source: nenhum · Label "Motivo do estorno" · Server-side Condition (Expression): `:P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'` |
 
@@ -346,7 +347,8 @@ Nenhum faz DML direto: todos chamam o package.
          p_vl_salario_anterior  => to_number(:P18_VL_SALARIO_ANTERIOR),
          p_vl_salario_novo      => to_number(:P18_VL_SALARIO_NOVO),
          p_ds_motivo            => :P18_DS_MOTIVO,
-         p_ds_observacao        => :P18_DS_OBSERVACAO);
+         p_ds_observacao        => :P18_DS_OBSERVACAO,
+         p_id_aprovador         => :P18_ID_APROVADOR);
      else
        pkg_historico_carreira.atualizar_rascunho(
          p_id_historico_carreira => :P18_ID_HISTORICO_CARREIRA,
@@ -358,7 +360,8 @@ Nenhum faz DML direto: todos chamam o package.
          p_vl_salario_anterior   => to_number(:P18_VL_SALARIO_ANTERIOR),
          p_vl_salario_novo       => to_number(:P18_VL_SALARIO_NOVO),
          p_ds_motivo             => :P18_DS_MOTIVO,
-         p_ds_observacao         => :P18_DS_OBSERVACAO);
+         p_ds_observacao         => :P18_DS_OBSERVACAO,
+         p_id_aprovador          => :P18_ID_APROVADOR);
      end if;
    end;
    ```

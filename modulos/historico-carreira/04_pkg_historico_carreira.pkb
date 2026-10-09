@@ -401,6 +401,22 @@ create or replace package body pkg_historico_carreira as
       end if;
     end if;
 
+    -- Aprovador: opcional, da mesma empresa e nunca o próprio colaborador.
+    -- Não exige vínculo ativo: lançamentos retroativos podem citar quem já saiu.
+    if p_mov.id_aprovador is not null then
+      if p_mov.id_aprovador = p_col.id_colaborador then
+        erro(c_err_aprovador, 'O colaborador não pode aprovar a própria movimentação.');
+      end if;
+      begin
+        select id_empresa into l_emp from colaborador where id_colaborador = p_mov.id_aprovador;
+      exception
+        when no_data_found then erro(c_err_aprovador, 'Aprovador não encontrado.');
+      end;
+      if l_emp <> p_col.id_empresa then
+        erro(c_err_aprovador, 'O aprovador informado não pertence à empresa do colaborador.');
+      end if;
+    end if;
+
     -- O cargo final precisa ser do departamento final (CARGO.ID_DEPARTAMENTO)
     if p_mov.id_cargo_novo is not null or p_mov.id_departamento_novo is not null then
       l_cargo_final := coalesce(p_mov.id_cargo_novo, p_col.id_cargo);
@@ -537,7 +553,8 @@ create or replace package body pkg_historico_carreira as
     p_vl_salario_anterior  in number   default null,
     p_vl_salario_novo      in number   default null,
     p_ds_motivo            in varchar2 default null,
-    p_ds_observacao        in clob     default null
+    p_ds_observacao        in clob     default null,
+    p_id_aprovador         in number   default null
   ) return number is
     l_col  r_colaborador;
     l_tipo tipo_movimentacao%rowtype;
@@ -554,6 +571,7 @@ create or replace package body pkg_historico_carreira as
     l_mov.id_cargo_novo        := p_id_cargo_novo;
     l_mov.id_departamento_novo := p_id_departamento_novo;
     l_mov.id_gestor_novo       := p_id_gestor_novo;
+    l_mov.id_aprovador         := p_id_aprovador;
 
     validar(l_mov, l_col, l_tipo);
 
@@ -564,13 +582,13 @@ create or replace package body pkg_historico_carreira as
       id_empresa, id_colaborador, id_tipo_movimentacao, dt_efetiva,
       id_cargo_anterior, id_departamento_anterior, id_gestor_anterior,
       id_cargo_novo, id_departamento_novo, id_gestor_novo,
-      vl_salario_anterior, vl_salario_novo, ds_motivo, ds_observacao, st_registro
+      vl_salario_anterior, vl_salario_novo, ds_motivo, ds_observacao, id_aprovador, st_registro
     ) values (
       l_col.id_empresa, l_col.id_colaborador, l_tipo.id_tipo_movimentacao, l_mov.dt_efetiva,
       l_col.id_cargo, l_col.id_departamento, l_col.id_gestor,
       l_mov.id_cargo_novo, l_mov.id_departamento_novo, l_mov.id_gestor_novo,
       coalesce(p_vl_salario_anterior, l_ult.vl_salario_novo),
-      p_vl_salario_novo, p_ds_motivo, p_ds_observacao, c_st_rascunho
+      p_vl_salario_novo, p_ds_motivo, p_ds_observacao, l_mov.id_aprovador, c_st_rascunho
     )
     returning id_historico_carreira into l_id;
 
@@ -587,7 +605,8 @@ create or replace package body pkg_historico_carreira as
     p_vl_salario_anterior   in number   default null,
     p_vl_salario_novo       in number   default null,
     p_ds_motivo             in varchar2 default null,
-    p_ds_observacao         in clob     default null
+    p_ds_observacao         in clob     default null,
+    p_id_aprovador          in number   default null
   ) is
     l_mov  historico_carreira%rowtype;
     l_col  r_colaborador;
@@ -607,6 +626,7 @@ create or replace package body pkg_historico_carreira as
     l_mov.id_cargo_novo        := p_id_cargo_novo;
     l_mov.id_departamento_novo := p_id_departamento_novo;
     l_mov.id_gestor_novo       := p_id_gestor_novo;
+    l_mov.id_aprovador         := p_id_aprovador;
 
     validar(l_mov, l_col, l_tipo);
 
@@ -622,7 +642,8 @@ create or replace package body pkg_historico_carreira as
            vl_salario_anterior      = p_vl_salario_anterior,
            vl_salario_novo          = p_vl_salario_novo,
            ds_motivo                = p_ds_motivo,
-           ds_observacao            = p_ds_observacao
+           ds_observacao            = p_ds_observacao,
+           id_aprovador             = l_mov.id_aprovador
      where id_historico_carreira = p_id_historico_carreira;
   end atualizar_rascunho;
 

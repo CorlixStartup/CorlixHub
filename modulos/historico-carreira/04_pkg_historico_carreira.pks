@@ -33,6 +33,7 @@ create or replace package pkg_historico_carreira authid definer as
   c_err_gestor          constant pls_integer := -20017;  -- gestor inválido
   c_err_registro        constant pls_integer := -20018;  -- lançamento não encontrado
   c_err_solicitacao     constant pls_integer := -20019;  -- solicitação de correção inválida
+  c_err_aprovador       constant pls_integer := -20020;  -- aprovador inválido (o próprio colaborador ou outra empresa)
 
   ------------------------------------------------------------------------------
   -- Domínios
@@ -75,7 +76,8 @@ create or replace package pkg_historico_carreira authid definer as
     p_vl_salario_anterior  in number   default null,
     p_vl_salario_novo      in number   default null,
     p_ds_motivo            in varchar2 default null,
-    p_ds_observacao        in clob     default null
+    p_ds_observacao        in clob     default null,
+    p_id_aprovador         in number   default null   -- quem aprovou (exibido como "Aprovado por")
   ) return number;
 
   -- Altera um RASCUNHO (o colaborador não muda)
@@ -89,7 +91,8 @@ create or replace package pkg_historico_carreira authid definer as
     p_vl_salario_anterior   in number   default null,
     p_vl_salario_novo       in number   default null,
     p_ds_motivo             in varchar2 default null,
-    p_ds_observacao         in clob     default null
+    p_ds_observacao         in clob     default null,
+    p_id_aprovador          in number   default null
   );
 
   -- Exclui um RASCUNHO (efetivados nunca são excluídos)

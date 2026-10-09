@@ -110,6 +110,7 @@ erDiagram
     CARGO |o--o{ HISTORICO_CARREIRA : "id_cargo_anterior / id_cargo_novo"
     DEPARTAMENTO |o--o{ HISTORICO_CARREIRA : "id_departamento_anterior / _novo"
     COLABORADOR |o--o{ HISTORICO_CARREIRA : "id_gestor_anterior / _novo"
+    COLABORADOR |o--o{ HISTORICO_CARREIRA : "id_aprovador"
     HISTORICO_CARREIRA |o--o| HISTORICO_CARREIRA : "id_registro_estornado (estorno)"
     COMUNICADO |o--o{ HISTORICO_CARREIRA : "id_comunicado"
     COLABORADOR ||--o{ FORMACAO_COLABORADOR : "id_colaborador"
@@ -586,18 +587,20 @@ Imutável após `EFETIVADO`; correção = estorno + novo lançamento. **Nunca fa
 | `ST_REGISTRO` | VARCHAR2(10) | não | `'RASCUNHO'` | `RASCUNHO` / `EFETIVADO` / `ESTORNADO` |
 | `ID_REGISTRO_ESTORNADO` | NUMBER | sim | | Só em lançamentos de estorno: aponta o original (auto-FK) |
 | `ID_COMUNICADO` | NUMBER | sim | | FK→COMUNICADO publicado na efetivação |
+| `ID_APROVADOR` | NUMBER | sim | | FK→COLABORADOR; quem aprovou ("Aprovado por" na p. 13). Informado pelo RH; mesma empresa; ≠ colaborador. Em bancos antigos é adicionada pelo bloco de migração do `01_` |
 | `DT_EFETIVACAO` | TIMESTAMP WITH TIME ZONE | sim | | Quando foi efetivado |
 | `USR_EFETIVACAO` | VARCHAR2(255) | sim | | Quem efetivou |
 | auditoria | | | | |
 
 Constraints:
-- PK `historico_carreira_pk`; 11 FKs (`_empresa_fk`, `_colab_fk`, `_tipo_fk`, `_cargo_ant_fk`, `_depto_ant_fk`, `_gestor_ant_fk`, `_cargo_novo_fk`, `_depto_novo_fk`, `_gestor_novo_fk`, `_estorno_fk`, `_comunicado_fk`).
+- PK `historico_carreira_pk`; 12 FKs (`_empresa_fk`, `_colab_fk`, `_tipo_fk`, `_cargo_ant_fk`, `_depto_ant_fk`, `_gestor_ant_fk`, `_cargo_novo_fk`, `_depto_novo_fk`, `_gestor_novo_fk`, `_estorno_fk`, `_comunicado_fk`, `_aprovador_fk`).
 - `historico_carreira_estorno_uk unique (id_registro_estornado)` — um lançamento só é estornado uma vez.
 - `_st_ck`: status no domínio.
 - `_estorno_ck`: `id_registro_estornado is null or (st_registro='EFETIVADO' and id_registro_estornado <> id_historico_carreira)`.
 - `_efetivacao_ck`: `st_registro='RASCUNHO' or dt_efetivacao is not null`.
 - `_sal_ant_ck`, `_sal_novo_ck`: salários ≥ 0.
 - `_gestor_ck`: `id_gestor_novo is null or id_gestor_novo <> id_colaborador`.
+- `_aprovador_ck`: `id_aprovador is null or id_aprovador <> id_colaborador`.
 
 Índices: `historico_carreira_emp_colab_ix (id_empresa,id_colaborador)`, `_colab_dt_ix (id_colaborador, st_registro, dt_efetiva)`, `_emp_dt_ix (id_empresa, dt_efetiva)`, e um índice por FK (`_tipo_ix`, `_cargo_ant_ix`, `_cargo_nov_ix`, `_dep_ant_ix`, `_dep_nov_ix`, `_ges_ant_ix`, `_ges_nov_ix`, `_comunic_ix`).
 
@@ -691,7 +694,7 @@ Escrita: `solicitar_correcao`, `responder_solicitacao`. Leitura: `PKG_HISTORICO_
 `HISTORICO_CARREIRA ⋈ TIPO_MOVIMENTACAO` onde `st_registro='EFETIVADO' and id_registro_estornado is null`. Colunas: `id_historico_carreira, id_empresa, id_colaborador, id_tipo_movimentacao, cd_tipo, ds_tipo, dt_efetiva, id_cargo_/id_departamento_/id_gestor_ anterior e novo`. **Sem salário.** É a cadeia de eventos que define a situação atual; usada por `ultimo_valido`, `dt_admissao_referencia`, `VW_SITUACAO_ATUAL_COLABORADOR` e pelo pacote de UI.
 
 ### 6.2 `VW_HISTORICO_CARREIRA` (03)
-Todos os lançamentos (inclusive rascunhos e estornos) com nomes resolvidos (`nm_colaborador`, `nm_cargo_anterior/novo`, `nm_departamento_anterior/novo`, `nm_gestor_anterior/novo`, `ds_tipo`, `ds_icone`, `ds_cor`, `cd_tipo`), `fl_estorno` (`'S'`/`'N'`), todos os campos de status/auditoria. `VL_SALARIO_ANTERIOR`/`VL_SALARIO_NOVO` saem **nulos** a menos que `(select fn_carreira_ve_salario from dual) = 'S'` (scalar subquery → avaliada uma vez por consulta). Uso planejado: IR "Lançamentos (RH)" da P13.
+Todos os lançamentos (inclusive rascunhos e estornos) com nomes resolvidos (`nm_colaborador`, `nm_cargo_anterior/novo`, `nm_departamento_anterior/novo`, `nm_gestor_anterior/novo`, `nm_aprovador`, `ds_tipo`, `ds_icone`, `ds_cor`, `cd_tipo`), `fl_estorno` (`'S'`/`'N'`), todos os campos de status/auditoria. `VL_SALARIO_ANTERIOR`/`VL_SALARIO_NOVO` saem **nulos** a menos que `(select fn_carreira_ve_salario from dual) = 'S'` (scalar subquery → avaliada uma vez por consulta). Uso planejado: IR "Lançamentos (RH)" da P13.
 
 ### 6.3 `VW_CARREIRA_TIMELINE` (03)
 `UNION ALL` de:
@@ -715,7 +718,7 @@ Só auditoria/integridade; regras de negócio ficam no package.
 |---|---|---|---|
 | `TRG_CONFIG_CARREIRA_AUD` | CONFIG_CARREIRA | before insert/update, row | Força `DT_/USR_CRIACAO` no insert (zera alteração); no update preserva criação e seta `DT_/USR_ALTERACAO`. Impede forjar autoria. |
 | `TRG_TIPO_MOVIMENTACAO_AUD` | TIPO_MOVIMENTACAO | idem | idem |
-| `TRG_HISTORICO_CARREIRA_AUD` | HISTORICO_CARREIRA | before insert/update/delete, row | Colunas de auditoria + **imutabilidade**: se `:old.st_registro <> 'RASCUNHO'`, o único UPDATE aceito é `EFETIVADO → ESTORNADO` sem mudar nenhuma outra coluna de negócio (compara 19 colunas, CLOB via `dbms_lob.compare`); senão `-20013`. DELETE de não-rascunho → `-20013`. |
+| `TRG_HISTORICO_CARREIRA_AUD` | HISTORICO_CARREIRA | before insert/update/delete, row | Colunas de auditoria + **imutabilidade**: se `:old.st_registro <> 'RASCUNHO'`, o único UPDATE aceito é `EFETIVADO → ESTORNADO` sem mudar nenhuma outra coluna de negócio (compara 20 colunas, incluindo `id_aprovador`, CLOB via `dbms_lob.compare`); senão `-20013`. DELETE de não-rascunho → `-20013`. |
 | `TRG_HISTORICO_CARREIRA_LOG` | HISTORICO_CARREIRA | after I/U/D, row | Insere em `LOG_AUDITORIA_CARREIRA` (`ST_ANTERIOR`/`ST_NOVO` = status). |
 | `TRG_FORMACAO_COLABORADOR_AUD` | FORMACAO_COLABORADOR | before I/U | auditoria |
 | `TRG_FORMACAO_COLABORADOR_LOG` | FORMACAO_COLABORADOR | after I/U/D | log (sem status) |
@@ -766,6 +769,7 @@ Códigos de erro (`raise_application_error`, mensagens em PT-BR amigáveis):
 | `c_err_gestor` | -20017 | MUDANCA_GESTOR sem gestor/igual ao atual; gestor = o próprio colaborador |
 | `c_err_registro` | -20018 | Lançamento não encontrado (ou de outro colaborador na solicitação) |
 | `c_err_solicitacao` | -20019 | Solicitação sem mensagem, não encontrada, status inválido, recusa sem resposta |
+| `c_err_aprovador` | -20020 | Aprovador = o próprio colaborador, inexistente ou de outra empresa |
 
 Outras: `c_st_rascunho/efetivado/estornado`, `c_auth_admin_rh = 'ADMIN_RH'`, `c_dias_futuro_padrao = 30`, `c_fuso_padrao = 'America/Sao_Paulo'`.
 Privadas relevantes: códigos com comportamento próprio `ADMISSAO, PROMOCAO, MUDANCA_CARGO, TRANSFERENCIA_DEPTO, MUDANCA_GESTOR, DESLIGAMENTO`; `altera_estrutura()` = esses menos DESLIGAMENTO (os demais tipos têm cargo/depto/gestor novos descartados); `c_max_titulo_comunicado = 100`; `g_empresa_batch` (empresa de contexto fora do APEX).
@@ -777,7 +781,7 @@ Privadas relevantes: códigos com comportamento próprio `ADMISSAO, PROMOCAO, MU
 | `fn_hoje` | `(p_id_empresa number) return date` | `trunc` da data local no fuso da empresa. Use no lugar de `SYSDATE` para datas de negócio. |
 | `fn_data_local` | `(p_id_empresa number, p_momento timestamp with time zone) return date` | Converte instante para data/hora local (`at time zone fuso`). |
 | `fn_id_tipo` | `(p_id_empresa number, p_cd_tipo varchar2) return number` | ID do tipo por código (`upper`); -20002 se não existe. |
-| `registrar_movimentacao` | `(p_id_colaborador, p_id_tipo_movimentacao, p_dt_efetiva date, p_id_cargo_novo, p_id_departamento_novo, p_id_gestor_novo, p_vl_salario_anterior, p_vl_salario_novo, p_ds_motivo varchar2, p_ds_observacao clob) return number` (todos após `p_dt_efetiva` default null) | Exige ADMIN_RH; carrega colaborador (checa tenant) e tipo (ativo, mesma empresa); `validar`; insere RASCUNHO com snapshot anterior = cadastro atual; `vl_salario_anterior` default = `vl_salario_novo` do último válido. Retorna ID. |
+| `registrar_movimentacao` | `(p_id_colaborador, p_id_tipo_movimentacao, p_dt_efetiva date, p_id_cargo_novo, p_id_departamento_novo, p_id_gestor_novo, p_vl_salario_anterior, p_vl_salario_novo, p_ds_motivo varchar2, p_ds_observacao clob, p_id_aprovador) return number` (todos após `p_dt_efetiva` default null) | Exige ADMIN_RH; carrega colaborador (checa tenant) e tipo (ativo, mesma empresa); `validar`; insere RASCUNHO com snapshot anterior = cadastro atual; `vl_salario_anterior` default = `vl_salario_novo` do último válido. Retorna ID. |
 | `atualizar_rascunho` | `(p_id_historico_carreira, p_id_tipo_movimentacao, p_dt_efetiva, ...mesmos opcionais)` | ADMIN_RH; lock; só RASCUNHO (-20009); revalida; atualiza (colaborador não muda; snapshot anterior recalculado). |
 | `excluir_rascunho` | `(p_id_historico_carreira)` | ADMIN_RH; só RASCUNHO; DELETE. |
 | `efetivar_movimentacao` | `(p_id)` | ADMIN_RH; lock do lançamento e do colaborador (serializa efetivações concorrentes); revalida; calcula cargo/depto/gestor finais (`coalesce(novo, atual)`) e status (DESLIGAMENTO → false; readmissão → true); publica comunicado (antes do UPDATE); UPDATE para EFETIVADO com snapshot completo, `vl_salario_novo = coalesce(novo, anterior)`, `dt_efetivacao`, `usr_efetivacao`; UPDATE `COLABORADOR` (`id_cargo, id_departamento, id_gestor, status`, `data_admissao` = `dt_efetiva` se readmissão). |
@@ -872,7 +876,7 @@ Não existe seed de `EMPRESA`/`COLABORADOR` etc. no repo (o `seed_corlixhub.sql`
 - Cria 2 empresas fictícias (A e B), departamentos, cargos e 5 colaboradores cada (INSERTs diretos em `EMPRESA(nome, nome_fantasia, cnpj, status, data_criacao)`, `DEPARTAMENTO(id_empresa, nome)`, `CARGO(id_empresa, id_departamento, nome)`, `COLABORADOR(id_empresa, nome_completo, primeiro_nome, ultimo_nome, email, login_apex, data_admissao, data_de_nascimento, id_departamento, id_cargo, id_gestor, status)`). PKs são identity, como o teste supõe. **O INSERT de `EMPRESA` falha contra o schema real**: `EMAIL_CORPORATIVO`, `TELEFONE`, `CEP`, `LOGRADOURO`, `NUMERO`, `BAIRRO`, `CIDADE` e `UF` são `NOT NULL` (§3.1). Ajuste `nova_empresa` com valores fictícios antes de rodar.
 - Tudo em uma transação; termina em **ROLLBACK** (nada fica no banco). Em erro inesperado imprime backtrace, zera contexto e faz rollback + raise.
 - Saída: linhas `[OK]`/`[FALHA]` e `=== Resumo: N OK | Falhas: 0 ===`.
-- Cobertura (T01–T42): admissão automática; rascunho vs efetivação; comunicado sem salário; cada código de erro -20003..-20019; isolamento entre empresas (T09–T12, T25–T28, T42); UPDATE/DELETE direto bloqueado (T13–T14); estorno em ordem e restauração (T17–T20); desligamento/readmissão (T21–T24); salário mascarado fora de ADMIN_RH (T29); `fn_tempo_no_cargo`/`fn_tempo_de_casa` (T31); trilha de auditoria (T32); mudança de gestão (T33–T35); solicitações (T36–T39); render da UI sem salário (T40–T41).
+- Cobertura (T01–T42): admissão automática; rascunho vs efetivação; comunicado sem salário; cada código de erro -20003..-20020 (aprovador: T02f, T12b–c, T13b, T41b); isolamento entre empresas (T09–T12, T25–T28, T42); UPDATE/DELETE direto bloqueado (T13–T14); estorno em ordem e restauração (T17–T20); desligamento/readmissão (T21–T24); salário mascarado fora de ADMIN_RH (T29); `fn_tempo_no_cargo`/`fn_tempo_de_casa` (T31); trilha de auditoria (T32); mudança de gestão (T33–T35); solicitações (T36–T39); render da UI sem salário (T40–T41).
 
 ---
 

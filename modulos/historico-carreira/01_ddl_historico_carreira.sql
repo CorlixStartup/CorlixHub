@@ -97,6 +97,7 @@ create table if not exists historico_carreira (
   st_registro              varchar2(10)  default 'RASCUNHO' not null,
   id_registro_estornado    number,
   id_comunicado            number,
+  id_aprovador             number,
   dt_efetivacao            timestamp with time zone,
   usr_efetivacao           varchar2(255),
   dt_criacao               timestamp with time zone default systimestamp not null,
@@ -115,6 +116,7 @@ create table if not exists historico_carreira (
   constraint historico_carreira_gestor_novo_fk  foreign key (id_gestor_novo)           references colaborador (id_colaborador),
   constraint historico_carreira_estorno_fk      foreign key (id_registro_estornado)    references historico_carreira (id_historico_carreira),
   constraint historico_carreira_comunicado_fk   foreign key (id_comunicado)            references comunicado (id_comunicado),
+  constraint historico_carreira_aprovador_fk    foreign key (id_aprovador)             references colaborador (id_colaborador),
   -- um lançamento só pode ser estornado uma vez
   constraint historico_carreira_estorno_uk      unique (id_registro_estornado),
   constraint historico_carreira_st_ck           check (st_registro in ('RASCUNHO', 'EFETIVADO', 'ESTORNADO')),
@@ -123,8 +125,38 @@ create table if not exists historico_carreira (
   constraint historico_carreira_efetivacao_ck   check (st_registro = 'RASCUNHO' or dt_efetivacao is not null),
   constraint historico_carreira_sal_ant_ck      check (vl_salario_anterior >= 0),
   constraint historico_carreira_sal_novo_ck     check (vl_salario_novo >= 0),
-  constraint historico_carreira_gestor_ck       check (id_gestor_novo is null or id_gestor_novo <> id_colaborador)
+  constraint historico_carreira_gestor_ck       check (id_gestor_novo is null or id_gestor_novo <> id_colaborador),
+  constraint historico_carreira_aprovador_ck    check (id_aprovador is null or id_aprovador <> id_colaborador)
 );
+
+-- Migração: bancos instalados antes da coluna ID_APROVADOR (reexecutável)
+declare
+  l_qt pls_integer;
+begin
+  select count(*) into l_qt
+    from user_tab_columns
+   where table_name = 'HISTORICO_CARREIRA' and column_name = 'ID_APROVADOR';
+  if l_qt = 0 then
+    execute immediate 'alter table historico_carreira add (id_aprovador number)';
+  end if;
+
+  select count(*) into l_qt
+    from user_constraints
+   where table_name = 'HISTORICO_CARREIRA' and constraint_name = 'HISTORICO_CARREIRA_APROVADOR_FK';
+  if l_qt = 0 then
+    execute immediate 'alter table historico_carreira add constraint historico_carreira_aprovador_fk '
+                      || 'foreign key (id_aprovador) references colaborador (id_colaborador)';
+  end if;
+
+  select count(*) into l_qt
+    from user_constraints
+   where table_name = 'HISTORICO_CARREIRA' and constraint_name = 'HISTORICO_CARREIRA_APROVADOR_CK';
+  if l_qt = 0 then
+    execute immediate 'alter table historico_carreira add constraint historico_carreira_aprovador_ck '
+                      || 'check (id_aprovador is null or id_aprovador <> id_colaborador)';
+  end if;
+end;
+/
 
 create index if not exists historico_carreira_emp_colab_ix on historico_carreira (id_empresa, id_colaborador);
 create index if not exists historico_carreira_colab_dt_ix  on historico_carreira (id_colaborador, st_registro, dt_efetiva);
@@ -137,6 +169,7 @@ create index if not exists historico_carreira_dep_nov_ix   on historico_carreira
 create index if not exists historico_carreira_ges_ant_ix   on historico_carreira (id_gestor_anterior);
 create index if not exists historico_carreira_ges_nov_ix   on historico_carreira (id_gestor_novo);
 create index if not exists historico_carreira_comunic_ix   on historico_carreira (id_comunicado);
+create index if not exists historico_carreira_aprov_ix     on historico_carreira (id_aprovador);
 
 comment on table  historico_carreira                          is 'Movimentações de carreira do colaborador. Imutável depois de EFETIVADO: correções são feitas por estorno + novo lançamento.';
 comment on column historico_carreira.id_historico_carreira    is 'PK (identity).';
@@ -157,6 +190,7 @@ comment on column historico_carreira.ds_observacao            is 'Observações 
 comment on column historico_carreira.st_registro              is 'RASCUNHO (editável), EFETIVADO (imutável) ou ESTORNADO (efetivado que foi revertido).';
 comment on column historico_carreira.id_registro_estornado    is 'Preenchido apenas nos lançamentos de estorno: aponta para o lançamento revertido (autorrelacionamento).';
 comment on column historico_carreira.id_comunicado            is 'Comunicado publicado automaticamente para a equipe na efetivação (admissão, promoção, transferência).';
+comment on column historico_carreira.id_aprovador             is 'Colaborador que aprovou a movimentação (em geral a gestão). Opcional; aparece como "Aprovado por" na linha do tempo. Não pode ser o próprio colaborador.';
 comment on column historico_carreira.dt_efetivacao            is 'Data/hora em que o lançamento foi efetivado.';
 comment on column historico_carreira.usr_efetivacao           is 'Usuário que efetivou o lançamento.';
 comment on column historico_carreira.dt_criacao               is 'Auditoria: data/hora de criação.';

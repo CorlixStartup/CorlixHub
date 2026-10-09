@@ -197,7 +197,8 @@ begin
                p_id_cargo_novo        => l_car_a_pl,
                p_vl_salario_anterior  => 5000,
                p_vl_salario_novo      => 6543.21,
-               p_ds_motivo            => 'Desempenho acima do esperado');
+               p_ds_motivo            => 'Desempenho acima do esperado',
+               p_id_aprovador         => l_col_a(1));
 
   confere('T02a rascunho não altera o cargo do colaborador', cargo_atual(l_col_a(2)) = l_car_a_jr);
 
@@ -211,6 +212,9 @@ begin
      and c.id_departamento = l_dep_a1
      and c.conteudo not like '%6543%';
   confere('T02e promoção publica comunicado para a equipe, sem salário', l_qt = 1, 'veio ' || l_qt);
+
+  select id_aprovador into l_num from historico_carreira where id_historico_carreira = l_promo;
+  confere('T02f aprovador é gravado e mantido na efetivação', l_num = l_col_a(1));
 
   select id_cargo into l_num from vw_situacao_atual_colaborador where id_colaborador = l_col_a(2);
   confere('T02c VW_SITUACAO_ATUAL reflete o novo cargo', l_num = l_car_a_pl);
@@ -304,6 +308,20 @@ begin
   exception when others then confere_erro('T12 tipo de movimentação da empresa B', -20008, sqlcode, sqlerrm);
   end;
 
+  begin
+    l_id := pkg_historico_carreira.registrar_movimentacao(l_col_a(3), tipo(l_emp_a, 'MERITO'), l_hoje,
+              p_id_aprovador => l_col_b(1));
+    nao_bloqueou('T12b aprovador da empresa B em colaborador da A', -20020);
+  exception when others then confere_erro('T12b aprovador da empresa B em colaborador da A', -20020, sqlcode, sqlerrm);
+  end;
+
+  begin
+    l_id := pkg_historico_carreira.registrar_movimentacao(l_col_a(3), tipo(l_emp_a, 'MERITO'), l_hoje,
+              p_id_aprovador => l_col_a(3));
+    nao_bloqueou('T12c colaborador aprovando a própria movimentação', -20020);
+  exception when others then confere_erro('T12c colaborador aprovando a própria movimentação', -20020, sqlcode, sqlerrm);
+  end;
+
   ------------------------------------------------------------------------------
   -- T13..T16 · Imutabilidade e ciclo de vida
   ------------------------------------------------------------------------------
@@ -311,6 +329,12 @@ begin
     update historico_carreira set ds_motivo = 'adulterado' where id_historico_carreira = l_promo;
     nao_bloqueou('T13 UPDATE direto em lançamento efetivado', -20013);
   exception when others then confere_erro('T13 UPDATE direto em lançamento efetivado', -20013, sqlcode, sqlerrm);
+  end;
+
+  begin
+    update historico_carreira set id_aprovador = l_col_a(4) where id_historico_carreira = l_promo;
+    nao_bloqueou('T13b trocar o aprovador de lançamento efetivado', -20013);
+  exception when others then confere_erro('T13b trocar o aprovador de lançamento efetivado', -20013, sqlcode, sqlerrm);
   end;
 
   begin
@@ -508,6 +532,7 @@ begin
     l_html := pkg_historico_carreira_ui.render(l_col_a(2));
     confere('T40 página renderiza a linha do tempo', dbms_lob.instr(l_html, 'class="hc-evento') > 0);
     confere('T41 página nunca mostra salário', dbms_lob.instr(l_html, '6543') = 0 and dbms_lob.instr(l_html, '7321') = 0);
+    confere('T41b página mostra quem aprovou', dbms_lob.instr(l_html, 'Aprovado por Ana Gestora') > 0);
   end;
 
   pkg_historico_carreira.definir_empresa_contexto(l_emp_a);

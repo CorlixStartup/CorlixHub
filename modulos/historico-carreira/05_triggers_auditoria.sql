@@ -125,6 +125,7 @@ begin
               and not mudou_clob(:old.ds_observacao,       :new.ds_observacao)
               and not mudou(:old.id_registro_estornado,    :new.id_registro_estornado)
               and not mudou(:old.id_comunicado,            :new.id_comunicado)
+              and not mudou(:old.id_aprovador,             :new.id_aprovador)
               and not mudou(:old.dt_efetivacao,            :new.dt_efetivacao)
               and not mudou(:old.usr_efetivacao,           :new.usr_efetivacao))
       then

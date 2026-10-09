@@ -5,7 +5,8 @@
 -- Renderiza a página "Histórico de carreira" (página 13) no layout do protótipo:
 --   título + Exportar PDF
 --   resumo (tempo de casa, no cargo atual, promoções) + cargos ao longo do tempo
---   linha do tempo com abas (Tudo / Movimentações / Desenvolvimento) e filtro de ano
+--   linha do tempo com abas (Tudo / Movimentações / Desenvolvimento) e filtro de ano;
+--   cada movimentação mostra quem registrou (RH) e, se houver, quem aprovou
 --   lateral: posição atual e "Sobre este histórico"
 --
 -- Mesmo padrão do PKG_ORGANOGRAMA: região Dynamic Content que retorna o HTML.
@@ -95,7 +96,8 @@ create or replace package body pkg_historico_carreira_ui as
            cast(null as date)           as dt_conclusao,
            cast(null as date)           as dt_validade,
            cast(null as varchar2(1000)) as ds_link,
-           cast(null as number)         as nr_anos
+           cast(null as number)         as nr_anos,
+           ap.nome_completo             as nm_aprovador
       from historico_carreira h
       join tipo_movimentacao  t  on t.id_tipo_movimentacao   = h.id_tipo_movimentacao
       left join cargo         ca on ca.id_cargo              = h.id_cargo_anterior
@@ -104,6 +106,7 @@ create or replace package body pkg_historico_carreira_ui as
       left join departamento  dn on dn.id_departamento       = h.id_departamento_novo
       left join colaborador   ga on ga.id_colaborador        = h.id_gestor_anterior
       left join colaborador   gn on gn.id_colaborador        = h.id_gestor_novo
+      left join colaborador   ap on ap.id_colaborador        = h.id_aprovador
       left join historico_carreira eo on eo.id_historico_carreira = h.id_registro_estornado
      where h.id_colaborador = p_id
        and h.st_registro in ('EFETIVADO', 'ESTORNADO')
@@ -111,14 +114,14 @@ create or replace package body pkg_historico_carreira_ui as
     select 'DEV', f.id_formacao, coalesce(f.dt_conclusao, f.dt_inicio), f.tp_formacao, null,
            f.ds_titulo, null, null, null, null, null, null, null, null, null, null, null, null,
            null, null, null, 0,
-           f.ds_instituicao, f.nr_carga_horaria, f.dt_conclusao, f.dt_validade, f.ds_link, null
+           f.ds_instituicao, f.nr_carga_horaria, f.dt_conclusao, f.dt_validade, f.ds_link, null, null
       from formacao_colaborador f
      where f.id_colaborador = p_id
     union all
     select 'MARCO', level, add_months(p_admissao, 12 * level), 'MARCO', null,
            null, null, null, null, null, null, null, null, null, null, null, null, null,
            null, null, null, 0,
-           null, null, null, null, null, level
+           null, null, null, null, null, level, null
       from dual
      where p_admissao is not null
        and add_months(p_admissao, 12 * level) <= p_hoje
@@ -271,6 +274,7 @@ create or replace package body pkg_historico_carreira_ui as
       when 'download'    then '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>'
       when 'seta'        then '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>'
       when 'cadeado'     then '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+      when 'aprovador'   then '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>'
       when 'registro'    then '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>'
       when 'megafone'    then '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'
       when 'alerta'      then '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v2"/><path d="M12 13h.01"/>'
@@ -533,6 +537,7 @@ create or replace package body pkg_historico_carreira_ui as
                            when l_nome_rh is not null then 'Registrado por ' || l_nome_rh || ' (RH) em ' || fmt(l_dt_reg)
                            when l_dt_reg  is not null then 'Registrado pelo RH em ' || fmt(l_dt_reg)
                          end);
+        meta('aprovador', nvl2(r.nm_aprovador, 'Aprovado por ' || r.nm_aprovador, null));
       end if;
       p('</div>');
       link_seta(l_link_href, l_link_txt, l_link_ext);
