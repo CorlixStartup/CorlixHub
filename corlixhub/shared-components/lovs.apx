@@ -54,3 +54,104 @@ lov empresa-nome (
     }
 )
 
+lov lov-colaborador-ativo (
+    name: LOV_COLABORADOR_ATIVO
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select cg.nome d, cg.id_cargo r
+              from cargo cg
+             where cg.id_empresa = :G_ID_EMPRESA
+               and cg.id_departamento = coalesce(to_number(:P18_ID_DEPARTAMENTO_NOVO),
+                                                 to_number(:P18_ID_DEPARTAMENTO_ATUAL))
+             order by cg.nome
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov lov-departamento-empresa (
+    name: LOV_DEPARTAMENTO_EMPRESA
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select nome d, id_departamento r
+              from departamento
+             where id_empresa = :G_ID_EMPRESA
+             order by nome
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov lov-tipo-formacao (
+    name: LOV_TIPO_FORMACAO
+    source {
+        location: staticValues
+    }
+
+    entry certificacao (
+        sequence: 5
+        display: Certificação
+        return: CERTIFICACAO
+    )
+
+    entry curso (
+        sequence: 4
+        display: Curso
+        return: CURSO
+    )
+
+    entry graduacao (
+        sequence: 1
+        display: Graduação
+        return: GRADUACAO
+    )
+
+    entry idioma (
+        sequence: 6
+        display: Idioma
+        return: IDIOMA
+    )
+
+    entry mba (
+        sequence: 3
+        display: MBA
+        return: MBA
+    )
+
+    entry pos (
+        sequence: 2
+        display: Pós-graduação
+        return: POS
+    )
+
+)
+
+lov lov-tipo-movimentacao (
+    name: LOV_TIPO_MOVIMENTACAO
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select ds_tipo d, id_tipo_movimentacao r
+              from tipo_movimentacao
+             where id_empresa = :G_ID_EMPRESA
+               and fl_ativo = true
+             order by nr_ordem, ds_tipo
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+

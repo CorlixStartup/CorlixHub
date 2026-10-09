@@ -9,31 +9,726 @@ page 13 (
     navigation {
         cursorFocus: doNotFocusCursor
     }
+    javaScript {
+        functionAndGlobalVariableDeclaration:
+            ```javascript-browser
+            /* --- 1. Function and Global Variable Declaration ------------------------- */
+            
+            var hc = hc || {};
+            
+            hc.plural = function (qtd) {
+              return qtd + (qtd === 1 ? " registro" : " registros");
+            };
+            
+            /** Aplica a aba e o ano escolhidos: esconde eventos e recalcula os cabeçalhos de ano. */
+            hc.filtrar = function (raiz) {
+              var aba   = raiz.querySelector('[role="tab"][aria-selected="true"]');
+              var grupo = aba ? aba.getAttribute("data-hc-filtro") : "tudo";
+              var seletorAno = raiz.querySelector("[data-hc-ano]");
+              var ano   = seletorAno ? seletorAno.value : "";
+              var porAno = {};
+              var visiveis = [];
+            
+              raiz.querySelectorAll(".hc-evento").forEach(function (ev) {
+                var mostra = (grupo === "tudo" || ev.getAttribute("data-grupo") === grupo)
+                          && (!ano || ev.getAttribute("data-ano") === ano);
+                ev.hidden = !mostra;
+                ev.classList.remove("is-ultimo");
+                if (mostra) {
+                  visiveis.push(ev);
+                  porAno[ev.getAttribute("data-ano")] = (porAno[ev.getAttribute("data-ano")] || 0) + 1;
+                }
+              });
+            
+              // Último evento visível não puxa a linha vertical para baixo
+              if (visiveis.length) {
+                visiveis[visiveis.length - 1].classList.add("is-ultimo");
+              }
+            
+              var primeiroAno = true;
+              raiz.querySelectorAll(".hc-ano").forEach(function (cab) {
+                var qtd = porAno[cab.getAttribute("data-ano")] || 0;
+                cab.hidden = qtd === 0;
+                var rotulo = cab.querySelector(".hc-ano__qt");
+                if (rotulo) { rotulo.textContent = hc.plural(qtd); }
+                cab.classList.toggle("is-primeiro", qtd > 0 && primeiroAno);
+                if (qtd > 0) { primeiroAno = false; }
+              });
+            
+              var vazio = raiz.querySelector("[data-hc-sem-resultado]");
+              if (vazio) { vazio.hidden = visiveis.length > 0; }
+            };
+            
+            hc.iniciar = function () {
+              if (hc.iniciado) { return; }
+              hc.iniciado = true;
+            
+              document.addEventListener("click", function (evento) {
+                var raiz = evento.target.closest("[data-hc]");
+                if (!raiz) { return; }
+            
+                var aba = evento.target.closest("[data-hc-filtro]");
+                if (aba) {
+                  raiz.querySelectorAll("[data-hc-filtro]").forEach(function (b) {
+                    b.setAttribute("aria-selected", String(b === aba));
+                  });
+                  hc.filtrar(raiz);
+                  return;
+                }
+            
+                if (evento.target.closest('[data-hc-acao="exportar"]')) {
+                  window.print();
+                }
+              });
+            
+              document.addEventListener("change", function (evento) {
+                if (evento.target.matches("[data-hc-ano]")) {
+                  hc.filtrar(evento.target.closest("[data-hc]"));
+                }
+              });
+            
+              // Setas esquerda/direita entre as abas (padrão WAI-ARIA de tablist)
+              document.addEventListener("keydown", function (evento) {
+                var aba = evento.target.closest && evento.target.closest("[data-hc] [role='tab']");
+                if (!aba || (evento.key !== "ArrowRight" && evento.key !== "ArrowLeft")) { return; }
+                var abas = Array.prototype.slice.call(aba.parentNode.querySelectorAll("[role='tab']"));
+                var i = abas.indexOf(aba) + (evento.key === "ArrowRight" ? 1 : -1);
+                var destino = abas[(i + abas.length) % abas.length];
+                destino.focus();
+                destino.click();
+              });
+            
+              // Ao imprimir, mostra tudo (sem o filtro da tela)
+              window.addEventListener("beforeprint", function () {
+                document.querySelectorAll("[data-hc] .hc-evento, [data-hc] .hc-ano").forEach(function (el) {
+                  el.setAttribute("data-hc-oculto", el.hidden ? "1" : "0");
+                  el.hidden = false;
+                });
+              });
+              window.addEventListener("afterprint", function () {
+                document.querySelectorAll("[data-hc] [data-hc-oculto]").forEach(function (el) {
+                  el.hidden = el.getAttribute("data-hc-oculto") === "1";
+                  el.removeAttribute("data-hc-oculto");
+                });
+              });
+            };
+            
+            /** Chamado no carregamento e depois de cada refresh da região. */
+            hc.preparar = function () {
+              document.querySelectorAll("[data-hc]").forEach(hc.filtrar);
+            };
+            ```
+        executeWhenPageLoads:
+            ```javascript-browser
+            /* --- 2. Execute when Page Loads ------------------------------------------ */
+            
+            hc.iniciar();
+            hc.preparar();
+            $("#historico_carreira").on("apexafterrefresh", hc.preparar);
+            ```
+    }
+    css {
+        fileUrls: #APP_FILES#historico-carreira#MIN#.css
+    }
     security {
+        authorizationScheme: @colaborador
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
-        source {
-            breadcrumb: @breadcrumb
-        }
+    region buttons-container (
+        name: Buttons Container
+        type: staticContent
         layout {
             sequence: 10
-            slot: breadcrumbBar
+            slot: body
         }
         appearance {
-            template: @/title-bar
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
+    region historico_carreira (
+        name: Histórico de Carreiras
+        type: dynamicContent
+        source {
+            plsqlFunctionBody: return pkg_historico_carreira_ui.render(:P13_ID_COLABORADOR);
+            pageItemsToSubmit: P13_ID_COLABORADOR
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region lançamentos-rh (
+        name: Lançamentos (RH)
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select id_historico_carreira, dt_efetiva, ds_tipo, st_registro, fl_estorno,
+                       nm_cargo_anterior, nm_cargo_novo, nm_departamento_anterior, nm_departamento_novo,
+                       nm_gestor_novo, vl_salario_anterior, vl_salario_novo, ds_motivo,
+                       usr_efetivacao, dt_efetivacao
+                  from vw_historico_carreira
+                 where id_colaborador = :P13_ID_COLABORADOR
+                   and id_empresa     = :G_ID_EMPRESA
+                 order by dt_efetiva desc, id_historico_carreira desc
+                ```
+            pageItemsToSubmit: P13_ID_COLABORADOR
+        }
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/collapsible
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                is-collapsed
+                t-Region--scrollBody
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
+        security {
+            authorizationScheme: @admin-rh
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        advanced {
+            savedReportMappingIdentifier: 29920412075540310
+        }
+
+        column DS_MOTIVO (
+            type: plainText
+            heading {
+                heading: Motivo
+            }
+            layout {
+                sequence: 130
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: M
+            }
+        )
+
+        column DS_TIPO (
+            type: plainText
+            heading {
+                heading: Tipo
+            }
+            layout {
+                sequence: 30
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column DT_EFETIVA (
+            type: plainText
+            heading {
+                heading: Data efetiva
+            }
+            layout {
+                sequence: 20
+            }
+            appearance {
+                formatMask: DD/MM/YYYY
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column DT_EFETIVACAO (
+            type: plainText
+            heading {
+                heading: Efetivado em
+            }
+            layout {
+                sequence: 150
+            }
+            appearance {
+                formatMask: DD/MM/YYYY HH24:MI
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: O
+            }
+        )
+
+        column FL_ESTORNO (
+            type: plainText
+            heading {
+                heading: Estorno
+            }
+            layout {
+                sequence: 50
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        column ID_HISTORICO_CARREIRA (
+            type: link
+            heading {
+                heading: Editar
+                alignment: center
+            }
+            layout {
+                sequence: 10
+                columnAlignment: end
+            }
+            link {
+                target: {
+                    page: 18
+                    items: {
+                        P18_ID_HISTORICO_CARREIRA: #ID_HISTORICO_CARREIRA#
+                        P18_ID_COLABORADOR: &P13_ID_COLABORADOR.
+                    }
+                    clearCache: 18
+                }
+                linkText: <span class="fa fa-edit"></span>
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column NM_CARGO_ANTERIOR (
+            type: plainText
+            heading {
+                heading: Cargo anterior
+            }
+            layout {
+                sequence: 60
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column NM_CARGO_NOVO (
+            type: plainText
+            heading {
+                heading: Cargo novo
+            }
+            layout {
+                sequence: 70
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column NM_DEPARTAMENTO_ANTERIOR (
+            type: plainText
+            heading {
+                heading: Depto. anterior
+            }
+            layout {
+                sequence: 80
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        column NM_DEPARTAMENTO_NOVO (
+            type: plainText
+            heading {
+                heading: Depto. novo
+            }
+            layout {
+                sequence: 90
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: I
+            }
+        )
+
+        column NM_GESTOR_NOVO (
+            type: plainText
+            heading {
+                heading: Gestor
+            }
+            layout {
+                sequence: 100
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: J
+            }
+        )
+
+        column ST_REGISTRO (
+            type: plainText
+            heading {
+                heading: Situação
+            }
+            layout {
+                sequence: 40
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column USR_EFETIVACAO (
+            type: plainText
+            heading {
+                heading: Efetivado por
+            }
+            layout {
+                sequence: 140
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: N
+            }
+        )
+
+        column VL_SALARIO_ANTERIOR (
+            type: plainText
+            heading {
+                heading: Salário anterior
+                alignment: end
+            }
+            layout {
+                sequence: 110
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: FML999G999G990D00
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: K
+            }
+            security {
+                authorizationScheme: @admin-rh
+            }
+        )
+
+        column VL_SALARIO_NOVO (
+            type: plainText
+            heading {
+                heading: Salário novo
+                alignment: end
+            }
+            layout {
+                sequence: 120
+                columnAlignment: end
+            }
+            appearance {
+                formatMask: FML999G999G990D00
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: L
+            }
+            security {
+                authorizationScheme: @admin-rh
+            }
+        )
+
+        page {
+            borderWidth: 0.5
+            borderColor: #666666
+        }
+
+        savedReport primary (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 50
+            }
+
+            displayColumn DS_MOTIVO (
+                sequence: 13
+            )
+
+            displayColumn DS_TIPO (
+                sequence: 3
+            )
+
+            displayColumn DT_EFETIVA (
+                sequence: 2
+            )
+
+            displayColumn DT_EFETIVACAO (
+                sequence: 15
+            )
+
+            displayColumn FL_ESTORNO (
+                sequence: 5
+            )
+
+            displayColumn ID_HISTORICO_CARREIRA (
+                sequence: 1
+            )
+
+            displayColumn NM_CARGO_ANTERIOR (
+                sequence: 6
+            )
+
+            displayColumn NM_CARGO_NOVO (
+                sequence: 7
+            )
+
+            displayColumn NM_DEPARTAMENTO_ANTERIOR (
+                sequence: 8
+            )
+
+            displayColumn NM_DEPARTAMENTO_NOVO (
+                sequence: 9
+            )
+
+            displayColumn NM_GESTOR_NOVO (
+                sequence: 10
+            )
+
+            displayColumn ST_REGISTRO (
+                sequence: 4
+            )
+
+            displayColumn USR_EFETIVACAO (
+                sequence: 14
+            )
+
+            displayColumn VL_SALARIO_ANTERIOR (
+                sequence: 11
+            )
+
+            displayColumn VL_SALARIO_NOVO (
+                sequence: 12
+            )
+
+        )
+
+    )
+
+    pageItem P13_ID_COLABORADOR (
+        type: hidden
+        layout {
+            sequence: 40
+            slot: body
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    button formacoes (
+        buttonName: FORMACOES
+        label: Formações
+        layout {
+            sequence: 20
+            region: @buttons-container
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text
             templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 19
+                items: {
+                    P19_ID_COLABORADOR: &P13_ID_COLABORADOR.
+                }
+            }
+        }
+    )
+
+    button nova-movimentação_1 (
+        buttonName: NOVA_MOVIMENTACAO
+        label: Nova movimentação
+        layout {
+            sequence: 10
+            region: @buttons-container
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 18
+                items: {
+                    P18_ID_COLABORADOR: &P13_ID_COLABORADOR.
+                }
+                clearCache: 18
+            }
+        }
+    )
+
+    dynamicAction atualizar-depois-da-modal (
+        name: Atualizar depois da modal
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: jsExpression
+            javaScriptExpression: document
+        }
+
+        action histórico-de-carreira (
+            name: Histórico de carreira
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @historico_carreira
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+        action lançamentos-rh (
+            name: Lançamentos (RH)
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @lançamentos-rh
+            }
+            execution {
+                sequence: 20
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    process colaborador-padrão (
+        name: Colaborador padrão
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                begin
+                  if :P13_ID_COLABORADOR is null then
+                    select id_colaborador
+                      into :P13_ID_COLABORADOR
+                      from colaborador
+                     where upper(trim(login_apex)) = upper(trim(:APP_USER))
+                       and id_empresa = :G_ID_EMPRESA;
+                  end if;
+                exception
+                  when no_data_found or too_many_rows then
+                    raise_application_error(-20012,
+                      'Sua conta não está vinculada a um colaborador desta empresa. Fale com o RH.');
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 29919817957540304
+        }
+    )
+
+    process registrar-acesso-salarial (
+        name: Registrar acesso salarial
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                pkg_historico_carreira.registrar_acesso_salarial(
+                  p_id_colaborador => :P13_ID_COLABORADOR,
+                  p_contexto       => 'P13 · lançamentos do histórico');
+                ```
+        }
+        execution {
+            sequence: 30
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 29920024740540306
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
+    process validar-acesso (
+        name: Validar acesso
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P13_ID_COLABORADOR is null
+                   or pkg_historico_carreira.fn_pode_ver_colaborador(:P13_ID_COLABORADOR) = 'N' then
+                  raise_application_error(-20012, 'Você não tem acesso ao histórico deste colaborador.');
+                end if;
+                ```
+        }
+        execution {
+            sequence: 20
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 29919984358540305
         }
     )
 

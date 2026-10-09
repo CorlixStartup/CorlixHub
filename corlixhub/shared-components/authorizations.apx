@@ -13,7 +13,7 @@ authorization admin-rh (
 )
 
 authorization administration-rights (
-    name: Equipe Corlix Hub
+    name: EQUIPE_CORLIX_HUB
     type: isInRoleOrGroup
     settings {
         names: Equipe do Corlix Hub
@@ -26,8 +26,58 @@ authorization administration-rights (
     }
 )
 
+authorization colaborador (
+    name: COLABORADOR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody:
+            ```plsql
+            declare
+              l_qt pls_integer;
+            begin
+              if apex_authorization.is_authorized('ADMIN_RH') then
+                return true;
+              end if;
+              select count(*)
+                into l_qt
+                from colaborador
+               where upper(login_apex) = upper(:APP_USER)
+                 and id_empresa = :G_ID_EMPRESA;
+              return l_qt > 0;
+            end;
+            ```
+    }
+    advanced {
+        evaluationType: perSession
+    }
+)
+
+authorization gestor (
+    name: GESTOR
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody:
+            ```plsql
+            declare
+              l_qt pls_integer;
+            begin
+              select count(*)
+                into l_qt
+                from colaborador s
+                join colaborador g on g.id_colaborador = s.id_gestor
+               where upper(g.login_apex) = upper(:APP_USER)
+                 and g.id_empresa = :G_ID_EMPRESA;
+              return l_qt > 0;
+            end;
+            ```
+    }
+    advanced {
+        evaluationType: perSession
+    }
+)
+
 authorization publicador-de-conteudo (
-    name: Publicador de Conteudo
+    name: PUBLICADOR_DE_CONTEUDO
     type: isInRoleOrGroup
     settings {
         names: Publicador de Conteúdo
@@ -41,7 +91,7 @@ authorization publicador-de-conteudo (
 )
 
 authorization somente-diretoria (
-    name: Somente Diretoria
+    name: SOMENTE_DIRETORIA
     type: isInRoleOrGroup
     settings {
         names: Diretoria
