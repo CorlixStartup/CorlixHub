@@ -17,7 +17,7 @@ Seu computador (Docker)                         OCI
 │  └─ agente (Java 21 + SQLcl) ───┼─ wallet ──▶ │  ├─ APEX: app 100 CORLIXHUB  │
 │        │                        │   (mTLS)    │  └─ schema WKSP_CORLIXHUB    │
 │        ▼                        │             └──────────────────────────────┘
-│ pasta do projeto (CorlixHub/)   │
+│ pasta do projeto (corlix-hub/)  │
 │  ├─ backups/prd/*.tar.gz        │  ← cópia de cada backup (fora do Git)
 │  ├─ corlixhub/                  │  ← app em APEXlang, atualizada pelo backup
 │  └─ database/                   │  ← f100.sql, ddl/ e dados/backup/ (CSVs, fora do Git)
@@ -41,7 +41,7 @@ Hoje existe um único ambiente, chamado `PRD` no `Jenkinsfile`. O nome é só um
 | Item | Para quê | Como conferir |
 |---|---|---|
 | Docker Desktop rodando | Jenkins e agente rodam em containers | `docker ps` responde sem erro |
-| Clone do repositório | O Jenkins grava os backups na pasta do projeto | `git -C ~/www/CorlixHub status` |
+| Clone do repositório | O Jenkins grava os backups na pasta do projeto | `git -C ~/www/corlix-hub status` |
 | Acesso ao OCI Console | Baixar a wallet | Você vê o Autonomous Database do Corlix Hub |
 | Usuário `ADMIN` do banco (ou alguém que o tenha) | Liberar o `WKSP_CORLIXHUB` | Login no Database Actions como `ADMIN` |
 
@@ -89,7 +89,7 @@ unzip -p ~/wallets/Wallet_*.zip tnsnames.ora | grep -o '^[a-z0-9_]*_low'
 ### 3.1 Iniciar o container
 
 ```bash
-cd ~/www/CorlixHub/scripts/backup/jenkins
+cd ~/www/corlix-hub/scripts/backup/jenkins
 docker compose up -d --build
 ```
 
@@ -156,7 +156,7 @@ Caminho: **Manage Jenkins** > **Credentials** > na tabela *Stores scoped to Jenk
 
 Usada pelo stage **Publicar no Git** para commitar na `DEV` e abrir o PR para a `PROD`.
 
-1. No GitHub: **Settings** > **Developer settings** > **Personal access tokens** > **Fine-grained tokens** > **Generate new token**. *Resource owner* `CorlixStartup`, *Repository access* só `CorlixHub`, permissões **Contents: Read and write** e **Pull requests: Read and write**.
+1. No GitHub: **Settings** > **Developer settings** > **Personal access tokens** > **Fine-grained tokens** > **Generate new token**. *Resource owner* `CorlixStartup`, *Repository access* só `corlix-hub`, permissões **Contents: Read and write** e **Pull requests: Read and write**.
 2. No Jenkins:
 
 | Campo | Valor |
@@ -183,7 +183,7 @@ Se a `DEV` tiver proteção de branch que exige PR, adicione esse usuário no *b
    |---|---|
    | Definition | **Pipeline script from SCM** |
    | SCM | **Git** |
-   | Repository URL | `https://github.com/CorlixStartup/CorlixHub.git` |
+   | Repository URL | `https://github.com/CorlixStartup/corlix-hub.git` |
    | Credentials | *- none -* (o repositório é público) |
    | Branch Specifier | `*/PROD` (veja a observação abaixo) |
    | Script Path | `scripts/backup/Jenkinsfile` |
@@ -226,7 +226,7 @@ Os números (tamanho, tabelas, arquivos) crescem com o projeto. Linhas `AVISO:` 
 ### 6.3 Conferir os arquivos
 
 ```bash
-cd ~/www/CorlixHub
+cd ~/www/corlix-hub
 
 # 1. O backup chegou e está íntegro
 ls -lh backups/prd/
@@ -283,7 +283,7 @@ O `.tar.gz` é salvo do mesmo jeito. Commite ou descarte suas mudanças e extrai
 Precisa do SQLcl instalado (`brew install sqlcl`):
 
 ```bash
-cd ~/www/CorlixHub
+cd ~/www/corlix-hub
 DB_USER=WKSP_CORLIXHUB DB_PASSWORD='<senha>' DB_SERVICE=corlixhub_low \
 DB_WALLET=~/wallets/Wallet_corlixhub.zip \
 ./scripts/backup/backup.sh

@@ -16,7 +16,7 @@
 # Variáveis de ambiente:
 #   GIT_USER        obrigatória  usuário do GitHub dono do token
 #   GIT_TOKEN       obrigatória  token com Contents e Pull requests (leitura e escrita)
-#   GITHUB_REPO     opcional     dono/repositório (padrão: CorlixStartup/CorlixHub)
+#   GITHUB_REPO     opcional     dono/repositório (padrão: CorlixStartup/corlix-hub)
 #   BRANCH_BACKUP   opcional     branch que recebe o commit (padrão: DEV)
 #   BRANCH_PR       opcional     base do PR (padrão: PROD)
 #   GIT_AUTOR_NOME  opcional     autor do commit (padrão: Jenkins Backup Corlix Hub)
@@ -33,7 +33,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARQUIVO="${1:?Uso: $0 <corlixhub-*.tar.gz>}"
 : "${GIT_USER:?Defina GIT_USER}"
 : "${GIT_TOKEN:?Defina GIT_TOKEN}"
-GITHUB_REPO="${GITHUB_REPO:-CorlixStartup/CorlixHub}"
+GITHUB_REPO="${GITHUB_REPO:-CorlixStartup/corlix-hub}"
 BRANCH_BACKUP="${BRANCH_BACKUP:-DEV}"
 BRANCH_PR="${BRANCH_PR:-PROD}"
 GIT_AUTOR_NOME="${GIT_AUTOR_NOME:-Jenkins Backup Corlix Hub}"

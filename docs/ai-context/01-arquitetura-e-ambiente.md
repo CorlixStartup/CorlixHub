@@ -115,7 +115,7 @@ Detalhes em [`05-banco-de-dados.md`](./05-banco-de-dados.md) e [`06-modulos.md`]
 | "Não há packages PL/SQL próprios" | Existem `pkg_historico_carreira`, `pkg_historico_carreira_ui`, `pkg_organograma`; a app usa `log_pkg.apex_error_handler` |
 | "Não há testes" | Existe `modulos/historico-carreira/07_testes.sql` |
 | `docs/` não existe | Agora existe `docs/ai-context/` |
-| Repo sem commits/remote | Remote `https://github.com/CorlixStartup/CorlixHub.git`; branches remotas `DEV` (HEAD), `UAT`, `PROD`, `main`, `feature/cadastro-empresas`; PR #1 mergeado |
+| Repo sem commits/remote | Remote `https://github.com/CorlixStartup/corlix-hub.git`; branches remotas `DEV` (HEAD), `UAT`, `PROD`, `main`, `feature/cadastro-empresas`; PR #1 mergeado |
 | Seis entidades: Empresa, Colaborador, Cargo, Departamento, Movimentacao_Carreira, Comunicado | `MOVIMENTACAO_CARREIRA` existe no banco como tabela legada, sem uso; o módulo novo a substitui por `HISTORICO_CARREIRA` + `TIPO_MOVIMENTACAO`; há também equipes, chat, logs, presença etc. |
 
 Quando o README e o código discordarem, **confie no código** e sinalize a divergência.
