@@ -1,0 +1,18 @@
+page 23 (
+    name: Responder solicitação
+    alias: RESPONDER-SOLICITAÇÃO
+    title: Responder solicitação
+    appearance {
+        pageMode: modalDialog
+        dialogTemplate: @/modal-dialog
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+)
+

@@ -37,5 +37,63 @@ page 3 (
         }
     )
 
+    region organograma (
+        name: Organograma Principal
+        type: dynamicContent
+        source {
+            plsqlFunctionBody:
+                ```plsql
+                return pkg_organograma.render(
+                         to_number(:P3_ID_FOCO default null on conversion error));
+                ```
+            pageItemsToSubmit: P3_ID_FOCO
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_BUSCA (
+        type: popupLov
+        label {
+            label: Novo
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select nome_completo || ' — ' || cargo d,
+                       id_colaborador r
+                from vw_org_colaborador
+                order by nome_completo
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: body
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+            valuePlaceholder: Buscar pessoa no organograma
+        }
+    )
+
+    pageItem P3_ID_FOCO (
+        type: hidden
+        layout {
+            sequence: 20
+            slot: body
+        }
+    )
+
 )
 

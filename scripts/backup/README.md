@@ -107,7 +107,7 @@ Com o parâmetro `PUBLICAR_GIT` marcado (padrão, inclusive na execução agenda
 3. Abre um PR `DEV` → `PROD` com o título `Backup - Corlix Hub - dd/MM/yyyy as HH:mm`. Se já houver um aberto, o push só o atualiza.
 
 Requisitos:
-- Credencial `corlixhub-github` (*Username with password*): usuário do GitHub e um *fine-grained token* com acesso ao `CorlixStartup/CorlixHub` e permissões **Contents: Read and write** e **Pull requests: Read and write**.
+- Credencial `corlixhub-github` (*Username with password*): usuário do GitHub e um *fine-grained token* com acesso ao `CorlixStartup/corlix-hub` e permissões **Contents: Read and write** e **Pull requests: Read and write**.
 - A `DEV` precisa aceitar push direto desse usuário. Se ela tiver proteção de branch que exige PR, libere o usuário no *bypass* da regra; senão o log mostra `push para DEV recusado`.
 - O PR inclui qualquer outro commit da `DEV` que ainda não está na `PROD`: revise antes do merge.
 

@@ -42,6 +42,25 @@ list emitir-comunicado (
 list navigation-menu (
     name: Navigation Menu
 
+    entry anexo-da-formação (
+        label: Anexo da formação
+        icon {
+            imageIconCssClasses: fa-file-o
+        }
+        layout {
+            sequence: 220
+        }
+        isCurrent {
+            type: pages
+            pages: 21
+        }
+        link {
+            target: {
+                page: 21
+            }
+        }
+    )
+
     entry cadastros (
         label: Cadastro de Usuários
         icon {
@@ -143,6 +162,25 @@ list navigation-menu (
         }
     )
 
+    entry dashboard-rh (
+        label: Dashboard RH
+        icon {
+            imageIconCssClasses: fa-file-o
+        }
+        layout {
+            sequence: 210
+        }
+        isCurrent {
+            type: pages
+            pages: 20
+        }
+        link {
+            target: {
+                page: 20
+            }
+        }
+    )
+
     entry emitir-comunicado (
         label: Emitir Comunicado
         icon {
@@ -188,6 +226,25 @@ list navigation-menu (
         }
         security {
             authorizationScheme: @administration-rights
+        }
+    )
+
+    entry formações-e-certificações (
+        label: Formações e certificações
+        icon {
+            imageIconCssClasses: fa-file-o
+        }
+        layout {
+            sequence: 200
+        }
+        isCurrent {
+            type: pages
+            pages: 19
+        }
+        link {
+            target: {
+                page: 19
+            }
         }
     )
 
@@ -275,6 +332,25 @@ list navigation-menu (
             target: {
                 type: url
                 url: &LOGOUT_URL.
+            }
+        }
+    )
+
+    entry solicitar-correção (
+        label: Solicitar correção
+        icon {
+            imageIconCssClasses: fa-file-o
+        }
+        layout {
+            sequence: 230
+        }
+        isCurrent {
+            type: pages
+            pages: 22
+        }
+        link {
+            target: {
+                page: 22
             }
         }
     )
