@@ -116,7 +116,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_value_01=>'CorlixHub'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>2461323142138
-,p_version_scn=>'47047511722316'
+,p_version_scn=>'47047511860508'
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -57298,8 +57298,8 @@ wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(31837999345958904)
 ,p_plug_name=>'Organograma Principal'
 ,p_static_id=>'organograma'
-,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
-,p_plug_template=>4073835273271169698
+,p_region_template_options=>'#DEFAULT#'
+,p_plug_template=>4502917002193490937
 ,p_plug_display_sequence=>10
 ,p_plug_item_display_point=>'ABOVE'
 ,p_location=>null
@@ -62697,4 +62697,4 @@ end;
 /
 set verify on feedback on define on
 prompt  ...done
--- Application Checksum SH256:FugsB6vq5iA1P7F7WqDEPnEYDD+jOK5MI/rDBaEeSqU=
+-- Application Checksum SH256:FwtQTGBKNxZU2ABt0nbxMx0JYhMzeej/v6Syf8bKDeU=
