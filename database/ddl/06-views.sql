@@ -198,7 +198,8 @@ LEFT JOIN "CANAL"    c ON c."ID_EQUIPE" = e."ID_EQUIPE" AND c."STATUS" = TRUE;
    and h.id_registro_estornado is null;
 
   CREATE OR REPLACE FORCE EDITIONABLE VIEW "VW_ORG_COLABORADOR" ("ID_COLABORADOR", "ID_GESTOR", "NOME_COMPLETO", "EMAIL", "LOGIN_APEX", "DATA_ADMISSAO", "DATA_DE_NASCIMENTO", "CARGO", "DEPARTAMENTO", "FOTO_URL", "TEM_IMAGEM") AS
-  select c.id_colaborador,
+  select
+       c.id_colaborador,
        c.id_gestor,
        c.nome_completo,
        c.email,
@@ -207,12 +208,18 @@ LEFT JOIN "CANAL"    c ON c."ID_EQUIPE" = e."ID_EQUIPE" AND c."STATUS" = TRUE;
        c.data_de_nascimento,
        cg.nome as cargo,
        d.nome  as departamento,
-       c.foto_url,
-       case when c.imagem_perfil is not null then 'S' else 'N' end as tem_imagem
-  from colaborador  c
-  join cargo        cg on cg.id_cargo       = c.id_cargo
-  join departamento d  on d.id_departamento = c.id_departamento
- where c.status = true;
+
+       '#APP_FILES#Fotos Colaboradores/' || c.foto_url as foto_url,
+
+       case
+         when c.imagem_perfil is not null then 'S'
+         else 'N'
+       end as tem_imagem
+
+from colaborador c
+join cargo cg on cg.id_cargo = c.id_cargo
+join departamento d on d.id_departamento = c.id_departamento
+where c.status = true;
 
   CREATE OR REPLACE FORCE EDITIONABLE VIEW "VW_SITUACAO_ATUAL_COLABORADOR" ("ID_EMPRESA", "ID_COLABORADOR", "NM_COLABORADOR", "ID_ULTIMO_REGISTRO", "CD_ULTIMO_TIPO", "DS_ULTIMO_TIPO", "DT_ULTIMA_MOVIMENTACAO", "ID_CARGO", "NM_CARGO", "ID_DEPARTAMENTO", "NM_DEPARTAMENTO", "ID_GESTOR", "NM_GESTOR", "DT_INICIO_FUNCAO", "DT_ULTIMA_ADMISSAO", "FL_VINCULO_ATIVO") AS
   with eventos as (

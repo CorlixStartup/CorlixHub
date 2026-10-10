@@ -42,25 +42,6 @@ list emitir-comunicado (
 list navigation-menu (
     name: Navigation Menu
 
-    entry anexo-da-formação (
-        label: Anexo da formação
-        icon {
-            imageIconCssClasses: fa-file-o
-        }
-        layout {
-            sequence: 220
-        }
-        isCurrent {
-            type: pages
-            pages: 21
-        }
-        link {
-            target: {
-                page: 21
-            }
-        }
-    )
-
     entry cadastros (
         label: Cadastro de Usuários
         icon {
@@ -229,25 +210,6 @@ list navigation-menu (
         }
     )
 
-    entry formações-e-certificações (
-        label: Formações e certificações
-        icon {
-            imageIconCssClasses: fa-file-o
-        }
-        layout {
-            sequence: 200
-        }
-        isCurrent {
-            type: pages
-            pages: 19
-        }
-        link {
-            target: {
-                page: 19
-            }
-        }
-    )
-
     entry histórico-de-carreira (
         label: Histórico de carreira
         icon {
@@ -263,6 +225,7 @@ list navigation-menu (
         link {
             target: {
                 page: 13
+                clearCache: 13
             }
         }
     )

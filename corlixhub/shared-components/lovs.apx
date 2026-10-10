@@ -60,12 +60,11 @@ lov lov-colaborador-ativo (
         type: sqlQuery
         sqlQuery:
             ```sql
-            select cg.nome d, cg.id_cargo r
-              from cargo cg
-             where cg.id_empresa = :G_ID_EMPRESA
-               and cg.id_departamento = coalesce(to_number(:P18_ID_DEPARTAMENTO_NOVO),
-                                                 to_number(:P18_ID_DEPARTAMENTO_ATUAL))
-             order by cg.nome
+            select nome_completo d, id_colaborador r
+              from colaborador
+             where id_empresa = :G_ID_EMPRESA
+               and status = true
+             order by nome_completo
             ```
     }
     columnMapping {

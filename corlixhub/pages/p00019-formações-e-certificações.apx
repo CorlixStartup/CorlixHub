@@ -10,31 +10,449 @@ page 19 (
         cursorFocus: doNotFocusCursor
     }
     security {
+        authorizationScheme: @admin-rh
         pageAccessProtection: argumentsMustHaveChecksum
         formAutoComplete: false
     }
 
-    region breadcrumb (
-        name: Breadcrumb
-        type: breadcrumb
+    region formações-e-certificações (
+        name: Formações e certificações
+        type: interactiveReport
         source {
-            breadcrumb: @breadcrumb
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select "ID_FORMACAO",
+                       "ID_EMPRESA",
+                       "ID_COLABORADOR",
+                       "TP_FORMACAO",
+                       "DS_INSTITUICAO",
+                       "DS_TITULO",
+                       "DT_INICIO",
+                       "DT_CONCLUSAO",
+                       "DT_VALIDADE",
+                       "NR_CARGA_HORARIA",
+                       sys.dbms_lob.getlength( "BL_ANEXO" ) "BL_ANEXO",
+                       "DS_MIME_TYPE",
+                       "DS_NOME_ARQUIVO",
+                       "DS_LINK",
+                       "DT_CRIACAO",
+                       "USR_CRIACAO",
+                       "DT_ALTERACAO",
+                       "USR_ALTERACAO"
+                  from "FORMACAO_COLABORADOR"
+                ```
         }
         layout {
             sequence: 10
-            slot: breadcrumbBar
+            slot: body
         }
         appearance {
-            template: @/title-bar
+            template: @/interactive-report
             templateOptions: [
                 #DEFAULT#
-                t-BreadcrumbRegion--useBreadcrumbTitle
+                t-IRR-region--hideHeader js-addHiddenHeadingRoleDesc
             ]
         }
-        componentAppearance {
-            breadcrumbTemplate: @/breadcrumb
+        link {
+            linkColumn: customTarget
+            target: {
+                page: 21
+                items: {
+                    P21_ID_FORMACAO: \#ID_FORMACAO#\
+                }
+                action: resetPagination
+            }
+            linkIcon: <span role="img" aria-label="Edit" class="fa fa-edit" title="Edit"></span>
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No data found.
+            whenMoreDataFound: The maximum row count for this report is #MAX_ROW_COUNT# rows.  Please apply a filter to reduce the number of records in your query.
+        }
+        advanced {
+            savedReportMappingIdentifier: 33886108875136748
+        }
+
+        column BL_ANEXO (
+            type: downloadBlob
+            heading {
+                heading: Bl Anexo
+            }
+            layout {
+                sequence: 11
+            }
+            blobAttributes {
+                tableName: FORMACAO_COLABORADOR
+                blobColumn: BL_ANEXO
+                primaryKeyColumn1: ID_FORMACAO
+            }
+            source {
+                dataType: NUMBER
+            }
+            columnFilter {
+                type: none
+            }
+            advanced {
+                endUserAlias: K
+            }
+            enableUsersTo {
+                hide: false
+                sort: false
+                filter: false
+                highlight: false
+                controlBreak: false
+                aggregate: false
+                compute: false
+                chart: false
+                groupBy: false
+            }
+        )
+
+        column DS_INSTITUICAO (
+            type: plainText
+            heading {
+                heading: Ds Instituicao
+            }
+            layout {
+                sequence: 5
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: E
+            }
+        )
+
+        column DS_LINK (
+            type: plainText
+            heading {
+                heading: Ds Link
+            }
+            layout {
+                sequence: 14
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: N
+            }
+        )
+
+        column DS_MIME_TYPE (
+            type: plainText
+            heading {
+                heading: Ds Mime Type
+            }
+            layout {
+                sequence: 12
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: L
+            }
+        )
+
+        column DS_NOME_ARQUIVO (
+            type: plainText
+            heading {
+                heading: Ds Nome Arquivo
+            }
+            layout {
+                sequence: 13
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: M
+            }
+        )
+
+        column DS_TITULO (
+            type: plainText
+            heading {
+                heading: Ds Titulo
+            }
+            layout {
+                sequence: 6
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: F
+            }
+        )
+
+        column DT_ALTERACAO (
+            type: plainText
+            heading {
+                heading: Dt Alteracao
+            }
+            layout {
+                sequence: 17
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: Q
+            }
+        )
+
+        column DT_CONCLUSAO (
+            type: plainText
+            heading {
+                heading: Dt Conclusao
+            }
+            layout {
+                sequence: 8
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: H
+            }
+        )
+
+        column DT_CRIACAO (
+            type: plainText
+            heading {
+                heading: Dt Criacao
+            }
+            layout {
+                sequence: 15
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: O
+            }
+        )
+
+        column DT_INICIO (
+            type: plainText
+            heading {
+                heading: Dt Inicio
+            }
+            layout {
+                sequence: 7
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: G
+            }
+        )
+
+        column DT_VALIDADE (
+            type: plainText
+            heading {
+                heading: Dt Validade
+            }
+            layout {
+                sequence: 9
+            }
+            source {
+                dataType: DATE
+            }
+            advanced {
+                endUserAlias: I
+            }
+        )
+
+        column ID_COLABORADOR (
+            type: plainTextBasedOnLov
+            heading {
+                heading: Id Colaborador
+            }
+            lov {
+                lov: @colaborador-nome-completo
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: C
+            }
+        )
+
+        column ID_EMPRESA (
+            type: plainTextBasedOnLov
+            heading {
+                heading: Id Empresa
+            }
+            lov {
+                lov: @empresa-nome
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: B
+            }
+        )
+
+        column ID_FORMACAO (
+            type: hidden
+            heading {
+                heading: Id Formacao
+            }
+            layout {
+                sequence: 0
+            }
+            source {
+                primaryKey: true
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: A
+            }
+        )
+
+        column NR_CARGA_HORARIA (
+            type: plainText
+            heading {
+                heading: Nr Carga Horaria
+                alignment: end
+            }
+            layout {
+                sequence: 10
+                columnAlignment: end
+            }
+            source {
+                dataType: NUMBER
+            }
+            advanced {
+                endUserAlias: J
+            }
+        )
+
+        column TP_FORMACAO (
+            type: plainText
+            heading {
+                heading: Tp Formacao
+            }
+            layout {
+                sequence: 4
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: D
+            }
+        )
+
+        column USR_ALTERACAO (
+            type: plainText
+            heading {
+                heading: Usr Alteracao
+            }
+            layout {
+                sequence: 18
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: R
+            }
+        )
+
+        column USR_CRIACAO (
+            type: plainText
+            heading {
+                heading: Usr Criacao
+            }
+            layout {
+                sequence: 16
+            }
+            source {
+                dataType: STRING
+            }
+            advanced {
+                endUserAlias: P
+            }
+        )
+
+        page {
+            borderWidth: 0.5
+            borderColor: #666666
+        }
+    )
+
+    pageItem P19_ID_COLABORADOR (
+        type: hidden
+        layout {
+            sequence: 20
+            slot: body
+        }
+    )
+
+    button create (
+        buttonName: CREATE
+        label: Create
+        layout {
+            sequence: 10
+            region: @formações-e-certificações
+            slot: rightOfInteractiveReportSearchBar
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
             templateOptions: #DEFAULT#
         }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 21
+                clearCache: 21
+            }
+            warnOnUnsavedChanges: doNotCheck
+        }
+    )
+
+    dynamicAction edit-report-dialog-closed (
+        name: Edit Report - Dialog Closed
+        execution {
+            sequence: 10
+        }
+        when {
+            event: apexafterclosedialog
+            selectionType: region
+            region: @formações-e-certificações
+        }
+
+        action native-refresh (
+            action: refresh
+            affectedElements {
+                selectionType: region
+                region: @formações-e-certificações
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
     )
 
 )

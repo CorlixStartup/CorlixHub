@@ -560,6 +560,45 @@ page 13 (
 
     )
 
+    pageItem P13_COLABORADOR_SELECIONADO (
+        type: popupLov
+        label {
+            label: Ver histórico de
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select nome_completo
+                       || case when status then null else ' (inativo)' end as d,
+                       id_colaborador as r
+                  from colaborador
+                 where id_empresa = :G_ID_EMPRESA
+                 order by nome_completo
+                ```
+            displayNullValue: false
+        }
+        layout {
+            sequence: 30
+            region: @buttons-container
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        default {
+            type: item
+            item: P13_ID_COLABORADOR
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
     pageItem P13_ID_COLABORADOR (
         type: hidden
         layout {
@@ -658,6 +697,34 @@ page 13 (
 
     )
 
+    dynamicAction trocar-colaborador (
+        name: Trocar colaborador
+        execution {
+            sequence: 20
+        }
+        when {
+            selectionType: items
+            items: P13_COLABORADOR_SELECIONADO
+        }
+        clientSideCondition {
+            type: itemIsNotNull
+            item: P13_COLABORADOR_SELECIONADO
+        }
+
+        action trocar-colaborador (
+            name: Trocar colaborador
+            action: submitPage
+            settings {
+                requestButtonName: TROCAR_COLABORADOR
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
     process colaborador-padrão (
         name: Colaborador padrão
         type: executeCode
@@ -711,6 +778,27 @@ page 13 (
         }
     )
 
+    process trocar-colaborador (
+        name: Trocar colaborador
+        type: executeCode
+        source {
+            plsqlCode: :P13_ID_COLABORADOR := :P13_COLABORADOR_SELECIONADO;
+        }
+        execution {
+            sequence: 5
+        }
+        advanced {
+            executionMappingIdentifier: 33808090707796705
+        }
+        serverSideCondition {
+            type: request=Value
+            value: TROCAR_COLABORADOR
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
     process validar-acesso (
         name: Validar acesso
         type: executeCode
@@ -729,6 +817,22 @@ page 13 (
         }
         advanced {
             executionMappingIdentifier: 29919984358540305
+        }
+    )
+
+    branch (
+        name: Recarregar
+        execution {
+            sequence: 10
+        }
+        behavior {
+            target: {
+                page: 13
+            }
+        }
+        serverSideCondition {
+            type: request=Value
+            value: TROCAR_COLABORADOR
         }
     )
 

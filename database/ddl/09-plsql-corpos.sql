@@ -2420,31 +2420,34 @@ end pkg_historico_carreira_ui;
 
   -- Foto (FOTO_URL ou BLOB) quando existir; senão, iniciais
   function avatar (
-    p_id         in number,
-    p_nome       in varchar2,
-    p_foto_url   in varchar2,
-    p_tem_imagem in varchar2,
-    p_tamanho    in varchar2   -- lg | md | row | sm
-  ) return varchar2 is
-    l_src varchar2(4000);
-  begin
-    if p_foto_url is not null then
-      l_src := p_foto_url;
-    elsif p_tem_imagem = 'S' then
-      l_src := apex_page.get_url(
-                 p_request => 'APPLICATION_PROCESS=DOWNLOAD_FOTO',
-                 p_items   => 'ID_COLABORADOR',
-                 p_values  => to_char(p_id));
-    end if;
+  p_id         in number,
+  p_nome       in varchar2,
+  p_foto_url   in varchar2,
+  p_tem_imagem in varchar2,
+  p_tamanho    in varchar2
+) return varchar2 is
+  l_src varchar2(4000);
+begin
 
-    if l_src is not null then
-      return '<span class="org-avatar org-avatar--' || p_tamanho || '">'
-          || '<img src="' || a(l_src) || '" alt="" loading="lazy"></span>';
-    end if;
+  if p_foto_url is not null then
+    l_src := '#APP_FILES#Fotos Colaboradores/' || p_foto_url;
 
-    return '<span class="org-avatar org-avatar--' || p_tamanho || '" aria-hidden="true">'
-        || e(iniciais(p_nome)) || '</span>';
-  end avatar;
+  elsif p_tem_imagem = 'S' then
+    l_src := apex_page.get_url(
+               p_request => 'APPLICATION_PROCESS=DOWNLOAD_FOTO',
+               p_items   => 'ID_COLABORADOR',
+               p_values  => to_char(p_id));
+  end if;
+
+  if l_src is not null then
+    return '<span class="org-avatar org-avatar--' || p_tamanho || '">'
+        || '' || a(l_src) || '</span>';
+  end if;
+
+  return '<span class="org-avatar org-avatar--' || p_tamanho || '" aria-hidden="true">'
+      || e(iniciais(p_nome)) || '</span>';
+
+end avatar;
 
   -- Linha clicável das listas do drawer (gestor / equipe direta)
   function linha_pessoa (

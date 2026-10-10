@@ -80,6 +80,39 @@ page 18 (
         formAutoComplete: false
     }
 
+    region botões (
+        name: Botões
+        type: staticContent
+        layout {
+            sequence: 10
+            slot: dialogFooter
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region estorno (
+        name: Estorno
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: contentBody
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--scrollBody
+            ]
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'
+        }
+    )
+
     region movimentação (
         name: Movimentação
         type: form
@@ -143,17 +176,21 @@ page 18 (
             column: DS_MOTIVO
             dataType: varchar2
         }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
+        }
     )
 
     pageItem P18_DS_MOTIVO_ESTORNO (
-        type: textField
+        type: textarea
         label {
             label: Motivo do estorno
             alignment: left
         }
         layout {
             sequence: 140
-            region: @movimentação
+            region: @estorno
             slot: regionBody
             alignment: left
         }
@@ -161,10 +198,7 @@ page 18 (
             template: @/optional-floating
             templateOptions: #DEFAULT#
             width: 30
-        }
-        serverSideCondition {
-            type: expression
-            plsqlExpression: :P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'
+            height: 5
         }
     )
 
@@ -194,6 +228,10 @@ page 18 (
         sessionState {
             dataType: clob
         }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
+        }
     )
 
     pageItem P18_DT_EFETIVA (
@@ -209,7 +247,7 @@ page 18 (
             alignment: left
         }
         appearance {
-            template: @/optional-floating
+            template: @/required-floating
             templateOptions: #DEFAULT#
             formatMask: DD/MM/YYYY
             width: 30
@@ -221,6 +259,10 @@ page 18 (
             formRegion: @movimentação
             column: DT_EFETIVA
             dataType: date
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
         }
     )
 
@@ -264,6 +306,10 @@ page 18 (
             column: ID_APROVADOR
             dataType: number
         }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
+        }
     )
 
     pageItem P18_ID_CARGO_NOVO (
@@ -305,6 +351,10 @@ page 18 (
             formRegion: @movimentação
             column: ID_CARGO_NOVO
             dataType: number
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
         }
     )
 
@@ -364,6 +414,10 @@ page 18 (
             column: ID_DEPARTAMENTO_NOVO
             dataType: number
         }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
+        }
     )
 
     pageItem P18_ID_GESTOR_NOVO (
@@ -391,6 +445,10 @@ page 18 (
             formRegion: @movimentação
             column: ID_GESTOR_NOVO
             dataType: number
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
         }
     )
 
@@ -429,7 +487,7 @@ page 18 (
             alignment: left
         }
         appearance {
-            template: @/optional-floating
+            template: @/required-floating
             templateOptions: #DEFAULT#
             height: 1
         }
@@ -440,6 +498,10 @@ page 18 (
             formRegion: @movimentação
             column: ID_TIPO_MOVIMENTACAO
             dataType: number
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
         }
     )
 
@@ -546,6 +608,10 @@ page 18 (
             column: VL_SALARIO_ANTERIOR
             dataType: number
         }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
+        }
         security {
             authorizationScheme: @admin-rh
         }
@@ -573,8 +639,295 @@ page 18 (
             column: VL_SALARIO_NOVO
             dataType: number
         }
+        readOnly {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO <> 'RASCUNHO'
+        }
         security {
             authorizationScheme: @admin-rh
+        }
+    )
+
+    button cancelar (
+        buttonName: CANCELAR
+        label: Cancelar
+        layout {
+            sequence: 10
+            region: @botões
+            slot: close
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            action: definedByDynamicAction
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
+    button efetivar (
+        buttonName: EFETIVAR
+        label: Efetivar
+        layout {
+            sequence: 50
+            region: @botões
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Depois de efetivado, o lançamento não pode ser alterado. Continuar?
+            style: warning
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
+    button estornar (
+        buttonName: ESTORNAR
+        label: Estornar
+        layout {
+            sequence: 30
+            region: @botões
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: [
+                #DEFAULT#
+                t-Button--danger
+            ]
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Estornar este lançamento?
+            style: danger
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
+    button excluir (
+        buttonName: EXCLUIR
+        label: Excluir rascunho
+        layout {
+            sequence: 20
+            region: @botões
+            slot: delete
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            executeValidations: false
+            warnOnUnsavedChanges: doNotCheck
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Excluir este rascunho?
+            style: danger
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P18_ST_REGISTRO = 'RASCUNHO' and :P18_ID_HISTORICO_CARREIRA is not null
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
+    button salvar-rascunho (
+        buttonName: SALVAR_RASCUNHO
+        label: Salvar rascunho
+        layout {
+            sequence: 40
+            region: @botões
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            templateOptions: #DEFAULT#
+        }
+        behavior {
+            warnOnUnsavedChanges: doNotCheck
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'
+        }
+        security {
+            authorizationScheme: @admin-rh
+        }
+    )
+
+    dynamicAction cancelar (
+        name: Cancelar
+        execution {
+            sequence: 20
+        }
+        when {
+            event: click
+            selectionType: button
+            button: @cancelar
+        }
+
+        action cancelar (
+            name: Cancelar
+            action: cancelDialog
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction tipo-mudou (
+        name: Tipo mudou
+        execution {
+            sequence: 10
+        }
+        when {
+            selectionType: items
+            items: P18_ID_TIPO_MOVIMENTACAO
+        }
+
+        action ação-1 (
+            name: Buscar código do tipo
+            action: setValue
+            settings {
+                type: sqlQuery
+                sqlQuery:
+                    ```sql
+                    select cd_tipo
+                      from tipo_movimentacao
+                     where id_tipo_movimentacao = :P18_ID_TIPO_MOVIMENTACAO
+                       and id_empresa = :G_ID_EMPRESA
+                    ```
+                itemsToSubmit: P18_ID_TIPO_MOVIMENTACAO
+                suppressChangeEvent: true
+            }
+            affectedElements {
+                selectionType: items
+                items: P18_CD_TIPO
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+        action ação-2 (
+            name: Ajustar campos
+            action: executeJsCode
+            settings {
+                jsCode: carreira.ajustarCampos(true);
+            }
+            execution {
+                sequence: 20
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    process efetivar (
+        name: Efetivar
+        type: executeCode
+        source {
+            plsqlCode: pkg_historico_carreira.efetivar_movimentacao(:P18_ID_HISTORICO_CARREIRA);
+        }
+        execution {
+            sequence: 20
+        }
+        successMessage {
+            successMessage: Movimentação efetivada.
+        }
+        advanced {
+            executionMappingIdentifier: 32808210824326814
+        }
+        serverSideCondition {
+            whenButtonPressed: @efetivar
+        }
+    )
+
+    process estornar (
+        name: Estornar
+        type: executeCode
+        source {
+            plsqlCode: pkg_historico_carreira.estornar_movimentacao(:P18_ID_HISTORICO_CARREIRA, :P18_DS_MOTIVO_ESTORNO);
+        }
+        execution {
+            sequence: 30
+        }
+        successMessage {
+            successMessage: Lançamento estornado.
+        }
+        advanced {
+            executionMappingIdentifier: 32808352054326815
+        }
+        serverSideCondition {
+            whenButtonPressed: @estornar
+        }
+    )
+
+    process excluir-rascunho (
+        name: Excluir rascunho
+        type: executeCode
+        source {
+            plsqlCode: pkg_historico_carreira.excluir_rascunho(:P18_ID_HISTORICO_CARREIRA);
+        }
+        execution {
+            sequence: 40
+        }
+        successMessage {
+            successMessage: Excluir rascunho
+        }
+        advanced {
+            executionMappingIdentifier: 32808402069326816
+        }
+        serverSideCondition {
+            whenButtonPressed: @excluir
+        }
+    )
+
+    process fechar (
+        name: Fechar
+        type: closeDialog
+        execution {
+            sequence: 50
+        }
+        advanced {
+            executionMappingIdentifier: 32808568747326817
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: SALVAR_RASCUNHO,EFETIVAR,ESTORNAR,EXCLUIR
         }
     )
 
@@ -588,6 +941,58 @@ page 18 (
         }
         advanced {
             executionMappingIdentifier: 31448997914538707
+        }
+    )
+
+    process salvar-movimentação (
+        name: Salvar movimentação
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                begin
+                  if :P18_ID_HISTORICO_CARREIRA is null then
+                    :P18_ID_HISTORICO_CARREIRA := pkg_historico_carreira.registrar_movimentacao(
+                      p_id_colaborador       => :P18_ID_COLABORADOR,
+                      p_id_tipo_movimentacao => :P18_ID_TIPO_MOVIMENTACAO,
+                      p_dt_efetiva           => to_date(:P18_DT_EFETIVA, 'DD/MM/YYYY'),
+                      p_id_cargo_novo        => :P18_ID_CARGO_NOVO,
+                      p_id_departamento_novo => :P18_ID_DEPARTAMENTO_NOVO,
+                      p_id_gestor_novo       => :P18_ID_GESTOR_NOVO,
+                      p_vl_salario_anterior  => to_number(:P18_VL_SALARIO_ANTERIOR),
+                      p_vl_salario_novo      => to_number(:P18_VL_SALARIO_NOVO),
+                      p_ds_motivo            => :P18_DS_MOTIVO,
+                      p_ds_observacao        => :P18_DS_OBSERVACAO,
+                      p_id_aprovador         => :P18_ID_APROVADOR);
+                  else
+                    pkg_historico_carreira.atualizar_rascunho(
+                      p_id_historico_carreira => :P18_ID_HISTORICO_CARREIRA,
+                      p_id_tipo_movimentacao  => :P18_ID_TIPO_MOVIMENTACAO,
+                      p_dt_efetiva            => to_date(:P18_DT_EFETIVA, 'DD/MM/YYYY'),
+                      p_id_cargo_novo         => :P18_ID_CARGO_NOVO,
+                      p_id_departamento_novo  => :P18_ID_DEPARTAMENTO_NOVO,
+                      p_id_gestor_novo        => :P18_ID_GESTOR_NOVO,
+                      p_vl_salario_anterior   => to_number(:P18_VL_SALARIO_ANTERIOR),
+                      p_vl_salario_novo       => to_number(:P18_VL_SALARIO_NOVO),
+                      p_ds_motivo             => :P18_DS_MOTIVO,
+                      p_ds_observacao         => :P18_DS_OBSERVACAO,
+                      p_id_aprovador          => :P18_ID_APROVADOR);
+                  end if;
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        successMessage {
+            successMessage: Rascunho salvo.
+        }
+        advanced {
+            executionMappingIdentifier: 32808139799326813
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: SALVAR_RASCUNHO,EFETIVAR
         }
     )
 

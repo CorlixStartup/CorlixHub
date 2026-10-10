@@ -1518,3 +1518,13 @@ file "icons/app-icon-512.png" (
     charSet: utf-8
 )
 
+file organograma.css.css (
+    mimeType: text/css
+    charSet: utf-8
+)
+
+file organograma.css.min.css (
+    mimeType: text/css
+    charSet: utf-8
+)
+
