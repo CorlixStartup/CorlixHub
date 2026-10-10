@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<header>
+    <strong>Cookies do APEX</strong>
+    <span id="host" class="mudo"></span>
+</header>
+
+<section id="medidor">
+    <div class="barra"><div id="preenchido"></div></div>
+    <p id="resumo"></p>
+    <div class="botoes">
+        <button id="limpar">Limpar este host</button>
+        <button id="copiar">Copiar relatório</button>
+    </div>
+</section>
+
+<details>
+    <summary>Cookies enviados para esta página</summary>
+    <table><thead><tr><th>Nome</th><th>Path</th><th>Bytes</th></tr></thead><tbody id="cookies"></tbody></table>
+</details>
+
+<details>
+    <summary>Erros 400 registrados</summary>
+    <ul id="eventos400"></ul>
+</details>
+
+<details>
+    <summary>Cookies descartados pelo Chrome</summary>
+    <ul id="descartados"></ul>
+</details>
+
+<details>
+    <summary>Configuração</summary>
+    <label><input type="checkbox" id="autoLimpar"> Limpar e recarregar sozinho no erro 400</label>
+    <label>Apagar sempre que passar do alerta (uma regex por linha)
+        <textarea id="apagarSempre" rows="3" spellcheck="false"></textarea></label>
+    <label>Nunca apagar (uma regex por linha)
+        <textarea id="nuncaApagar" rows="3" spellcheck="false"></textarea></label>
+    <button id="salvar">Salvar</button>
+</details>
+
+<p id="aviso" class="mudo"></p>
+<script src="comum.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>
