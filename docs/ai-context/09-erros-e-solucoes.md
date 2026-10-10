@@ -130,6 +130,17 @@ end;
 
 ---
 
+### 3.3 Carga inicial "com sucesso" que não cria nada
+**Sintoma:** `06_carga_inicial.sql` termina sem erro no **SQL Workshop**, mas nenhum colaborador ganha a `ADMISSAO`. A conferência no fim do script lista todos.
+
+**Causa:** o SQL Workshop roda dentro de uma sessão APEX (`sys_context('APEX$SESSION', 'APP_SESSION')` não é nulo). O package entende que está no app e exige `G_ID_EMPRESA`, que não existe nessa sessão: cada colaborador falha com "Sua sessão não está vinculada a uma empresa". O script captura o erro por colaborador e segue, e o resumo sai por `dbms_output`, que o SQL Scripts não mostra.
+
+**Correção:** rode o script fora do APEX, no SQLcl ou no SQL Developer (desktop ou extensão do VS Code), conectado como `WKSP_CORLIXHUB`. O script é reexecutável.
+
+No Autonomous o schema do workspace costuma não ter login; conectado como `ADMIN`, o script dá `ORA-00942: table or view "ADMIN"."COLABORADOR" does not exist`. Aponte a sessão para o schema antes: `alter session set current_schema = WKSP_CORLIXHUB;` e depois `@06_carga_inicial.sql`. Nesse caso `USR_EFETIVACAO` das admissões fica `ADMIN`.
+
+**Prevenção:** scripts de carga e manutenção do módulo vão no SQLcl/SQL Developer. No SQL Workshop, só consultas.
+
 ## 4. APEX: configuração de páginas
 
 ### 4.1 "Access denied by Page security check"
@@ -182,7 +193,9 @@ affectedElements {
 **Prevenção:** para o refresh funcionar, a região também precisa de *Page Items to Submit* com os itens que a fonte usa (ex.: `P13_ID_COLABORADOR`). Senão ela recarrega sem o valor e volta vazia.
 
 ### 4.5 Links e botões para páginas que ainda não existem
-O guia monta a página 13 antes das páginas 18 e 19. O botão "Nova movimentação", o ícone de editar e o botão "Formações" dão erro até essas páginas existirem. Isso é esperado. Termine-os depois das etapas 3 e 4. Pelo mesmo motivo, `c_pagina_organograma` está `null` em `08_pkg_historico_carreira_ui.sql`: volte para `3` quando o organograma for integrado.
+O guia monta a página 13 antes das páginas 18 e 19. O botão "Nova movimentação", o ícone de editar e o botão "Formações" dão erro até essas páginas existirem. Isso é esperado. Termine-os depois das etapas 3 e 4. Pelo mesmo motivo, as constantes `c_pagina_*` de `08_pkg_historico_carreira_ui.sql` só devem apontar para páginas que já existem com o item indicado (`c_pagina_organograma` = 3 com `P3_ID_FOCO` já funciona; `c_pagina_solicitacao` fica nula até a página 22).
+
+**`ERR-1002 Unable to find item ID for item "P22_ID_COLABORADOR" in application "100"`:** aparece na página 13 quando o usuário abre o **próprio** histórico. O package monta o link "Solicitar correção" com `apex_page.get_url`, que precisa achar o item na página de destino para gerar o checksum. Enquanto a página 22 (§6 do guia) não existir, deixe `c_pagina_solicitacao := null` em `08_pkg_historico_carreira_ui.sql` e rode o arquivo de novo: o link some. Depois de criar a página 22 com o item `P22_ID_COLABORADOR`, volte para `22`. Vale para qualquer constante `c_item_*`: o item precisa existir na página indicada.
 
 ### 4.6 Sintaxe de valores em links
 | Sintaxe | Significa |

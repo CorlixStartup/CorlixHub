@@ -17,12 +17,12 @@
 create or replace package pkg_historico_carreira_ui authid definer as
 
   -- Destinos dos links (ajuste para o app). Página nula = o link não aparece.
-  c_pagina_organograma constant pls_integer  := null;  -- organograma ainda não instalado; volte para 3 depois
+  c_pagina_organograma constant pls_integer  := 3;
   c_item_organograma   constant varchar2(30) := 'P3_ID_FOCO';
   c_pagina_comunicado  constant pls_integer  := 11;
   c_item_comunicado    constant varchar2(30) := null;   -- ex.: 'P11_ID_COMUNICADO'
   c_pagina_holerite    constant pls_integer  := null;   -- ainda não existe no app
-  c_pagina_solicitacao constant pls_integer  := 22;
+  c_pagina_solicitacao constant pls_integer  := null;  -- página 22 ainda não criada; volte para 22 depois (ERR-1002)
   c_item_solicitacao   constant varchar2(30) := 'P22_ID_COLABORADOR';
   c_pagina_painel_rh   constant pls_integer  := 20;
 

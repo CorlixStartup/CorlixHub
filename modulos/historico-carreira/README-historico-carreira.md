@@ -17,7 +17,7 @@ Ao efetivar uma movimentação, o cargo, o departamento, o gestor e o status do 
 | `03_views_carreira.sql` | Views e `FN_CARREIRA_VE_SALARIO` |
 | `04_pkg_historico_carreira.pks` / `.pkb` | Package com as regras de negócio |
 | `05_triggers_auditoria.sql` | Auditoria e trilha de alterações |
-| `06_carga_inicial.sql` | Admissão dos colaboradores que já existem |
+| `06_carga_inicial.sql` | Admissão dos colaboradores que já existem. Rode no SQLcl ou SQL Developer, **não** no SQL Workshop (lá todos falham em silêncio; veja `docs/ai-context/09-erros-e-solucoes.md` §3.3) |
 | `07_testes.sql` | 2 empresas, 10 colaboradores, um teste por regra e prova de isolamento (termina em rollback) |
 | `08_pkg_historico_carreira_ui.sql` | Package que renderiza a página 13 no layout do protótipo |
 | `historico-carreira.css` | Estilos da página 13 (tokens do protótipo, responsivo e impressão) |

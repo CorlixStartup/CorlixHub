@@ -204,7 +204,7 @@ Ajuste as constantes no topo de `08_pkg_historico_carreira_ui.sql` para o seu ap
 | `c_pagina_organograma` / `c_item_organograma` | 3 / `P3_ID_FOCO` | "Ver no organograma". Use o item de foco que você criou no organograma (no guia daquele módulo ele aparece como `P10_ID_FOCO`). |
 | `c_pagina_comunicado` / `c_item_comunicado` | 11 / nulo | "Ver comunicado". Com item nulo, abre a lista de comunicados. |
 | `c_pagina_holerite` | nulo | "Ver holerite" no mérito. Nulo esconde o link até o holerite existir. |
-| `c_pagina_solicitacao` / `c_item_solicitacao` | 22 / `P22_ID_COLABORADOR` | Botão "Solicitar correção" |
+| `c_pagina_solicitacao` / `c_item_solicitacao` | nulo / `P22_ID_COLABORADOR` | Botão "Solicitar correção". Fica nulo até a página 22 existir (§6); com 22 e sem o item, a página 13 dá `ERR-1002` |
 | `c_pagina_painel_rh` | 20 | Link para o RH ver as solicitações abertas |
 
 ### 2.5 Região "Lançamentos (RH)"
@@ -242,7 +242,49 @@ Em uma região *Buttons Container* acima da região principal, com Authorization
 
 Esse refresh vale também para a modal "Solicitar correção" (página 22): a contagem de solicitações em análise aparece logo depois.
 
-### 2.8 O que o protótipo mostra e ainda não tem dado
+### 2.8 Seletor de colaborador (RH)
+
+Sem parâmetro, a página abre no próprio usuário. Para o RH abrir o histórico de qualquer pessoa sem depender da página 12 (Colaboradores), coloque um seletor no topo, visível só para `ADMIN_RH`.
+
+**Região**
+- Na região *Buttons Container* do §2.6, ou numa região Static Content própria acima de "Histórico de carreira", com Authorization `ADMIN_RH`.
+
+**Item `P13_COLABORADOR_SELECIONADO`**
+- Type: **Popup LOV** · Label "Ver histórico de" · Authorization Scheme `ADMIN_RH`
+- Source: nenhum · Default › Type **Item** › `P13_ID_COLABORADOR` (abre mostrando quem está na tela)
+- List of Values › Type **SQL Query** (inclui inativos, porque o RH também consulta quem saiu):
+  ```sql
+  select nome_completo
+         || case when status then null else ' (inativo)' end as d,
+         id_colaborador as r
+    from colaborador
+   where id_empresa = :G_ID_EMPRESA
+   order by nome_completo
+  ```
+- Display Null Value: Off
+
+**Dynamic Action "Trocar colaborador"**
+- Event: **Change** · Item: `P13_COLABORADOR_SELECIONADO`
+- Client-side Condition: Item **is not null** › `P13_COLABORADOR_SELECIONADO`
+- True action: **Submit Page** · Request/Button Name: `TROCAR_COLABORADOR` · Show Processing: On
+
+**Processo "Trocar colaborador"** (Processing, Sequence 5)
+- Type: Execute Code · Server-side Condition: **Request = Value** › `TROCAR_COLABORADOR` · Authorization `ADMIN_RH`
+  ```sql
+  :P13_ID_COLABORADOR := :P13_COLABORADOR_SELECIONADO;
+  ```
+
+**Branch "Recarregar"** (After Processing)
+- Target: página **13**, sem itens nem Clear Cache. O valor novo já está na sessão.
+- Server-side Condition: Request = Value › `TROCAR_COLABORADOR`
+
+Por que assim: a página recarrega inteira, então os processos Before Header do §2.2 rodam de novo para o colaborador escolhido (validação de acesso e log de acesso salarial). Trocar o item só no navegador e dar Refresh pularia esses dois. `P13_ID_COLABORADOR` continua protegido por checksum, porque quem muda o valor é o processo no servidor.
+
+O valor escolhido fica na sessão. Para o menu "Histórico de carreira" voltar sempre ao próprio usuário, coloque **Clear Cache: `13`** nessa entrada do Navigation Menu.
+
+O caminho definitivo continua sendo o link "Histórico" na lista da página 12 (§7). O seletor resolve o RH enquanto ela não existe e pode ficar depois.
+
+### 2.9 O que o protótipo mostra e ainda não tem dado
 
 - **PDI e Resultados 360:** os módulos de Avaliações, Resultados 360 e Plano de desenvolvimento não existem no app. A aba "Desenvolvimento" mostra, por enquanto, as formações e certificações. Quando esses módulos existirem, basta acrescentar um `union all` no cursor `c_eventos`, com `ds_grupo = 'DEV'`.
 - **"Aprovado por":** não há fluxo de aprovação no app. O RH informa quem aprovou (`P18_ID_APROVADOR` → `HISTORICO_CARREIRA.ID_APROVADOR`) ao lançar a movimentação, e o rodapé mostra "Aprovado por ..." ao lado de "Registrado por ... (RH) em ...". Sem aprovador informado, só a linha do registro aparece.
@@ -285,7 +327,14 @@ Itens (crie os que não vierem do assistente):
 | `P18_DS_MOTIVO` | Textarea | Max 1000 |
 | `P18_ID_APROVADOR` | Popup LOV | LOV `LOV_COLABORADOR_ATIVO` · Label "Aprovado por" · opcional (em geral a gestão que aprovou; não pode ser o próprio colaborador) · aparece em todos os tipos |
 | `P18_DS_OBSERVACAO` | Textarea | |
-| `P18_DS_MOTIVO_ESTORNO` | Textarea | Source: nenhum · Label "Motivo do estorno" · Server-side Condition (Expression): `:P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'` |
+| `P18_DS_MOTIVO_ESTORNO` | Textarea | Source: nenhum · Label "Motivo do estorno" · **fica fora da região do formulário**, numa região própria "Estorno" (abaixo) |
+
+**Região "Estorno"** (só para o motivo do estorno):
+- Type: **Static Content** · Slot: Body · Sequence 20 (depois de "Movimentação") · Template: Standard
+- Server-side Condition (Expression): `:P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'`
+- Mova `P18_DS_MOTIVO_ESTORNO` para ela (*Layout › Region*: `Estorno`) e tire a condição do item, que passa a ser da região.
+
+Dentro da região de formulário, ao abrir um lançamento existente, o campo não aceita digitação: o motivo do estorno não é coluna da view, então fica numa região à parte.
 
 Os campos de cargo e departamento anteriores aparecem preenchidos com a situação atual do colaborador. Na efetivação o package grava o snapshot definitivo.
 
@@ -304,36 +353,281 @@ Para edição só de rascunho: em todos os itens editáveis, *Read Only* com con
 
 ### 3.3 Dynamic Action "Tipo mudou"
 
-- Event: Change · Item: `P18_ID_TIPO_MOVIMENTACAO`
-- Ação 1 · Set Value · SQL Statement:
-  ```sql
-  select cd_tipo
-    from tipo_movimentacao
-   where id_tipo_movimentacao = :P18_ID_TIPO_MOVIMENTACAO
-     and id_empresa = :G_ID_EMPRESA
-  ```
-  Items to Submit: `P18_ID_TIPO_MOVIMENTACAO` · Affected Element: `P18_CD_TIPO`
-- Ação 2 · Execute JavaScript Code: `carreira.ajustarCampos(true);` (bloco 3 do `.js`)
+Quando o RH troca o tipo da movimentação, a página descobre o código do tipo (`PROMOCAO`, `MERITO`…) e mostra só os campos que fazem sentido para ele. São duas ações em sequência: a primeira busca o código no banco e guarda em `P18_CD_TIPO`; a segunda roda o JS que mostra e esconde os campos lendo esse item.
 
-Com isso, o cargo novo só aparece em promoção, mudança de cargo, transferência e admissão; o departamento novo em transferência e admissão; o gestor novo também em mudança de gestão (onde é obrigatório); e o salário em promoção, mudança de cargo, mérito e admissão. Campos escondidos são limpos, e o package também descarta cargo, departamento e gestor nos tipos que não mexem na estrutura.
+**Antes de começar, confira:**
+
+- [ ] Os blocos 1 e 2 do `historico-carreira.js` já estão na página (§3.1). Sem o bloco 1, a ação 2 dá `carreira is not defined` no console.
+- [ ] `P18_CD_TIPO` existe, é **Hidden**, tem **Value Protected: No** e Source **Database Column** `CD_TIPO` (a view tem essa coluna; é assim que o tipo vem preenchido ao editar um rascunho).
+- [ ] `P18_ID_TIPO_MOVIMENTACAO` tem opção vazia: *List of Values > Display Null Value* **On**, com *Null Display Value* `- Selecione -`. Sem ela o select abre já com "Admissão", nenhum Change dispara e `P18_CD_TIPO` fica vazio, então os campos de Admissão não aparecem.
+- [ ] `P18_ID_CARGO_NOVO`, `P18_ID_DEPARTAMENTO_NOVO`, `P18_ID_GESTOR_NOVO` e os dois salários estão com **Validation > Value Required: Off**. Eles ficam escondidos em vários tipos, e um item obrigatório escondido trava o envio. A obrigatoriedade é feita pelo JS (marca visual) e validada de novo pelo package.
+
+#### Passo 1 · Criar a Dynamic Action
+
+1. Abra a página 18 no Page Designer.
+2. Na aba **Rendering** (painel da esquerda), localize o item `P18_ID_TIPO_MOVIMENTACAO` dentro da região "Movimentação".
+3. Clique com o botão direito no item e escolha **Create Dynamic Action**. O APEX cria a DA já ligada ao item, com uma ação *Show* de exemplo.
+4. Com a DA selecionada (o nó com o raio), preencha no painel da direita:
+
+| Seção | Atributo | Valor |
+|---|---|---|
+| Identification | Name | `Tipo mudou` |
+| When | Event | **Change** |
+| When | Selection Type | Item(s) |
+| When | Item(s) | `P18_ID_TIPO_MOVIMENTACAO` |
+| Client-side Condition | Type | (nenhuma) |
+
+#### Passo 2 · Ação 1: Set Value (busca o código do tipo)
+
+1. Embaixo da DA, abra **True** e clique na ação *Show* que o APEX criou.
+2. Preencha:
+
+| Seção | Atributo | Valor |
+|---|---|---|
+| Identification | Action | **Set Value** |
+| Settings | Set Type | **SQL Statement** |
+| Settings | SQL Statement | (SQL abaixo) |
+| Settings | Items to Submit | `P18_ID_TIPO_MOVIMENTACAO` |
+| Settings | Escape Special Characters | On (padrão) |
+| Settings | Suppress Change Event | On |
+| Affected Elements | Selection Type | Item(s) |
+| Affected Elements | Item(s) | `P18_CD_TIPO` |
+| Execution | Sequence | 10 |
+| Execution | Fire on Initialization | **Off** |
+| Execution | Wait For Result | **On** |
+
+```sql
+select cd_tipo
+  from tipo_movimentacao
+ where id_tipo_movimentacao = :P18_ID_TIPO_MOVIMENTACAO
+   and id_empresa = :G_ID_EMPRESA
+```
+
+Por que cada um importa:
+- **Items to Submit:** o SQL roda no servidor e só enxerga o valor novo do select list se ele for enviado. Sem isso, `:P18_ID_TIPO_MOVIMENTACAO` chega vazio (ou com o valor antigo) e `P18_CD_TIPO` fica em branco. `G_ID_EMPRESA` é app item e já está na sessão, então não precisa entrar aqui.
+- **Wait For Result:** faz a ação 2 esperar a resposta do servidor. Desligado, o JS roda antes de `P18_CD_TIPO` mudar e mostra os campos do tipo *anterior*.
+- **Fire on Initialization Off:** no carregamento quem ajusta os campos é o bloco 2 do JS, com o `CD_TIPO` que já veio da view.
+
+#### Passo 3 · Ação 2: Execute JavaScript Code (mostra/esconde os campos)
+
+1. Clique com o botão direito em **True** e escolha **Create TRUE Action**.
+2. Preencha:
+
+| Seção | Atributo | Valor |
+|---|---|---|
+| Identification | Action | **Execute JavaScript Code** |
+| Settings | Code | `carreira.ajustarCampos(true);` (bloco 3 do `.js`) |
+| Affected Elements | Selection Type | (nenhum) |
+| Execution | Sequence | 20 (precisa ser **maior** que a da ação 1) |
+| Execution | Fire on Initialization | **Off** |
+
+O `true` manda limpar os campos que ficaram escondidos, para não gravar, por exemplo, um cargo "fantasma" num mérito. No carregamento o bloco 2 chama `ajustarCampos(false)`, que preserva os valores do rascunho.
+
+3. Salve a página (**Save**, Ctrl+S).
+
+A árvore deve ficar assim:
+
+```
+Dynamic Actions
+└── Change
+    └── Tipo mudou            (Change · P18_ID_TIPO_MOVIMENTACAO)
+        └── True
+            ├── Set Value                  seq 10 → P18_CD_TIPO
+            └── Execute JavaScript Code    seq 20
+```
+
+#### O que aparece em cada tipo
+
+| Tipo | Novo cargo | Novo departamento | Novo gestor | Salários |
+|---|---|---|---|---|
+| Admissão | sim | sim | sim | sim |
+| Promoção | **obrigatório** | – | sim | sim |
+| Mudança de cargo | **obrigatório** | – | sim | sim |
+| Transferência de área | sim | **obrigatório** | sim | – |
+| Mudança de gestão | – | – | **obrigatório** | – |
+| Mérito | – | – | – | sim |
+| Efetivação, Jornada, Afastamento, Retorno, Desligamento | – | – | – | – |
+
+Tipo, data, motivo, aprovador e observação aparecem sempre. Os salários só existem para quem tem `ADMIN_RH` (o JS ignora itens que não foram renderizados). Para mudar essas regras, edite `carreira.visivelEm` e `carreira.obrigatorioEm` no bloco 1 do JS; o package também descarta cargo, departamento e gestor nos tipos que não mexem na estrutura.
+
+#### Passo 4 · Testar
+
+1. Rode a página 13 de um colaborador e clique em **Nova movimentação**.
+2. Abra o console do navegador (F12) e escolha **Promoção**: devem aparecer Novo cargo (com marca de obrigatório), Novo gestor e os salários. Digite `$v('P18_CD_TIPO')` no console: deve responder `"PROMOCAO"`.
+3. Escolha um cargo, troque para **Mérito**: o cargo some e, ao voltar para Promoção, aparece vazio.
+4. Salve um rascunho de Transferência, feche e reabra pelo ícone de edição na lista "Lançamentos (RH)": o departamento novo continua visível e preenchido.
+
+#### Se não funcionar
+
+| Sintoma | Causa provável | Correção |
+|---|---|---|
+| Nenhum campo some ao trocar o tipo | `P18_CD_TIPO` vazio | Confira *Items to Submit* da ação 1 e se o tipo tem `id_empresa` igual ao `G_ID_EMPRESA` da sessão |
+| Os campos mostrados são os do tipo anterior | Ação 2 rodou antes da 1 terminar | *Wait For Result* On na ação 1 e sequência da ação 2 maior |
+| `carreira is not defined` no console | Bloco 1 do JS não está na página | Cole-o em *Page > JavaScript > Function and Global Variable Declaration* |
+| Ao salvar: "Session state protection violation" / item protegido alterado | `P18_CD_TIPO` com Value Protected On | Mude para **No** |
+| Ao salvar: "... must have some value" num campo escondido | Item com Value Required On | Desligue *Value Required* nos itens da lista acima |
+| Na movimentação nova o select já vem com um tipo e nenhum campo extra aparece | Select list sem opção vazia | *Display Null Value* On em `P18_ID_TIPO_MOVIMENTACAO` |
+| Ao abrir um rascunho os campos certos não aparecem | `P18_CD_TIPO` sem Source | Source: Database Column `CD_TIPO` |
 
 ### 3.4 Botões
 
-| Botão | Request | Condição (Server-side, Expression) | Observação |
-|---|---|---|---|
-| `CANCELAR` | | sempre | Ação: Defined by Dynamic Action > Cancel Dialog |
-| `EXCLUIR` | `EXCLUIR` | `:P18_ST_REGISTRO = 'RASCUNHO' and :P18_ID_HISTORICO_CARREIRA is not null` | Confirmação: "Excluir este rascunho?" |
-| `SALVAR_RASCUNHO` | `SALVAR_RASCUNHO` | `nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'` | |
-| `EFETIVAR` (Hot) | `EFETIVAR` | `nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'` | Confirmação: "Depois de efetivado, o lançamento não pode ser alterado. Continuar?" |
-| `ESTORNAR` (Danger) | `ESTORNAR` | `:P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'` | Confirmação: "Estornar este lançamento?" |
+A modal tem cinco botões, e cada situação do lançamento mostra só os que fazem sentido:
 
-Todos com Authorization Scheme `ADMIN_RH`.
+| Situação | Botões visíveis |
+|---|---|
+| Nova movimentação | Cancelar · Salvar rascunho · Efetivar |
+| Rascunho já salvo | Cancelar · Excluir rascunho · Salvar rascunho · Efetivar |
+| Efetivado (não estornado) | Cancelar · Estornar |
+| Estornado | Cancelar |
+
+O nome do botão vira o *request* da submissão (`:REQUEST`), e é por ele que os processos da §3.5 decidem o que rodar. Por isso use **exatamente** os nomes da tabela, em maiúsculas.
+
+**Antes de começar, confira:**
+
+- [ ] O item `P18_ST_REGISTRO` tem Default `RASCUNHO` e `P18_FL_ESTORNO` tem Source `FL_ESTORNO` (§3.2). As condições dos botões leem esses dois itens.
+
+#### Passo 1 · Criar a região dos botões
+
+1. Na aba **Rendering**, clique com o botão direito em **Dialog Footer** e escolha **Create Region**.
+2. Preencha:
+
+| Seção | Atributo | Valor |
+|---|---|---|
+| Identification | Name | `Botões` |
+| Identification | Type | **Static Content** |
+| Layout | Slot (Position) | **Dialog Footer** |
+| Appearance | Template | **Buttons Container** |
+
+Com isso os botões ficam fixos no rodapé da modal, como na página 27 (Nova Equipe).
+
+#### Passo 2 · Criar os botões
+
+Para cada linha da tabela abaixo: clique com o botão direito na região **Botões** › **Create Button**, e preencha os atributos.
+
+| Button Name | Label | Slot (Button Position) | Sequence | Appearance |
+|---|---|---|---|---|
+| `CANCELAR` | Cancelar | **Close** | 10 | padrão |
+| `EXCLUIR` | Excluir rascunho | **Delete** | 20 | padrão |
+| `ESTORNAR` | Estornar | **Delete** | 30 | Template Options › Type: **Danger** |
+| `SALVAR_RASCUNHO` | Salvar rascunho | **Next** | 40 | padrão |
+| `EFETIVAR` | Efetivar | **Next** | 50 | **Hot: On** |
+
+Em todos os botões, preencha também **Security › Authorization Scheme:** `ADMIN_RH`. A página já exige esse papel, e a autorização no botão é uma segunda proteção.
+
+#### Passo 3 · Comportamento e condição de cada botão
+
+**`CANCELAR`**
+- Behavior › Action: **Defined by Dynamic Action**
+- Clique com o botão direito no botão › **Create Dynamic Action** › Name `Cancelar` (Event *Click* já vem preenchido) › True action: **Cancel Dialog**
+- Server-side Condition: nenhuma (aparece sempre)
+
+**`EXCLUIR`**
+- Behavior › Action: **Submit Page** · Execute Validations: **Off** · Warn on Unsaved Changes: *Do Not Check*
+- Behavior › Requires Confirmation: **On** › Message `Excluir este rascunho?` › Style **Danger**
+- Server-side Condition › Type **Expression** (PL/SQL):
+  ```sql
+  :P18_ST_REGISTRO = 'RASCUNHO' and :P18_ID_HISTORICO_CARREIRA is not null
+  ```
+
+**`ESTORNAR`**
+- Behavior › Action: **Submit Page** · Execute Validations: **Off**
+- Behavior › Requires Confirmation: **On** › Message `Estornar este lançamento?` › Style **Danger**
+- Server-side Condition › Type **Expression**:
+  ```sql
+  :P18_ST_REGISTRO = 'EFETIVADO' and :P18_FL_ESTORNO = 'N'
+  ```
+
+**`SALVAR_RASCUNHO`**
+- Behavior › Action: **Submit Page** · Execute Validations: **On** (padrão)
+- Server-side Condition › Type **Expression**:
+  ```sql
+  nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'
+  ```
+
+**`EFETIVAR`**
+- Behavior › Action: **Submit Page** · Execute Validations: **On**
+- Behavior › Requires Confirmation: **On** › Message `Depois de efetivado, o lançamento não pode ser alterado. Continuar?` › Style **Warning**
+- Server-side Condition › Type **Expression**:
+  ```sql
+  nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'
+  ```
+
+Por que esses detalhes importam:
+- **`nvl(..., 'RASCUNHO')`:** a condição do botão pode ser avaliada antes de o Default do item ser aplicado. Numa movimentação nova `P18_ST_REGISTRO` ainda está nulo, e sem o `nvl` os botões Salvar e Efetivar sumiriam.
+- **Execute Validations Off em Excluir e Estornar:** essas ações não dependem do formulário. Sem isso, um campo obrigatório vazio (ou somente leitura num lançamento efetivado) impediria a exclusão ou o estorno. O motivo do estorno é validado pelo package.
+- **Requires Confirmation:** é o diálogo nativo do APEX, o mesmo que a página 16 usa. Não precisa de DA nem de JavaScript para confirmar.
+
+Salve a página (**Save**, Ctrl+S). A árvore deve ficar assim:
+
+```
+Dialog Footer
+└── Botões                 (Static Content · Buttons Container)
+    ├── Close    CANCELAR          seq 10
+    ├── Delete   EXCLUIR           seq 20
+    ├── Delete   ESTORNAR          seq 30  (Danger)
+    ├── Next     SALVAR_RASCUNHO   seq 40
+    └── Next     EFETIVAR          seq 50  (Hot)
+```
+
+No export APEXlang, cada botão fica parecido com este:
+
+```
+button efetivar (
+    buttonName: EFETIVAR
+    label: Efetivar
+    layout {
+        sequence: 50
+        region: @botões
+        slot: next
+    }
+    appearance {
+        buttonTemplate: @/text
+        hot: true
+        templateOptions: #DEFAULT#
+    }
+    behavior {
+        requiresConfirmation: true
+    }
+    confirmation {
+        message: Depois de efetivado, o lançamento não pode ser alterado. Continuar?
+        style: warning
+    }
+    serverSideCondition {
+        type: expression
+        plsqlExpression: nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'
+    }
+    security {
+        authorizationScheme: @admin-rh
+    }
+)
+```
+
+#### Passo 4 · Testar
+
+Os botões que enviam a página só gravam alguma coisa depois que os processos da §3.5 existirem. Por enquanto, teste se eles aparecem nas situações certas:
+
+1. Na página 13, clique em **Nova movimentação**: devem aparecer só *Cancelar*, *Salvar rascunho* e *Efetivar*.
+2. Clique em **Cancelar**: a modal fecha sem erro.
+3. Clique em **Efetivar**: deve abrir a confirmação. Clique em *Cancelar* no diálogo, porque o processo ainda não existe.
+4. Depois de montar a §3.5, repita com um rascunho salvo (deve aparecer *Excluir rascunho*) e com um lançamento efetivado (só *Cancelar* e *Estornar*).
+
+#### Se não funcionar
+
+| Sintoma | Causa provável | Correção |
+|---|---|---|
+| Salvar e Efetivar não aparecem numa movimentação nova | Condição sem `nvl` | Use `nvl(:P18_ST_REGISTRO, 'RASCUNHO') = 'RASCUNHO'` |
+| Efetivar aparece antes de Salvar rascunho (ou a ordem muda sozinha) | Botões do mesmo slot com a mesma sequência | Use as sequências da tabela do Passo 2 (40 e 50) |
+| Os botões aparecem no meio do formulário | Região criada no Body | Mova a região `Botões` para o slot **Dialog Footer** |
+| Cancelar não fecha a modal | Action ficou *Submit Page* ou a DA não tem *Cancel Dialog* | Action **Defined by Dynamic Action** e DA Click com *Cancel Dialog* |
+| Clicar no botão recarrega a modal e nada acontece | Processos da §3.5 ainda não existem, ou o nome do botão difere do request do processo | Confira a grafia exata (`SALVAR_RASCUNHO`, `EFETIVAR`…) |
+| Excluir ou Estornar mostra "... must have some value" | Execute Validations On | Desligue *Execute Validations* nesses dois botões |
+| Botão não aparece para o RH | Authorization Scheme errado no botão | Use `ADMIN_RH` e confira se o usuário tem o papel |
 
 ### 3.5 Processos (Processing, nesta ordem)
 
 Nenhum faz DML direto: todos chamam o package.
 
-1. **Salvar movimentação** · PL/SQL · When Button Pressed: `SALVAR_RASCUNHO` **ou** `EFETIVAR` (use Server-side Condition *Request is contained in Value*: `SALVAR_RASCUNHO,EFETIVAR`)
+1. **Salvar movimentação** · PL/SQL · roda com `SALVAR_RASCUNHO` **ou** `EFETIVAR`. *When Button Pressed* aceita um botão só, então deixe-o **vazio** e use *Server-side Condition* › Type **Request is contained in Value** › Value `SALVAR_RASCUNHO,EFETIVAR` (nomes dos botões, separados por vírgula, sem espaço). Sem isso, Efetivar numa movimentação nova chama `efetivar_movimentacao` com ID nulo.
    ```sql
    begin
      if :P18_ID_HISTORICO_CARREIRA is null then
@@ -577,6 +871,8 @@ select s.id_solicitacao,
 ---
 
 ## 6. Página 22 · Solicitar correção (Modal)
+
+> Ao terminar esta página, volte `c_pagina_solicitacao` para `22` em `08_pkg_historico_carreira_ui.sql` e rode o arquivo de novo, para o botão "Solicitar correção" aparecer na página 13.
 
 - Page Mode: **Modal Dialog** · Authorization Scheme: `COLABORADOR` · Title "Solicitar correção"
 - Itens:
