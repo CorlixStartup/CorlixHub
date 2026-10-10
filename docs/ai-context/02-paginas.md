@@ -96,7 +96,7 @@
 | 0 | Global Page | — | p00000-global-page.apx | — | — | — | Implementada (header: busca + ações/usuário) |
 | 1 | Home | HOME | p00001-home.apx | @/standard | normal | nenhuma / nenhuma | Implementada (dashboard) |
 | 2 | Meu Perfil | MEU-PERFIL | p00002-meu-perfil.apx | @/standard | normal | nenhuma / nenhuma | Placeholder (só breadcrumb) |
-| 3 | Organograma | ORGANOGRAMA | p00003-organograma.apx | @/standard | normal | nenhuma / nenhuma | Placeholder (módulo em `modulos/organograma/`, não integrado) |
+| 3 | Organograma | ORGANOGRAMA | p00003-organograma.apx | @/standard | normal | nenhuma / nenhuma | Organograma por níveis + drawer (módulo `modulos/organograma/`) |
 | 4 | Chat | CHAT | p00004-chat.apx | @corlix-standard-page | normal | nenhuma / nenhuma (coluna CAB_DEPT exige @administration-rights) | Implementada parcialmente (leitura; sem envio) |
 | 5 | Notificações | NOTIFICACOES | p00005-notificacoes.apx | @corlix-standard-page | normal | nenhuma | Placeholder (breadcrumb) |
 | 6 | Configurações | CONFIGURACOES | p00006-configuracoes.apx | @corlix-standard-page | normal | nenhuma | Placeholder (breadcrumb) |
@@ -179,7 +179,13 @@ Notas da tabela:
 Placeholder: só região `breadcrumb` (type breadcrumb, `@breadcrumb`, slot breadcrumbBar, @/title-bar com `t-BreadcrumbRegion--useBreadcrumbTitle`). Template @/standard. Nada mais.
 
 ### Página 3 — Organograma (`p00003-organograma.apx`)
-Placeholder idêntico à 2. O módulo real está sendo desenvolvido fora do app em `modulos/organograma/` (`organograma.sql/.js/.css`, `Etapas-organograma.md`, PNGs de redesign — tudo não commitado/modificado); ainda não há região/JS na página.
+Integra o módulo `modulos/organograma/` (detalhes em [06 §1](./06-modulos.md)).
+- **JS da página:** blocos 1 e 2 de `organograma.js` em *Function and Global Variable Declaration* e *Execute when Page Loads*. **CSS:** `#APP_FILES#organograma#MIN#.css`.
+- **Região `organograma`** (Dynamic Content, Blank with Attributes): `pkg_organograma.render(:P3_ID_FOCO)`, submete `P3_ID_FOCO`.
+- **Itens:** `P3_BUSCA` (Popup LOV de `vw_org_colaborador`, label oculto, seq 5, acima do organograma e alinhado à direita via `#P3_BUSCA_CONTAINER`); `P3_ID_FOCO` (Hidden, `valueProtected: false`, o JS altera).
+- **DA** `ir-para-pessoa-buscada`: Change em `P3_BUSCA` → `orgIrPara(id)` e limpa o campo.
+- **Processo `ORG_DETALHES`** (`point: ajaxCallback`): devolve o HTML do drawer (`render_detalhes(g_x01)`).
+- Sem `P3_ID_FOCO`, abre na pessoa do usuário logado (`login_apex = APP_USER`); sem vínculo, no topo da hierarquia.
 
 ### Página 4 — Chat (`p00004-chat.apx`)
 - **Propósito**: chat interno 1:1. Coluna esquerda com contatos agrupados por departamento e status de presença; coluna direita com mensagens do canal direto.

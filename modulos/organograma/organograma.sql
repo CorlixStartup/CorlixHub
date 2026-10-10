@@ -34,19 +34,26 @@ create or replace package pkg_organograma as
   -- Um app por cliente: ajuste o nome da empresa neste schema
   c_nome_empresa  constant varchar2(100) := 'Corlix';
 
-  -- Destinos de "Ver perfil completo" e "Conversar" (ajuste para o seu app)
-  c_pagina_perfil constant pls_integer  := 20;
-  c_item_perfil   constant varchar2(30) := 'P20_ID_COLABORADOR';
-  c_pagina_chat   constant pls_integer  := 30;
-  c_item_chat     constant varchar2(30) := 'P30_ID_COLABORADOR';
+  -- Destinos de "Ver perfil completo" e "Conversar" (p2 Meu perfil e p4 Chat).
+  -- Item nulo = abre a página sem parâmetro (as duas ainda não recebem o colaborador pela URL)
+  c_pagina_perfil constant pls_integer  := 2;
+  c_item_perfil   constant varchar2(30) := null;
+  c_pagina_chat   constant pls_integer  := 4;
+  c_item_chat     constant varchar2(30) := null;
+
+  -- Pasta das fotos em Static Application Files (FOTO_URL guarda só o nome do arquivo)
+  c_pasta_fotos   constant varchar2(100) := 'Fotos Colaboradores/';
 
   -- Quantas pessoas da equipe direta listar no drawer
   c_max_equipe    constant pls_integer  := 8;
 
-  -- Primeiro colaborador ativo sem gestor (topo da hierarquia)
+  -- Colaborador ativo sem gestor com a maior estrutura abaixo (topo da hierarquia)
   function id_raiz return number;
 
-  -- Região do organograma. p_id_foco nulo/inválido => topo da hierarquia
+  -- Colaborador ativo vinculado ao usuário logado (COLABORADOR.LOGIN_APEX = APP_USER)
+  function id_usuario return number;
+
+  -- Região do organograma. p_id_foco nulo => usuário logado; inválido ou sem vínculo => topo
   function render (
     p_id_foco      in number,
     p_nome_empresa in varchar2 default c_nome_empresa
@@ -138,8 +145,23 @@ create or replace package body pkg_organograma as
 
   function url (p_pagina in pls_integer, p_item in varchar2, p_id in number) return varchar2 is
   begin
+    if p_item is null then
+      return a(apex_page.get_url(p_page => p_pagina));
+    end if;
     return a(apex_page.get_url(p_page => p_pagina, p_items => p_item, p_values => to_char(p_id)));
   end url;
+
+  -- FOTO_URL pode ser URL completa, caminho com substituição (#APP_FILES#...) ou só o nome do arquivo
+  function url_foto (p_foto_url in varchar2) return varchar2 is
+  begin
+    if p_foto_url is null then
+      return null;
+    elsif regexp_like(p_foto_url, '^(https?:|//|/|#)') then
+      return apex_application.do_substitutions(p_foto_url);
+    end if;
+    return apex_application.do_substitutions('#APP_FILES#')
+        || utl_url.escape(c_pasta_fotos || p_foto_url, false, 'AL32UTF8');
+  end url_foto;
 
   function eh_usuario_atual (p_login in varchar2) return boolean is
   begin
@@ -188,7 +210,7 @@ create or replace package body pkg_organograma as
     return to_char(p_data, 'fmdd') || ' de ' || mes_por_extenso(p_data);
   end aniversario;
 
-  -- Foto (FOTO_URL ou BLOB) quando existir; senão, iniciais
+  -- Iniciais sempre; a foto (FOTO_URL ou BLOB) fica por cima e some se não carregar
   function avatar (
     p_id         in number,
     p_nome       in varchar2,
@@ -199,7 +221,7 @@ create or replace package body pkg_organograma as
     l_src varchar2(4000);
   begin
     if p_foto_url is not null then
-      l_src := p_foto_url;
+      l_src := url_foto(p_foto_url);
     elsif p_tem_imagem = 'S' then
       l_src := apex_page.get_url(
                  p_request => 'APPLICATION_PROCESS=DOWNLOAD_FOTO',
@@ -207,13 +229,12 @@ create or replace package body pkg_organograma as
                  p_values  => to_char(p_id));
     end if;
 
-    if l_src is not null then
-      return '<span class="org-avatar org-avatar--' || p_tamanho || '">'
-          || '<img src="' || a(l_src) || '" alt="" loading="lazy"></span>';
-    end if;
-
     return '<span class="org-avatar org-avatar--' || p_tamanho || '" aria-hidden="true">'
-        || e(iniciais(p_nome)) || '</span>';
+        || e(iniciais(p_nome))
+        || case when l_src is not null then
+             '<img src="' || a(l_src) || '" alt="" loading="lazy" onerror="this.remove()">'
+           end
+        || '</span>';
   end avatar;
 
   -- Linha clicável das listas do drawer (gestor / equipe direta)
@@ -244,12 +265,32 @@ create or replace package body pkg_organograma as
   function id_raiz return number is
     l_id number;
   begin
+    -- Pode haver vários colaboradores sem gestor (ex.: contas da equipe técnica).
+    -- O topo é quem tem mais pessoas abaixo; empate => menor id.
+    select id_colaborador
+      into l_id
+      from (select connect_by_root id_colaborador as id_colaborador, count(*) as qtd
+              from vw_org_colaborador
+             start with id_gestor is null
+           connect by nocycle prior id_colaborador = id_gestor
+             group by connect_by_root id_colaborador
+             order by qtd desc, id_colaborador)
+     fetch first 1 row only;
+    return l_id;
+  exception
+    when no_data_found then
+      return null;
+  end id_raiz;
+
+  function id_usuario return number is
+    l_id number;
+  begin
     select min(id_colaborador)
       into l_id
       from vw_org_colaborador
-     where id_gestor is null;
+     where upper(trim(login_apex)) = upper(trim(v('APP_USER')));
     return l_id;
-  end id_raiz;
+  end id_usuario;
 
   ------------------------------------------------------------------------------
   -- ORGANOGRAMA · caminho: Empresa > ... > Pessoa em foco
@@ -420,9 +461,10 @@ create or replace package body pkg_organograma as
   begin
     inicia;
 
-    -- foco inválido, inativo ou nulo => topo da hierarquia
+    -- foco nulo => usuário logado; inválido, inativo ou sem vínculo => topo da hierarquia
     begin
-      select * into l_foco from vw_org_colaborador where id_colaborador = p_id_foco;
+      select * into l_foco from vw_org_colaborador
+       where id_colaborador = coalesce(p_id_foco, id_usuario);
     exception
       when no_data_found then
         l_id := id_raiz;

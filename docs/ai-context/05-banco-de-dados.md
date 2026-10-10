@@ -278,7 +278,7 @@ Atenção: `07_testes.sql` insere em `EMPRESA` só `nome, nome_fantasia, cnpj, s
 | `DESCRIPTION` | VARCHAR2(255) | sim | não usado no repo |
 
 - Sem unique em `LOGIN_APEX`: o código trata `TOO_MANY_ROWS`. Recomendado: unique em `upper(login_apex)`.
-- Inconsistência de caminho de foto: P1 usa `#APP_FILES#Fotos Colaboradores/<FOTO_URL>`; `APP_USER_FOTO` e P1 (gestor) usam `#APP_FILES#fotos/<FOTO_URL>`; o organograma usa `FOTO_URL` como URL completa.
+- Inconsistência de caminho de foto: P1 usa `#APP_FILES#Fotos Colaboradores/<FOTO_URL>`; `APP_USER_FOTO` e P1 (gestor) usam `#APP_FILES#fotos/<FOTO_URL>`; o organograma usa `#APP_FILES#Fotos Colaboradores/<FOTO_URL>` (ou a própria `FOTO_URL` se for URL/substituição).
 - Quem lê: praticamente tudo (procs. de app `APP_USER_CARGO`, `APP_USER_FOTO`, `G_NOME_EMPRESA`; P1, P4, P14, P17; LOVs; views; packages).
 - Quem escreve: P14 (form DML, insert) + `APEX_UTIL.CREATE_USER` (conta APEX com `P14_LOGIN`); `PKG_HISTORICO_CARREIRA.efetivar_movimentacao` / `estornar_movimentacao` (`UPDATE` de `ID_CARGO`, `ID_DEPARTAMENTO`, `ID_GESTOR`, `STATUS`, `DATA_ADMISSAO`).
 
@@ -820,11 +820,12 @@ Regras de exibição: **nunca exibe salário**; eventos `MERITO` só para o pró
 
 | Rotina | Assinatura | Faz |
 |---|---|---|
-| `id_raiz` | `return number` | `min(id_colaborador)` ativo sem gestor. |
+| `id_raiz` | `return number` | Ativo sem gestor com mais pessoas abaixo (empate → menor id). |
+| `id_usuario` | `return number` | Colaborador ativo com `upper(trim(login_apex)) = upper(trim(APP_USER))`. |
 | `render` | `(p_id_foco number, p_nome_empresa varchar2 default c_nome_empresa) return clob` | Caminho (`connect by prior id_gestor = id_colaborador`), card da pessoa em foco (contagem de diretos e de toda a estrutura abaixo), cards dos subordinados com prévia de até 3. Foco inválido/inativo → raiz. |
 | `render_detalhes` | `(p_id number, p_nome_empresa ...) return clob` | Drawer: e-mail, gestor, equipe direta (até `c_max_equipe = 8`), departamento, tempo de casa, aniversário (dia/mês). |
 
-Constantes: `c_nome_empresa = 'Corlix'`, `c_pagina_perfil = 20`/`P20_ID_COLABORADOR`, `c_pagina_chat = 30`/`P30_ID_COLABORADOR` (placeholders). Lê só `VW_ORG_COLABORADOR`. Fotos BLOB via processo de aplicação `DOWNLOAD_FOTO` (item `ID_COLABORADOR`), não versionado. Ajax callback planejado `ORG_DETALHES` (usa `apex_application.g_x01`). Na app versionada a página 3 está vazia (só breadcrumb).
+Constantes: `c_nome_empresa = 'Corlix'`, `c_pagina_perfil = 2` e `c_pagina_chat = 4` (itens nulos: as páginas ainda não recebem o colaborador pela URL), `c_pasta_fotos = 'Fotos Colaboradores/'`. Lê só `VW_ORG_COLABORADOR`. Fotos BLOB via processo de aplicação `DOWNLOAD_FOTO` (item `ID_COLABORADOR`), não versionado. Ajax callback planejado `ORG_DETALHES` (usa `apex_application.g_x01`). Na app versionada a página 3 está vazia (só breadcrumb).
 
 ---
 

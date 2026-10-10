@@ -35,7 +35,7 @@
 - Os app processes (4, `BEFORE_HEADER`, sem condição) rodam em todas as páginas, inclusive no login. Eles ligam o usuário ao colaborador por `COLABORADOR.login_apex = :APP_USER`; algumas comparações usam `UPPER` e outras não.
 
 ### Páginas
-- **Placeholders** (só breadcrumb): p2 Meu perfil, p3 Organograma, p5 Notificações, p6 Configurações, p11 Comunicados, p12 Colaboradores, p13 Histórico de carreira. A p8 `NOTIFICAÇÕES` está vazia e duplica a p5.
+- **Placeholders** (só breadcrumb): p2 Meu perfil, p5 Notificações, p6 Configurações, p11 Comunicados, p12 Colaboradores, p13 Histórico de carreira. A p8 `NOTIFICAÇÕES` está vazia e duplica a p5.
 - **p4 Chat**:
   - A região de mensagens tem a condição de servidor `P4_CANAL_ID is not null`, então ela não existe no DOM ao carregar e o refresh da DA não funciona.
   - Em `contatos` aparece `templateOptions: "[object Object]"`, um valor corrompido (linha ~330).
@@ -60,12 +60,13 @@
 ### Arquivos e tema
 - As fotos são montadas como `#APP_FILES#fotos/<foto_url>` (app process e Home), mas a pasta real é `static-files/Fotos Colaboradores/` (`nome_sobrenome.jpg`, ~291 fotos fictícias). O fallback é `default-user.jpeg`.
 - `custom.css` tem regras globais (`.a-CardView-*` com sombra e raio 14px, `.ui-dialog-titlebar`) que contrariam a política "sem sombra" do tema.
-- `organograma.css` e `historico-carreira.css` ainda não estão em `static-files/`.
+- `organograma.css` fica em `modulos/organograma/` **e** em `static-files/` (cópia + `.min.css`): mantenha os três em sincronia.
 - Static IDs e aliases com acento (`publicador-de-conteúdo`, `histórico-de-carreira`, `NOTIFICAÇÕES`) são frágeis em URLs e scripts.
 
 ### Módulos
-- O guia do organograma usa a página 10 (`P10_ID_FOCO`), mas a página real é a **3**.
-- `c_pagina_perfil = 20` do organograma conflita com o Dashboard RH (página 20) planejado pelo histórico de carreira.
+- O organograma está montado na página **3** (`P3_ID_FOCO`, `P3_BUSCA`, callback `ORG_DETALHES`); guia completo em `modulos/organograma/Etapas-organograma.md`.
+- O backup diário (Jenkins) exporta o app de PRD e commita `corlixhub/` em `DEV`: mudança feita só no `.apx` e não levada ao APEX é **desfeita** no próximo backup.
+- O organograma linka "Ver perfil completo" e "Conversar" para as p2/p4 sem parâmetro: elas ainda não abrem a pessoa escolhida.
 - `vw_org_colaborador` não filtra por empresa, e o drawer de detalhes não verifica permissão.
 - `G_ID_EMPRESA` só é preenchido depois de um novo login. Sem esse item, toda chamada a `pkg_historico_carreira` dentro de uma sessão APEX falha com `-20012`.
 - A spec de `pkg_historico_carreira` diz que a p14 chama `registrar_admissao_automatica`, mas a p14 não faz essa chamada.

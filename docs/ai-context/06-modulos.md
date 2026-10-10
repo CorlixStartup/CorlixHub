@@ -1,13 +1,13 @@
 # 06 · Módulos de feature (`modulos/`)
 
 > Escopo: os módulos desenvolvidos **fora do App Builder** (SQL/PL/SQL + CSS + JS + guia `Etapas-*.md` de montagem da página). Schema/tabelas em detalhe: ver `05-banco-de-dados.md`. Tokens `--cx-*`, `corlix-tema.css` e o padrão visual: ver `04-tema-e-estilos.md`.
-> Estado conferido em 2026-10-06 (branch `DEV`).
+> Estado conferido em 2026-10-06 (branch `DEV`); seção 1 (Organograma) atualizada em 2026-10-09.
 
 ## Visão geral
 
 | Pasta | Situação no Git | Página APEX alvo | Integrada no app? |
 |---|---|---|---|
-| `modulos/organograma/` | versionada (commit `bac2d69`), **com mudanças não commitadas** (+774/−80 linhas: drawer de detalhes) | p. 3 `Organograma` (`corlixhub/pages/p00003-organograma.apx`) | **Não.** A página só tem a região Breadcrumb |
+| `modulos/organograma/` | versionada | p. 3 `Organograma` (`corlixhub/pages/p00003-organograma.apx`) | **Sim** no repositório (09/10/2026): região, itens, JS, CSS, DA e Ajax Callback. Guia: `Etapas-organograma.md` |
 | `modulos/historico-carreira/` | **untracked** | p. 13 `Histórico de carreira` (`p00013-histórico-de-carreira.apx`) + páginas novas 18–23 | **Não.** A página 13 só tem a região Breadcrumb; páginas 18–23 não existem |
 | `modulos/tema/` | **untracked** | todas (tema global) | documentado em `04-tema-e-estilos.md` |
 | `modulos/perfis-acesso/` | versionado | p. 14 `Cadastro de Usuários` | **Sim** na app (papéis `colaborador`/`gestor`/`admin-rh`, authorization `ADMIN_RH`, processo e LOV de gestor na P14); SQL instalado no banco em 06/10/2026, com papéis vinculados à mão aos cargos antigos. Guia: `Etapas-perfis-acesso.md`; histórico: `Registro-implantacao.md` |
@@ -41,10 +41,10 @@ Convenções de geração de HTML (idênticas nos dois packages): CLOB temporár
 Navegação **por níveis** na hierarquia de gestão (`COLABORADOR.ID_GESTOR`): uma pessoa em foco, o caminho até o topo (breadcrumb) e os subordinados diretos em cards. Clique no card abre um **drawer** de detalhes (redesign em `Organograma — redesign (navegação por níveis).png` e `Organograma · detalhes da pessoa (Drawer) — redesign.png`).
 
 - Só **contas ativas** aparecem (`colaborador.status = true`; `STATUS` nulo/false = inativo). Se um gestor fica inativo, os subordinados dele somem da navegação até serem realocados.
-- Sem foco (ou foco inválido/inativo) → abre no **topo**: `id_raiz` = `min(id_colaborador)` ativo sem gestor.
+- Sem foco → abre na pessoa do **usuário logado** (`id_usuario`, por `login_apex`). Foco inválido/inativo ou usuário sem colaborador → abre no **topo**: `id_raiz` = ativo sem gestor com mais pessoas abaixo (empate → menor id). Antes era `min(id_colaborador)`, que caía numa conta técnica sem equipe.
 - Card em foco: avatar, nome, "cargo · departamento", tag "Topo da hierarquia" (se sem gestor), resumo "N subordinados diretos · M pessoas na estrutura" (M = todos os descendentes ativos, `connect by`), botões "Ver perfil" (abre o drawer) e "Conversar" (oculto se a pessoa é o próprio `APP_USER`, comparando `login_apex`).
 - Cards dos filhos (ordem alfabética): prévia da equipe com até 3 avatares/nomes; acima disso "+N" e "e mais N"; "Sem equipe direta" se 0; botão "Ver equipe" desce um nível.
-- Avatar: `FOTO_URL` se houver; senão BLOB (`IMAGEM_PERFIL`) via `APPLICATION_PROCESS=DOWNLOAD_FOTO` com item `ID_COLABORADOR`; senão iniciais.
+- Avatar: iniciais sempre; por cima, a foto `FOTO_URL` (nome de arquivo → `#APP_FILES#Fotos Colaboradores/<arquivo>`; URL ou `#...#` usados como estão) se houver; senão BLOB (`IMAGEM_PERFIL`) via `APPLICATION_PROCESS=DOWNLOAD_FOTO` com item `ID_COLABORADOR`; senão iniciais.
 - Drawer: Contato (e-mail `mailto` + botão copiar com ✓ por 2 s), Na estrutura ("Reporta-se a" gestor ou "Topo da hierarquia"/"Gestor inativo ou não encontrado"; "Equipe direta" até `c_max_equipe` = 8, depois "e mais N na equipe"; "Ver equipe no organograma"), Sobre (Departamento, Empresa, "Na Corlix desde" = "fevereiro de 2026 · 7 meses" a partir de `DATA_ADMISSAO`, ou "admissão em ..." se futura; Aniversário só dia e mês), nota de privacidade, rodapé "Conversar" + "Ver perfil completo".
 - **Privacidade:** a nota diz "você vê só os dados visíveis para todos", mas hoje e-mail, admissão e aniversário aparecem para qualquer usuário logado. Sugestão do guia: flag de visibilidade no cadastro.
 
@@ -53,35 +53,34 @@ Navegação **por níveis** na hierarquia de gestão (`COLABORADOR.ID_GESTOR`): 
 | Camada | Artefato | Detalhes |
 |---|---|---|
 | View | `vw_org_colaborador` | `colaborador` ⨝ `cargo` ⨝ `departamento`, `where c.status = true`. Colunas: `id_colaborador, id_gestor, nome_completo, email, login_apex, data_admissao, data_de_nascimento, cargo, departamento, foto_url, tem_imagem ('S'/'N')` |
-| Package | `pkg_organograma` | Constantes: `c_nome_empresa = 'Corlix'`, `c_pagina_perfil = 20` / `c_item_perfil = 'P20_ID_COLABORADOR'`, `c_pagina_chat = 30` / `c_item_chat = 'P30_ID_COLABORADOR'` (**placeholders**), `c_max_equipe = 8`. Públicas: `id_raiz`, `render(p_id_foco, p_nome_empresa default c_nome_empresa) return clob`, `render_detalhes(p_id, p_nome_empresa) return clob`. Privadas: `render_caminho`, `render_foco`, `render_filhos`, `avatar`, `linha_pessoa`, `dado`, `tempo_de_casa`, `aniversario`, `eh_usuario_atual` (usa `v('APP_USER')`) |
-| Região | Dynamic Content, Static ID `organograma` | Source `return pkg_organograma.render(to_number(:P10_ID_FOCO default null on conversion error));` |
+| Package | `pkg_organograma` | Constantes: `c_nome_empresa = 'Corlix'`, `c_pagina_perfil = 2` / `c_item_perfil = null`, `c_pagina_chat = 4` / `c_item_chat = null` (item nulo = link sem parâmetro), `c_pasta_fotos = 'Fotos Colaboradores/'`, `c_max_equipe = 8`. Públicas: `id_raiz` (ativo sem gestor com mais descendentes), `id_usuario` (ativo com `login_apex = APP_USER`), `render(p_id_foco` → nulo usa `id_usuario`, inválido usa `id_raiz`; `p_id_foco, p_nome_empresa default c_nome_empresa) return clob`, `render_detalhes(p_id, p_nome_empresa) return clob`. Privadas: `render_caminho`, `render_foco`, `render_filhos`, `url` (item opcional), `url_foto` (nome de arquivo → `#APP_FILES#` + `c_pasta_fotos`, via `apex_application.do_substitutions` + `utl_url.escape`), `avatar` (iniciais + `<img onerror="this.remove()">` por cima), `linha_pessoa`, `dado`, `tempo_de_casa`, `aniversario`, `eh_usuario_atual` (usa `v('APP_USER')`) |
+| Região | Dynamic Content, Static ID `organograma` | Source `return pkg_organograma.render(to_number(:P3_ID_FOCO default null on conversion error));` |
 | Ajax Callback | `ORG_DETALHES` | `apex_util.prn(p_clob => pkg_organograma.render_detalhes(to_number(apex_application.g_x01 default null on conversion error)), p_escape => false);` |
 | Front | `organograma.css` (escopo `.org` e `.org-drawer`), `organograma.js` (3 blocos) | drawer = `<dialog>` nativo criado pelo JS |
 
 Arquivo SQL único: `modulos/organograma/organograma.sql` (view + spec + body). A versão anterior (commitada) não tinha `render_detalhes`; recebia o nome da empresa como 2º argumento obrigatório e "Ver perfil" era link direto para a página de perfil.
 
-### 1.3 Passo a passo de integração (resumo fiel de `Etapas-organograma.md`)
+### 1.3 Integração na página 3
 
-O guia usa **página 10** — no app real a página é a **3** (troque `P10_` → `P3_`; o histórico de carreira já espera `P3_ID_FOCO`).
+O passo a passo completo (banco, import APEXlang ou montagem campo a campo no Builder, testes de aceite, solução de problemas e manutenção) está em [`modulos/organograma/Etapas-organograma.md`](../../modulos/organograma/Etapas-organograma.md). Resumo do que a página 3 tem hoje (`corlixhub/pages/p00003-organograma.apx`):
 
-Remover da versão antiga (se existir): URLs da OrgChart JS, região `painel-detalhes`, DA de Page Load, processos `GET_ORGANOGRAMA` e `GET_DETALHES_SETOR`, função `fn_organograma_json`. Pode manter `DOWNLOAD_FOTO`; tabela `departamento_metrica` e coluna `id_lider` ficaram sem uso.
+| Componente | Configuração |
+|---|---|
+| Página › JavaScript | *Function and Global Variable Declaration* = bloco 1 de `organograma.js`; *Execute when Page Loads* = bloco 2 |
+| Página › CSS › File URLs | `#APP_FILES#organograma#MIN#.css` (arquivos `organograma.css` e `organograma.min.css` registrados em `static-files.apx`) |
+| Região `organograma` | Dynamic Content · Static ID `organograma` · *Blank with Attributes* · seq 10 · Page Items to Submit `P3_ID_FOCO` · `return pkg_organograma.render(to_number(:P3_ID_FOCO default null on conversion error));` |
+| `P3_ID_FOCO` | Hidden · `valueProtected: false` · seq 20 |
+| `P3_BUSCA` | Popup LOV de `vw_org_colaborador` · label template `@/hidden` (label "Buscar pessoa no organograma") · placeholder igual · seq 5 (acima da região) · largura 30 · alinhado à direita pelo CSS `#P3_BUSCA_CONTAINER` |
+| DA `ir-para-pessoa-buscada` | Change em `P3_BUSCA` → *Execute JavaScript Code* = bloco 3 (`orgIrPara` + limpa o item) |
+| Processo `ORG_DETALHES` | `executeCode`, `point: ajaxCallback` · `apex_util.prn(p_clob => pkg_organograma.render_detalhes(to_number(apex_application.g_x01 default null on conversion error)), p_escape => false);` |
 
-1. **Banco:** rodar `organograma.sql` (cria/recria view e package). Reexecutar após cada mudança.
-2. **Itens:** `P10_ID_FOCO` Hidden, *Value Protected = No* (o JS altera). `P10_BUSCA` Popup LOV, placeholder "Buscar pessoa no organograma", label oculto, na região de título alinhado à direita; LOV:
-   `select nome_completo || ' — ' || cargo d, id_colaborador r from vw_org_colaborador order by nome_completo`
-3. **Região de título:** template de título Redwood, "Organograma" / "Estrutura da Corlix a partir das relações de gestão."
-4. **Região principal:** Dynamic Content · Static ID `organograma` · Template *Blank with Attributes* · Page Items to Submit `P10_ID_FOCO` · Source acima.
-5. **Processo** `ORG_DETALHES`: Execute Code, ponto *Ajax Callback* (código acima).
-6. **CSS:** `organograma.css` como Static Application File (`#APP_FILES#organograma.css`) ou CSS Inline.
-7. **JS:** bloco 1 → *Function and Global Variable Declaration*; bloco 2 → *Execute when Page Loads*; bloco 3 → DA *Change* em `P10_BUSCA` → Execute JavaScript Code.
-8. **Ajustar constantes** do package (`c_pagina_perfil/c_item_perfil`, `c_pagina_chat/c_item_chat`, `c_nome_empresa`) e reexecutar o SQL.
-9. **Fotos BLOB:** criar Application Item `ID_COLABORADOR` + Application Process `DOWNLOAD_FOTO` (não existem no app hoje).
+Ordem de implantação: (1) rodar `organograma.sql`; (2) `apex validate -input corlixhub` + `apex import` **ou** montar no Builder; (3) testes de aceite; (4) garantir que o app em PRD está atualizado antes do backup diário (ver 1.7).
 
-Deep-link previsto: `...:P10_ID_FOCO:<id>`. Atenção: a página 3 tem `pageAccessProtection: argumentsMustHaveChecksum`, então só URLs geradas com checksum (`apex_page.get_url`) funcionam.
+Deep-link: `apex_page.get_url(p_page => 3, p_items => 'P3_ID_FOCO', p_values => <id>)` (a página exige checksum).
 
 ### 1.4 API JavaScript (`organograma.js`)
 
-Constantes: `ORG_ITEM_FOCO = "P10_ID_FOCO"`, `ORG_REGIAO = "organograma"`, `ORG_PROCESSO_DETALHES = "ORG_DETALHES"`. Estado: `orgDrawer` (dialog singleton), `orgPedido` (contador para descartar respostas atrasadas).
+Constantes: `ORG_ITEM_FOCO = "P3_ID_FOCO"`, `ORG_REGIAO = "organograma"`, `ORG_PROCESSO_DETALHES = "ORG_DETALHES"`. Estado: `orgDrawer` (dialog singleton), `orgPedido` (contador para descartar respostas atrasadas).
 
 | Função | Faz |
 |---|---|
@@ -92,7 +91,7 @@ Constantes: `ORG_ITEM_FOCO = "P10_ID_FOCO"`, `ORG_REGIAO = "organograma"`, `ORG_
 | `orgCopiar(botao)` | `navigator.clipboard.writeText(data-valor)`, classe `is-copiado` por 2 s, anuncia em `.org-sr` (`aria-live`) |
 | `orgCliqueNoDrawer(ev)` | clique no backdrop fecha; delegação por `data-acao`: `fechar`, `detalhe` (troca conteúdo sem fechar), `equipe` (fecha + `orgIrPara`), `copiar` |
 
-Execute when Page Loads: `$("#organograma").on("click", "[data-acao]")` → `foco` ⇒ `orgIrPara`, `detalhe` ⇒ `orgAbrirDetalhes`; `$("#organograma").on("apexafterrefresh")` → foca `#org-foco-nome` (`preventScroll`). DA de busca: `orgIrPara($v("P10_BUSCA"))` e limpa o item com `setValue("", null, true)` (suppressChangeEvent).
+Execute when Page Loads: `$("#organograma").on("click", "[data-acao]")` → `foco` ⇒ `orgIrPara`, `detalhe` ⇒ `orgAbrirDetalhes`; `$("#organograma").on("apexafterrefresh")` → foca `#org-foco-nome` (`preventScroll`). DA de busca: `orgIrPara($v("P3_BUSCA"))` e limpa o item com `setValue("", null, true)` (suppressChangeEvent).
 
 Contrato HTML↔JS: atributos `data-acao` ∈ {`foco`, `detalhe`, `equipe`, `fechar`, `copiar`} + `data-id` / `data-valor`. Esc, foco preso e scrim vêm do `<dialog>` nativo.
 
@@ -125,15 +124,18 @@ CSS: tokens `--org-*` declarados em `.org, .org-drawer`, lendo `--cx-*` do `corl
 
 ### 1.6 Status
 
-Feito (nos arquivos do módulo): view, package com `render` + `render_detalhes`, CSS e JS do redesign + drawer, guia. Pendente: **nada montado na página 3**; criar itens/região/callback; ajustar `P10_`→`P3_` (JS e Source); apontar `c_pagina_perfil`/`c_pagina_chat` para páginas reais; criar `ID_COLABORADOR`/`DOWNLOAD_FOTO`; commitar as mudanças locais; flag de privacidade (opcional); filtro por empresa (ver pegadinhas).
+Montado na página 3 (`p00003-organograma.apx`): JS (`P3_`), CSS `#APP_FILES#organograma#MIN#.css` (registrado em `static-files.apx`; a fonte continua em `modulos/organograma/organograma.css` — copie para `static-files/` e regenere o `.min.css` ao alterar), região, itens, DA de busca e Ajax Callback `ORG_DETALHES`. `c_pagina_perfil`/`c_pagina_chat` apontam para as p2/p4 sem parâmetro. Pendente: as p2/p4 receberem o colaborador pela URL; criar `ID_COLABORADOR`/`DOWNLOAD_FOTO`; flag de privacidade (opcional); filtro por empresa (ver pegadinhas). **Após importar a app, rode de novo `organograma.sql` no banco.**
 
 ### 1.7 Pegadinhas
 
-- **Sem isolamento multi-tenant:** `vw_org_colaborador` e `id_raiz` **não filtram por `id_empresa`**. Com mais de uma empresa no schema, o "topo" é o menor ID global e a LOV de busca lista todos. O histórico de carreira resolve isso com `G_ID_EMPRESA`; o organograma precisa do mesmo filtro (ex.: `and c.id_empresa = to_number(sys_context('APEX$SESSION', ...))`/`v('G_ID_EMPRESA')` ou parâmetro).
+- **Sem isolamento multi-tenant:** `vw_org_colaborador` e `id_raiz` **não filtram por `id_empresa`**. Com mais de uma empresa no schema, o "topo" é a maior estrutura global e a LOV de busca lista todos. O histórico de carreira resolve isso com `G_ID_EMPRESA`; o organograma precisa do mesmo filtro (ex.: `and c.id_empresa = to_number(sys_context('APEX$SESSION', ...))`/`v('G_ID_EMPRESA')` ou parâmetro).
 - `c_nome_empresa` é constante "um app por cliente" — o app já tem `G_NOME_EMPRESA`; considerar usá-lo.
-- `c_pagina_perfil = 20` **colide** com a página 20 "Dashboard RH" planejada pelo histórico de carreira. O perfil existente é a p. 2 (Meu Perfil, sem item de ID); o chat é a p. 4, que usa `P4_CONTATO_ID`/`P4_CANAL_ID` setados por DA de clique — confirme se aceita deep-link antes de apontar `c_item_chat`.
+- Perfil e chat apontam para as p. 2 e 4 **sem** item: a p. 2 não tem item de ID e a p. 4 usa `P4_CONTATO_ID`/`P4_CANAL_ID` setados por DA de clique — confirme se aceita deep-link antes de preencher `c_item_chat`.
+- **Backup diário sobrescreve o repositório:** o job Jenkins exporta o app de PRD e commita `corlixhub/` em `DEV`. Mudança feita só no `.apx` e não levada ao APEX é desfeita no próximo backup. `modulos/` e `docs/` não são afetados.
 - Mais de 2 subordinados: cards quebram em linhas de 2 e os conectores só ligam a primeira linha.
-- `P10_ID_FOCO` precisa de *Value Protected = No* e estar em *Page Items to Submit*; senão o refresh ignora a troca de foco.
+- `P3_ID_FOCO` precisa de *Value Protected = No* e estar em *Page Items to Submit*; senão o refresh ignora a troca de foco.
+- O nome do callback é sensível a maiúsculas: o JS chama `ORG_DETALHES`. O Static ID da região tem de ser `organograma` (minúsculo).
+- O CSS existe em dois lugares: `modulos/organograma/organograma.css` (fonte) e `static-files/organograma(.min).css` (publicado). Altere a fonte, copie e regenere o `.min`.
 - O Ajax Callback devolve HTML cru (`p_escape => false`); todo dado já é escapado no package — mantenha `e()`/`a()` ao editar.
 - `render_detalhes` não verifica permissão; qualquer sessão pode pedir qualquer `x01`.
 
@@ -270,7 +272,7 @@ Feito (no módulo): DDL, seed, views, package de regras, package de UI, triggers
 - Remover o gestor não é possível por movimentação (gestor vazio = manter atual). Excluir colaborador com histórico é bloqueado por FK (use `DESLIGAMENTO`).
 - Carga inicial: inativos pré-instalação recebem só admissão (sem desligamento) → turnover histórico incompleto.
 - Comunicados automáticos não têm imagem; o card da Home reserva 260px para capa.
-- `c_pagina_painel_rh = 20` colide com o `c_pagina_perfil = 20` do organograma (ver 1.7). `c_item_organograma = 'P3_ID_FOCO'` exige que o organograma seja montado na p. 3 com esse nome de item (o guia do organograma usa `P10_`).
+- `c_pagina_painel_rh = 20` (o organograma deixou de usar a p. 20 em 09/10/2026). `c_item_organograma = 'P3_ID_FOCO'` bate com o item montado na p. 3.
 - O IG (até 24.2) não fazia upload; por isso a modal 21 — verificar se a 26.1.5 já tem coluna de upload.
 - Salvar e efetivar na mesma submissão: se a efetivação falha, o rascunho também é desfeito (sem commit no package).
 

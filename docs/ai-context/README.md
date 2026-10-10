@@ -10,7 +10,7 @@
 - **App:** ID `100`, alias `CORLIXHUB`, workspace/schema `WKSP_CORLIXHUB`, autenticação por contas APEX, idioma da UI pt-BR (idioma primário técnico `en`).
 - **Fonte da app:** `corlixhub/` em formato **APEXlang** (`.apx`). `database/f100.sql` é o mesmo app num export SQL de 12 MB: use só para consultar, nunca edite.
 - **Banco:** o DDL das tabelas base (`COLABORADOR`, `CARGO`, `DEPARTAMENTO`, `EMPRESA`, `COMUNICADO`, `EQUIPE`, chat, logs…) está em `database/corlix-hub.sql`. É um snapshot só de estrutura, **sem dados**, e não serve como instalador. O módulo de histórico de carreira tem DDL próprio em `modulos/historico-carreira/`. Dados exportados ficam em `database/dados/` (hoje só `departamento.xlsx`: 6 departamentos da empresa 1).
-- **Em andamento:** redesign visual (tokens `--cx-*` em `corlix-tema.css`), módulos de Organograma e Histórico de carreira (prontos em `modulos/`, ainda **não integrados** às páginas 3 e 13) e ~28 telas-alvo em `figma/`.
+- **Em andamento:** redesign visual (tokens `--cx-*` em `corlix-tema.css`), módulo de Organograma integrado à página 3 (fonte em `modulos/organograma`), módulo de Histórico de carreira em `modulos/` e ~28 telas-alvo em `figma/`.
 
 ## Documentos
 
@@ -39,7 +39,7 @@
 | 0 | Global Page (header: busca, sino, config, usuário) | Implementada |
 | 1 | Home (dashboard) | Implementada |
 | 2 | Meu Perfil | Placeholder |
-| 3 | Organograma | Placeholder; o módulo existe em `modulos/organograma` |
+| 3 | Organograma | Implementada (módulo `modulos/organograma`: níveis + drawer de detalhes) |
 | 4 | Chat | Parcial (leitura, sem envio) |
 | 5 / 8 | Notificações (duplicadas) | Placeholder / vazia |
 | 6 | Configurações | Placeholder |
