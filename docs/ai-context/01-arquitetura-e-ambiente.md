@@ -52,6 +52,8 @@ CorlixHub/
 ├── scripts/
 │   ├── setup.sh / setup.ps1   # setup do ambiente Docker (macOS/Linux e Windows)
 │   ├── git-hooks/commit-msg   # valida Conventional Commits
+│   ├── apex-sessao-timeouts.sql      # lê/ajusta timeouts de sessão do workspace (ver 09 §8)
+│   ├── extensao-cookies-apex/ # extensão local do Chrome contra o 400 de cookies (ver 09 §9)
 │   ├── apex-limpar-sql-scripts.sql  # apaga SQL Scripts do workspace (dry-run por padrão)
 │   └── backup/                # pipeline de backup (SQLcl + Jenkins): app, DDL e dados
 └── .github/workflows/ci.yml   # CI: valida docker-compose, gitleaks, bloqueia pastas proibidas
@@ -96,6 +98,9 @@ Variáveis: `ORACLE_PWD`, `APEX_PWD`, `DB_HOST_PORT=1522`, `ORDS_HOST_PORT=8081`
 URLs locais: Builder `http://localhost:8081/ords`; app `http://localhost:8081/ords/r/wksp_corlixhub/corlixhub` (não confirmado).
 
 ⚠️ **Consequências se essa deleção for commitada:** o job `validate` do CI passou a ignorar a validação quando o arquivo não existe; `scripts/setup.*` também passam a não funcionar. Pergunte ao time antes de assumir qual é o ambiente atual (possivelmente migraram para uma instância APEX hospedada/OCI ou outra forma de rodar).
+
+### 5.1.1 APEX no Autonomous (OCI)
+O desenvolvimento acontece no APEX do Autonomous Database da OCI (`https://<id>.adb.<região>.oraclecloudapps.com/ords/...`). Depois de longas sessões, o proxy da Oracle pode responder `400 Request Header Or Cookie Too Large`. Causa e solução estão em [`09-erro-400-cookies.md`](./09-erro-400-cookies.md).
 
 ### 5.2 Pastas que nunca vão para o Git
 `apex/` (distribuição Oracle ~1,1 GB), `META-INF/`, `oracle_oradata/` (datafiles), `ords_config/` (contém wallet e chave TLS), `.env*` (exceto `.env.example`), `*.log`, `.DS_Store`. O CI bloqueia `apex/`, `oracle_oradata/`, `ords_config/`, `META-INF/`.

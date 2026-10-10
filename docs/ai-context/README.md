@@ -24,6 +24,7 @@
 | 06 | [Módulos](./06-modulos.md) | Organograma e Histórico de carreira: arquitetura, integração no APEX, API JS, template de novo módulo |
 | 07 | [Design (Figma)](./07-design-figma.md) | Descrição detalhada de cada tela-alvo e mapeamento para componentes APEX; features sem backend |
 | 08 | [Convenções e pegadinhas](./08-convencoes-e-pegadinhas.md) | **Leia antes de editar qualquer coisa.** Regras de trabalho, lacunas, bugs conhecidos, checklist |
+| 09 | [Cookies e sessão (OCI)](./09-erro-400-cookies.md) | `400 Request Header Or Cookie Too Large` e sessão do Builder caindo/pedindo workspace: causa, diagnóstico, correção |
 
 ### Guia por tipo de tarefa
 - **Mexer numa página existente:** 08 → 02 (seção da página) → 03 (componentes que ela usa) → 04 (classes CSS).
@@ -31,6 +32,7 @@
 - **Mexer no banco ou criar tabela:** 05 → 06 §4 (padrão de módulo) → 08.
 - **Integrar organograma ou histórico de carreira:** 06 → 05 → 02 (páginas 3/13).
 - **Ambiente, deploy ou CI:** 01.
+- **Erro 400 "Request Header Or Cookie Too Large" ou sessão do Builder caindo:** 09.
 
 ## Páginas (visão rápida)
 

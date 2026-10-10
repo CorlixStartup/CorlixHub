@@ -1,0 +1,16 @@
+:root { --fundo: #fbf9f8; --texto: #161513; --mudo: #6f6964; --linha: #e4e1dd; --ok: #508223; --alerta: #ac630c; --critico: #c74634; }
+body { width: 420px; margin: 0; padding: 12px; background: var(--fundo); color: var(--texto); font: 13px/1.45 system-ui, -apple-system, sans-serif; }
+header { display: flex; flex-direction: column; margin-bottom: 8px; }
+.mudo { color: var(--mudo); font-size: 12px; overflow-wrap: anywhere; }
+.barra { height: 8px; background: var(--linha); border-radius: 4px; overflow: hidden; }
+#preenchido { height: 100%; width: 0; }
+.botoes { display: flex; gap: 6px; margin-bottom: 8px; }
+button { padding: 5px 10px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; cursor: pointer; font: inherit; }
+details { border-top: 1px solid var(--linha); padding: 6px 0; }
+summary { cursor: pointer; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+th, td { text-align: left; padding: 3px 4px; border-bottom: 1px solid var(--linha); overflow-wrap: anywhere; }
+tr.repetido td { color: var(--critico); }
+ul { margin: 6px 0; padding-left: 18px; font-size: 12px; }
+label { display: block; margin: 6px 0; }
+textarea { width: 100%; box-sizing: border-box; font: 12px ui-monospace, monospace; }

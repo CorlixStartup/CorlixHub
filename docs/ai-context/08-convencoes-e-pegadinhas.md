@@ -79,6 +79,8 @@
 ### Configuração
 - O idioma primário da app é `en`, com máscaras de data `DS`. Para pt-BR, formate explicitamente com `to_char(..., 'dd/mm/yyyy')`. A LOV `BOOLEAN` mostra "Yes/No".
 - `deployments/default.json` está com `debugging: true`.
+- `400 Request Header Or Cookie Too Large` no host do Autonomous: são cookies acumulados, e o limite do proxy da OCI não pode ser alterado. Limpe **só o host** (DevTools → Application → Clear site data). Veja [`09-erro-400-cookies.md`](./09-erro-400-cookies.md).
+- A sessão do Builder cai e pede o workspace de novo: ou os cookies foram perdidos, ou houve timeout (padrão de 1 h de inatividade e 8 h de duração; a app não define timeout próprio). Diagnóstico com `scripts/apex-sessao-timeouts.sql`; ver `09` §8.
 - O último commit (`feature: …`) não segue o padrão do hook `commit-msg`.
 
 ## 4. Checklist rápido antes de entregar uma mudança

@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Corlix Hub · Cookies do APEX",
+  "version": "1.0.0",
+  "description": "Mede os cookies do APEX no Autonomous (OCI), limpa sozinho no erro 400 e registra cookies descartados.",
+  "permissions": ["cookies", "webRequest", "storage"],
+  "host_permissions": ["https://*.oraclecloudapps.com/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Cookies do APEX" }
+}
