@@ -15,6 +15,10 @@
 8. **Segurança**: quando criar ou alterar páginas administrativas, defina `authorizationScheme` **na página**, e não apenas na entrada do menu.
 9. **Commits**: Conventional Commits (`feat(escopo): …`). Faça PR para `DEV`. Nunca versione `apex/`, `oracle_oradata/`, `ords_config/`, `.env`.
 10. **Não invente**: o README e o código divergem em vários pontos (ver [`01`](./01-arquitetura-e-ambiente.md) §6). Confie no código e pergunte ao time sobre o que não estiver confirmado (ambiente atual, DDL das tabelas base, `log_pkg`).
+11. **Passo a passo do Builder é para o APEX 26.1.5.** Os guias (`Etapas-*.md`) descrevem caminhos do Page Designer desta versão, com passos detalhados (onde clicar, seção › atributo, valor, como testar).
+    - Não copie caminhos de versões antigas: no 26.1.5 o painel de propriedades **não tem a aba "Attributes"** e a região de Form **não mostra a seção "Edit"**.
+    - Caminho que não foi conferido na tela do 26.1.5 vai marcado **(confirmar no 26.1.5)** e acompanhado de um jeito de verificar o resultado (o processo que o APEX cria, ou o trecho esperado no export APEXlang).
+    - Se o usuário disser que um caminho não existe, **não chute outro**: peça um print da árvore e do painel de propriedades, e depois corrija o guia com o caminho real.
 
 ## 2. Lacunas estruturais (objetos que faltam no repositório)
 
@@ -35,6 +39,7 @@
 - Os app processes (4, `BEFORE_HEADER`, sem condição) rodam em todas as páginas, inclusive no login. Eles ligam o usuário ao colaborador por `COLABORADOR.login_apex = :APP_USER`; algumas comparações usam `UPPER` e outras não.
 
 ### Páginas
+- **Edição de regiões no 26.1.5**: Form e Interactive Grid só são editáveis com o bloco `edit { enabled: true ... }`, que nos exports só aparece em regiões criadas pelo assistente de criação de página; o painel de propriedades não oferece onde ligar. Para cadastros, prefira lista (Interactive Report) + formulário em modal criado pelo assistente (padrão p15/p16). Ver `09` §4.8.
 - **Placeholders** (só breadcrumb): p2 Meu perfil, p3 Organograma, p5 Notificações, p6 Configurações, p11 Comunicados, p12 Colaboradores, p13 Histórico de carreira. A p8 `NOTIFICAÇÕES` está vazia e duplica a p5.
 - **p4 Chat**:
   - A região de mensagens tem a condição de servidor `P4_CANAL_ID is not null`, então ela não existe no DOM ao carregar e o refresh da DA não funciona.

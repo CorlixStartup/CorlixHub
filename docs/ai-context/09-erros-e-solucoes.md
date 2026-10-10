@@ -215,6 +215,18 @@ O guia monta a página 13 antes das páginas 18 e 19. O botão "Nova movimentaç
 
 ---
 
+### 4.8 Região de Form ou Interactive Grid sem edição (APEX 26.1.5)
+**Sintoma:** num Form, os campos não aceitam digitação ao abrir um registro existente (ex.: "Motivo do estorno" na p18). Num Interactive Grid, não há como ligar a edição: o painel de propriedades do 26.1.5 não tem a aba "Attributes", nem nó "Attributes" na árvore, nem seção "Edit".
+
+**Causa (observada nos exports, não conferida na tela):** a edição fica no bloco `edit { enabled: true allowedOperations: [...] }` da região. Nos exports do app esse bloco só aparece em regiões criadas pelo **assistente de criação de página** (p16 Empresas, p27 Nova Equipe). Regiões criadas ou montadas depois, sem ele, ficam só leitura (p18 Movimentação, p19 Formações) e o Builder não oferece onde ligar.
+
+**Correção:**
+- Precisa de edição? Crie a região pelo assistente (*Create Page › Form*, ou lista + formulário) e confira no export que o bloco `edit` veio.
+- Para cadastro em lista, use o padrão **lista (Interactive Report) + formulário em modal**, como p15/p16 e p13/p18, em vez de Interactive Grid editável.
+- Item que não é coluna da tabela/view (ex.: `P18_DS_MOTIVO_ESTORNO`) pode ficar numa região Static Content separada, fora do Form.
+
+**Prevenção:** depois de criar uma região editável, procure `edit {` no export APEXlang da página. Sem ele, a região é só leitura.
+
 ## 5. Checklist antes de entregar SQL/PL/SQL
 
 - [ ] Nenhum `unistr()` em SQL sem `to_char` (2.1).

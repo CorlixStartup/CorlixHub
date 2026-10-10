@@ -4,7 +4,14 @@ Este guia monta as páginas do módulo no App Builder do **APEX 26.1.5**, a vers
 
 Depois de montar as páginas no Builder, exporte o app em APEXlang como já é feito hoje, para que as páginas novas entrem no Git em `corlixhub/pages/`.
 
-> Os nomes de menus e atributos abaixo seguem o Builder. Se algum rótulo estiver diferente na 26.1, o atributo equivalente costuma ficar na mesma seção do painel de propriedades.
+### Como ler os caminhos deste guia (APEX 26.1.5)
+
+- **Rendering** é a árvore da esquerda do Page Designer; o **painel de propriedades** é o da direita. `Seção › Atributo` indica a seção e o campo no painel de propriedades do componente selecionado.
+- No 26.1.5 a região **não tem a aba nem o nó "Attributes"** que versões antigas tinham (Region | Attributes).
+- Para achar qualquer atributo, use a **busca no topo do painel de propriedades** (digite parte do nome, ex.: `Edit`, `Clear Cache`).
+- Passos marcados com **(confirmar no 26.1.5)** ainda não foram conferidos na tela desta versão. Se o caminho não existir, não procure por tentativa: tire um print da árvore e do painel e registre o caminho certo neste guia.
+- Para confirmar que um ajuste pegou, confira o **export APEXlang** da página: cada passo crítico traz o trecho esperado (ex.: `edit { enabled: true }`).
+
 
 | Página | Nome | Tipo | Quem acessa |
 |---|---|---|---|
@@ -12,7 +19,7 @@ Depois de montar as páginas no Builder, exporte o app em APEXlang como já é f
 | 18 | Movimentação | Modal Dialog | ADMIN_RH |
 | 19 | Formações e certificações | Normal | ADMIN_RH |
 | 20 | Dashboard RH | Normal | ADMIN_RH |
-| 21 | Anexo da formação | Modal Dialog | ADMIN_RH |
+| 21 | Formação (formulário da formação, com anexo) | Modal Dialog | ADMIN_RH |
 | 22 | Solicitar correção | Modal Dialog | O próprio colaborador |
 | 23 | Responder solicitação | Modal Dialog | ADMIN_RH |
 
@@ -686,80 +693,236 @@ pkg_historico_carreira.registrar_acesso_salarial(
 
 ---
 
-## 4. Página 19 · Formações e certificações
+## 4. Páginas 19 e 21 · Formações e certificações
 
-- Authorization Scheme: `ADMIN_RH`
-- Item `P19_ID_COLABORADOR`: Hidden · Checksum Required - Session Level
-- Processo Before Header **Validar acesso**: o mesmo código do item 2.2 (passo 2), com `P19_`.
+O RH cadastra as formações de um colaborador numa **lista** (página 19) e edita cada uma num **formulário em modal** (página 21). É o mesmo padrão das páginas 15/16 (Empresas) e 13/18 (Movimentações).
 
-### 4.1 Região "Formações" (Interactive Grid)
+> **Por que não Interactive Grid:** no 26.1.5 o painel de propriedades não oferece onde ligar a edição de uma região; nos exports do app, a edição (`edit { enabled: true ... }`) só aparece em regiões criadas pelo assistente de criação de página. Por isso as duas páginas são criadas juntas pelo assistente. Ver `docs/ai-context/09-erros-e-solucoes.md` §4.8.
 
-- Source:
-  ```sql
-  select f.id_formacao,
-         f.id_empresa,
-         f.id_colaborador,
-         f.tp_formacao,
-         f.ds_titulo,
-         f.ds_instituicao,
-         f.dt_inicio,
-         f.dt_conclusao,
-         f.dt_validade,
-         f.nr_carga_horaria,
-         f.ds_link,
-         f.ds_nome_arquivo,
-         case
-           when f.tp_formacao = 'CERTIFICACAO'
-            and f.dt_validade < pkg_historico_carreira.fn_hoje(:G_ID_EMPRESA)      then 'VENCIDA'
-           when f.tp_formacao = 'CERTIFICACAO'
-            and f.dt_validade <= pkg_historico_carreira.fn_hoje(:G_ID_EMPRESA) + 60 then 'A VENCER'
-         end as ds_alerta_validade
-    from formacao_colaborador f
-   where f.id_colaborador = :P19_ID_COLABORADOR
-     and f.id_empresa     = :G_ID_EMPRESA
-  ```
-- Attributes > Edit: Enabled · Allowed Operations: Add, Update, Delete
-- Colunas:
-  - `ID_FORMACAO`: Hidden · Primary Key
-  - `ID_EMPRESA`: Hidden · Value Protected · Default: Item `G_ID_EMPRESA`
-  - `ID_COLABORADOR`: Hidden · Value Protected · Default: Item `P19_ID_COLABORADOR`
-  - `TP_FORMACAO`: Select List · LOV `LOV_TIPO_FORMACAO`
-  - `DT_INICIO`, `DT_CONCLUSAO`, `DT_VALIDADE`: Date Picker `DD/MM/YYYY`
-  - `DS_ALERTA_VALIDADE`: Display Only · **Query Only: Yes**
-  - `DS_NOME_ARQUIVO`: Link · Target página 21 · `P21_ID_FORMACAO` = `&ID_FORMACAO.` · Link Text: `&DS_NOME_ARQUIVO.` (ou "Anexar" quando vazio, via `nvl` na query) · Query Only: Yes
-- Processo **Salvar formações**: Interactive Grid - Automatic Row Processing (DML). Para formações o DML nativo é aceitável: a imutabilidade vale só para movimentações. As constraints da tabela validam as datas, o tipo e o link.
+| Página | Tipo | O que faz |
+|---|---|---|
+| 19 · Formações e certificações | Normal · Interactive Report | Lista as formações do colaborador, com destaque para certificações vencidas ou a vencer |
+| 21 · Formação | Modal Dialog · Form | Cria, edita e exclui uma formação, inclusive o anexo (PDF ou imagem) |
 
-**Destaque das certificações a vencer:** rode a página, abra *Actions > Format > Highlight* e crie:
-- "A vencer": Column `DS_ALERTA_VALIDADE` = `A VENCER` · Background amarelo · Highlight: Row
-- "Vencida": Column `DS_ALERTA_VALIDADE` = `VENCIDA` · Background vermelho claro
+Os dados vão direto para a tabela `FORMACAO_COLABORADOR` (DML nativo do APEX). Isso é aceitável aqui porque a regra de imutabilidade vale só para as movimentações. Os triggers preenchem criação/alteração e o log.
 
-Depois salve como relatório **Primary** (*Actions > Report > Save*, como desenvolvedor).
+### 4.1 Antes de começar
 
-> Até o APEX 24.2, o Interactive Grid não fazia upload de arquivo; por isso o anexo fica na página 21. Se a sua 26.1.5 já oferecer um tipo de coluna de upload no IG, dá para dispensar a página 21 e mapear `BL_ANEXO`, `DS_MIME_TYPE` e `DS_NOME_ARQUIVO` direto na grid.
+1. **Apague as versões antigas das páginas 19 e 21**, se já existirem (a grid e o anexo do desenho anterior). Com a página aberta no Page Designer: menu da página (ícone de engrenagem/lixeira no topo) › **Delete Page** (confirmar no 26.1.5). O assistente não cria páginas em números já ocupados.
+2. Confira que a LOV `LOV_TIPO_FORMACAO` existe (§1.4).
+3. Confira que o botão **Formações** da página 13 (§2.6) leva para a página 19 com `P19_ID_COLABORADOR` = `&P13_ID_COLABORADOR.`.
 
-### 4.2 Página 21 · Anexo da formação (Modal)
+### 4.2 Criar as duas páginas pelo assistente
 
-- Authorization: `ADMIN_RH`
-- Região Form sobre `FORMACAO_COLABORADOR` · PK `ID_FORMACAO`, só com os itens:
-  - `P21_ID_FORMACAO` (Hidden, Checksum Required)
-  - `P21_BL_ANEXO`: **File Upload** (antigo *File Browse*; não use *Image Upload*, que é o tipo da página 17, porque o anexo pode ser PDF) · Storage Type: BLOB column specified in Item Source attribute · MIME Type Column `DS_MIME_TYPE` · Filename Column `DS_NOME_ARQUIVO` · Download Link Text "Baixar anexo"
-  - `P21_DS_LINK`: Text Field (URL)
-- Processos: Form - Initialization e Form - Automatic Row Processing (somente Update), depois Close Dialog.
-- Validação **Formação da empresa** (PL/SQL Function Body Returning Boolean):
-  ```sql
-  declare
-    l_qt pls_integer;
-  begin
-    select count(*) into l_qt
-      from formacao_colaborador
-     where id_formacao = :P21_ID_FORMACAO
-       and id_empresa  = :G_ID_EMPRESA;
-    return l_qt = 1;
-  end;
-  ```
-- Na página 19, DA *Dialog Closed* > Refresh na grid.
+1. **Create › Page** (no App Builder, dentro do app 100).
+2. Escolha **Interactive Report**.
+3. Preencha (os nomes dos campos são do assistente; confirmar no 26.1.5):
+
+| Campo | Valor |
+|---|---|
+| Page Number | `19` |
+| Name | `Formações e certificações` |
+| Page Mode | Normal |
+| Data Source › Table/View | `FORMACAO_COLABORADOR` |
+| **Include Form Page** | **On** |
+| Form Page Number | `21` |
+| Form Page Name | `Formação` |
+| Form Page Mode | **Modal Dialog** |
+| Primary Key Column | `ID_FORMACAO` |
+| Navigation › Create Navigation Menu Entry | **Off** (a página 19 é aberta pela página 13; a 21 é modal) |
+| Breadcrumb | Don't use breadcrumbs |
+
+4. **Create Page**.
+
+Como conferir: no export da página 21, a região do formulário tem o bloco abaixo. Sem ele, o formulário fica só leitura.
+```
+edit {
+    enabled: true
+    allowedOperations: [
+        add
+        update
+        delete
+    ]
+}
+```
+
+Se o assistente criar entradas no menu mesmo assim, apague-as em **Shared Components › Navigation Menu**.
+
+### 4.3 Página 19 · atributos e acesso
+
+1. Página 19 › **Security › Authorization Scheme:** `ADMIN_RH`.
+2. Crie o item **`P19_ID_COLABORADOR`** (botão direito em **Body** › Create Page Item, ou na região da lista):
+   - Type: **Hidden** · Value Protected: On
+   - **Security › Session State Protection:** Checksum Required - Session Level
+3. Processo **Validar acesso** · Pre-Rendering › **Before Header** · Type Execute Code:
+   ```sql
+   if :P19_ID_COLABORADOR is null
+      or pkg_historico_carreira.fn_pode_ver_colaborador(:P19_ID_COLABORADOR) = 'N' then
+     raise_application_error(-20012, 'Você não tem acesso a este colaborador.');
+   end if;
+   ```
+4. Opcional, para o título mostrar de quem são as formações: item **`P19_NM_COLABORADOR`** (Hidden) com Source › Type **SQL Query (return single value)**:
+   ```sql
+   select nome_completo
+     from colaborador
+    where id_colaborador = :P19_ID_COLABORADOR
+      and id_empresa     = :G_ID_EMPRESA
+   ```
+   e o título da região da lista: `Formações de &P19_NM_COLABORADOR.`
+
+### 4.4 Página 19 · região da lista (Interactive Report)
+
+1. Clique na região criada pelo assistente e troque **Source › Type** para **SQL Query**:
+   ```sql
+   select f.id_formacao,
+          f.tp_formacao,
+          f.ds_titulo,
+          f.ds_instituicao,
+          f.dt_inicio,
+          f.dt_conclusao,
+          f.dt_validade,
+          f.nr_carga_horaria,
+          f.ds_link,
+          f.ds_nome_arquivo,
+          case
+            when f.tp_formacao = 'CERTIFICACAO'
+             and f.dt_validade < pkg_historico_carreira.fn_hoje(:G_ID_EMPRESA)      then 'VENCIDA'
+            when f.tp_formacao = 'CERTIFICACAO'
+             and f.dt_validade <= pkg_historico_carreira.fn_hoje(:G_ID_EMPRESA) + 60 then 'A VENCER'
+          end as ds_alerta_validade
+     from formacao_colaborador f
+    where f.id_colaborador = :P19_ID_COLABORADOR
+      and f.id_empresa     = :G_ID_EMPRESA
+    order by coalesce(f.dt_conclusao, f.dt_inicio) desc
+   ```
+   **Page Items to Submit:** `P19_ID_COLABORADOR`.
+2. Colunas (clique em cada uma em *Columns*):
+
+| Coluna | Type | Heading | Detalhes |
+|---|---|---|---|
+| `ID_FORMACAO` | Hidden | | |
+| `TP_FORMACAO` | Plain Text (based on List of Values) | Tipo | LOV `LOV_TIPO_FORMACAO`, para mostrar "Certificação" em vez de `CERTIFICACAO` |
+| `DS_TITULO` | Plain Text | Título | |
+| `DS_INSTITUICAO` | Plain Text | Instituição | |
+| `DT_INICIO`, `DT_CONCLUSAO`, `DT_VALIDADE` | Plain Text | Início, Conclusão, Validade | Appearance › Format Mask `DD/MM/YYYY` |
+| `NR_CARGA_HORARIA` | Plain Text | Carga horária (h) | |
+| `DS_LINK` | Link | Link | Target › Type **URL** › `#DS_LINK#` · Link Text `Abrir` |
+| `DS_NOME_ARQUIVO` | Plain Text | Anexo | O download fica no formulário |
+| `DS_ALERTA_VALIDADE` | Plain Text | Validade | |
+
+3. **Link de edição** (o lápis de cada linha): o assistente já cria, apontando para a 21. Para achar a configuração, selecione a região e use a busca do painel com `Link` (confirmar no 26.1.5). Confira no export da página 19:
+   ```
+   link {
+       linkColumn: customTarget
+       target: {
+           page: 21
+           items: {
+               P21_ID_FORMACAO: \#ID_FORMACAO#\
+           }
+       }
+   }
+   ```
+   O ideal é ter também Clear Cache `21`.
+4. **Botão "Nova formação"** (o assistente cria um botão `CREATE`; ajuste-o):
+   - Label `Nova formação` · Hot
+   - Behavior › Action: Redirect to Page in this Application › página **21** · Items `P21_ID_COLABORADOR` = `&P19_ID_COLABORADOR.` · Clear Cache `21`
+5. **Botão "Voltar ao histórico"**: Redirect › página **13**, sem itens e **sem** Clear Cache (a 13 continua no colaborador escolhido).
+6. **DA "Atualizar depois da modal"**: o assistente costuma criar (Event **Dialog Closed** na região → **Refresh** da região). Confira se existe; se não, crie igual à da página 15.
+
+**Destaque das certificações:** rode a página com o usuário de RH, abra **Actions › Format › Highlight** e crie:
+- "A vencer": Column `DS_ALERTA_VALIDADE` = `A VENCER` · Background amarelo · Highlight Type: Row
+- "Vencida": Column `DS_ALERTA_VALIDADE` = `VENCIDA` · Background vermelho claro · Row
+
+Depois **Actions › Report › Save Report** › *As Default Report Settings* › **Primary** (só aparece para o desenvolvedor logado no Builder).
+
+### 4.5 Página 21 · formulário da formação (Modal)
+
+1. Página 21 › **Security › Authorization Scheme:** `ADMIN_RH` · Title `Formação`.
+2. **Itens criados pelo assistente** (ajuste ou apague):
+
+| Item | O que fazer |
+|---|---|
+| `P21_ID_FORMACAO` | Hidden · PK · Session State Protection: **Checksum Required - Session Level** |
+| `P21_ID_EMPRESA` | Hidden · Value Protected (o valor vem do processo do passo 4) |
+| `P21_ID_COLABORADOR` | Hidden · Value Protected · Session State Protection: **Checksum Required - Session Level** (vem na URL do botão "Nova formação") |
+| `P21_TP_FORMACAO` | **Select List** · LOV `LOV_TIPO_FORMACAO` · Display Null Value On (`- Selecione -`) · Value Required On · Label "Tipo" |
+| `P21_DS_TITULO` | Text Field · Value Required On · Label "Título" |
+| `P21_DS_INSTITUICAO` | Text Field · Value Required On · Label "Instituição" |
+| `P21_DT_INICIO`, `P21_DT_CONCLUSAO`, `P21_DT_VALIDADE` | Date Picker · Format Mask `DD/MM/YYYY` · Labels "Início", "Conclusão", "Validade (certificações)" |
+| `P21_NR_CARGA_HORARIA` | Number Field · Label "Carga horária (h)" |
+| `P21_DS_LINK` | Text Field · Label "Link (https://...)" |
+| `P21_BL_ANEXO` | **File Upload** (ver passo 3) |
+| `P21_DS_MIME_TYPE`, `P21_DS_NOME_ARQUIVO` | **Apague.** O item de upload já grava essas colunas |
+| `P21_DT_CRIACAO`, `P21_USR_CRIACAO`, `P21_DT_ALTERACAO`, `P21_USR_ALTERACAO` | **Apague.** O trigger preenche e sobrescreve qualquer valor do formulário |
+
+3. **Anexo (`P21_BL_ANEXO`)** (confirmar os nomes no 26.1.5):
+   - Type: **File Upload** (não use *Image Upload*: o anexo pode ser PDF)
+   - Storage › Type: **BLOB column specified in Item Source attribute**
+   - MIME Type Column `DS_MIME_TYPE` · Filename Column `DS_NOME_ARQUIVO`
+   - Download Link Text `Baixar anexo`
+   - Source: Form Region · Column `BL_ANEXO`
+4. **Processo "Empresa da sessão"** · Processing · Sequence **antes** do processo de gravação do assistente (ex.: 5) · Execute Code:
+   ```sql
+   :P21_ID_EMPRESA := :G_ID_EMPRESA;
+   ```
+   Garante a empresa certa sem depender de valor vindo do navegador.
+5. **Validações** (Processing › Validations). As constraints da tabela já barram dados errados, mas com mensagem técnica; estas mostram a mensagem no campo:
+
+| Nome | Tipo | Código / valor | Mensagem | Item |
+|---|---|---|---|---|
+| Formação da empresa | PL/SQL Function Body Returning Boolean | (abaixo) | `Formação não encontrada.` | |
+| Data obrigatória | Expression | `:P21_DT_INICIO is not null or :P21_DT_CONCLUSAO is not null` | `Informe a data de início ou de conclusão.` | `P21_DT_INICIO` |
+| Conclusão depois do início | Expression | `:P21_DT_CONCLUSAO is null or :P21_DT_INICIO is null or to_date(:P21_DT_CONCLUSAO, 'DD/MM/YYYY') >= to_date(:P21_DT_INICIO, 'DD/MM/YYYY')` | `A conclusão não pode ser antes do início.` | `P21_DT_CONCLUSAO` |
+| Validade | Expression | `:P21_DT_VALIDADE is null or to_date(:P21_DT_VALIDADE, 'DD/MM/YYYY') >= to_date(coalesce(:P21_DT_CONCLUSAO, :P21_DT_INICIO), 'DD/MM/YYYY')` | `A validade não pode ser antes da conclusão.` | `P21_DT_VALIDADE` |
+| Carga horária | Expression | `:P21_NR_CARGA_HORARIA is null or to_number(:P21_NR_CARGA_HORARIA) > 0` | `A carga horária deve ser maior que zero.` | `P21_NR_CARGA_HORARIA` |
+| Link | Expression | `:P21_DS_LINK is null or regexp_like(:P21_DS_LINK, '^https?://', 'i')` | `O link deve começar com http:// ou https://.` | `P21_DS_LINK` |
+
+   "Formação da empresa" impede editar formação de outra empresa ou cadastrar para colaborador de outra empresa:
+   ```sql
+   declare
+     l_qt pls_integer;
+   begin
+     if :P21_ID_FORMACAO is not null then
+       select count(*) into l_qt
+         from formacao_colaborador
+        where id_formacao = :P21_ID_FORMACAO
+          and id_empresa  = :G_ID_EMPRESA;
+     else
+       select count(*) into l_qt
+         from colaborador
+        where id_colaborador = :P21_ID_COLABORADOR
+          and id_empresa     = :G_ID_EMPRESA;
+     end if;
+     return l_qt = 1;
+   end;
+   ```
+   Na validação "Formação da empresa", deixe **Server-side Condition › When Button Pressed** vazio (vale para criar, salvar e excluir).
+6. **Botões e processos do assistente:** mantenha `CANCEL`, `DELETE` (com confirmação), `SAVE` e `CREATE`, e os processos *Initialize form*, *Process form* (Automatic Row Processing) e *Close Dialog*. Traduza os labels: Cancelar, Excluir, Salvar, Criar. Em todos os botões, Authorization `ADMIN_RH`.
+
+### 4.6 Testar
+
+1. Na página 13, escolha um colaborador no seletor e clique em **Formações**. A página 19 abre com a lista vazia e o nome dele no título.
+2. **Nova formação** › Certificação · título · instituição · conclusão = hoje · validade = daqui a 30 dias · anexe um PDF › **Criar**. A modal fecha e a linha aparece **em amarelo** ("A VENCER").
+3. Abra a formação pelo lápis. O link **Baixar anexo** baixa o PDF.
+4. Mude a validade para uma data passada › **Salvar**. A linha fica **vermelha** ("VENCIDA").
+5. Coloque a conclusão antes do início › **Salvar**. A mensagem aparece no campo, sem `ORA-`.
+6. **Excluir** › confirme. A linha some.
+7. **Voltar ao histórico**: a página 13 volta no mesmo colaborador, e a aba *Desenvolvimento* mostra as formações cadastradas.
+8. Abra a página 19 com um usuário que não é RH, ou mude o `P19_ID_COLABORADOR` na URL: deve dar acesso negado ou erro de checksum.
+
+### 4.7 Se não funcionar
+
+| Sintoma | Causa provável | Correção |
+|---|---|---|
+| A lista sempre vazia | `P19_ID_COLABORADOR` não existe ou não está em *Page Items to Submit* | Passos 4.3 e 4.4 |
+| Os campos da modal não aceitam digitação ao editar | Formulário sem o bloco `edit` | Recrie as páginas pelo assistente (§4.2) e confira o export |
+| "Formação não encontrada." ao criar | `P21_ID_COLABORADOR` vazio | O botão "Nova formação" precisa passar `P21_ID_COLABORADOR` = `&P19_ID_COLABORADOR.` |
+| `ORA-02290 ... FORMACAO_COLABORADOR_..._CK` | Validação faltando para essa regra | Crie a validação correspondente do passo 4.5 |
+| Anexo não grava ou não baixa | Storage do File Upload errado | Storage: BLOB column specified in Item Source · MIME `DS_MIME_TYPE` · Filename `DS_NOME_ARQUIVO` |
+| Destaque some depois | Relatório não foi salvo como Primary | Actions › Report › Save Report › Primary, logado no Builder |
 
 ---
+
 
 ## 5. Página 20 · Dashboard RH
 
