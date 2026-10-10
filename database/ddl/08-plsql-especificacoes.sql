@@ -311,7 +311,7 @@ end pkg_historico_carreira;
   c_pagina_comunicado  constant pls_integer  := 11;
   c_item_comunicado    constant varchar2(30) := null;   -- ex.: 'P11_ID_COMUNICADO'
   c_pagina_holerite    constant pls_integer  := null;   -- ainda não existe no app
-  c_pagina_solicitacao constant pls_integer  := 22;
+  c_pagina_solicitacao constant pls_integer  := null;  -- página 22 ainda não criada; volte para 22 depois (ERR-1002)
   c_item_solicitacao   constant varchar2(30) := 'P22_ID_COLABORADOR';
   c_pagina_painel_rh   constant pls_integer  := 20;
 
@@ -328,13 +328,14 @@ end "PKG_LOGS";
 /
 
   CREATE OR REPLACE EDITIONABLE PACKAGE "PKG_ORGANOGRAMA" as
+
   c_nome_empresa  constant varchar2(100) := 'Corlix';
 
-  c_pagina_perfil constant pls_integer := 20;
-  c_item_perfil   constant varchar2(30) := 'P20_ID_COLABORADOR';
+  c_pagina_perfil constant pls_integer := 2;
+  c_item_perfil   constant varchar2(30) := null;
 
-  c_pagina_chat   constant pls_integer := 30;
-  c_item_chat     constant varchar2(30) := 'P30_ID_COLABORADOR';
+  c_pagina_chat   constant pls_integer := 4;
+  c_item_chat     constant varchar2(30) := 'P4_CONTATO_ID';
 
   c_max_equipe constant pls_integer := 8;
 
